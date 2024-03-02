@@ -7,8 +7,28 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\css\bootstrap\**" />
+    <Content Remove="wwwroot\css\bootstrap\**" />
+    <EmbeddedResource Remove="wwwroot\css\bootstrap\**" />
+    <None Remove="wwwroot\css\bootstrap\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Layout\package.json" />
+    <Content Remove="Pages\Component.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Layout\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\js\" />
   </ItemGroup>
 
 </Project>
