@@ -1,32 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
+  <!-- TargetFramework specifies the.NET version that the project will target. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="wwwroot\css\bootstrap\**" />
-    <Content Remove="wwwroot\css\bootstrap\**" />
-    <EmbeddedResource Remove="wwwroot\css\bootstrap\**" />
-    <None Remove="wwwroot\css\bootstrap\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="Layout\package.json" />
-    <Content Remove="Pages\Component.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Layout\.editorconfig" />
-  </ItemGroup>
-
+  <!-- PackageReferences are the packages that the project depends on. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.2" PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- ItemGroups contain metadata about the project's files and folders. In this case, the ItemGroup includes a Folder element that specifies the location of the project's JavaScript files. -->
   <ItemGroup>
     <Folder Include="wwwroot\js\" />
   </ItemGroup>
