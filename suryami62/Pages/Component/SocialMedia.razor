@@ -1,0 +1,32 @@
+﻿<div class="text-center">
+	@foreach (var socialMediaLink in socialMediaLinks)
+	{
+		<a aria-label="@socialMediaLink.AriaLabel" href="@socialMediaLink.Href" target="_blank">
+			<i class="@socialMediaLink.IconClass fa-3x px-1"></i>
+		</a>
+	}
+</div>
+
+@code {
+	public class SocialMediaLink
+	{
+		public string AriaLabel { get; set; }
+		public string Href { get; set; }
+		public string IconClass { get; set; }
+
+		public SocialMediaLink(string label, string href, string icon)
+		{
+			AriaLabel = label;
+			Href = href;
+			IconClass = icon;
+		}
+	}
+
+	private List<SocialMediaLink> socialMediaLinks = new List<SocialMediaLink>
+	{
+		new SocialMediaLink ("facebook", "https://www.facebook.com/suryami62/", "fa-brands fa-square-facebook"),
+		new SocialMediaLink ("instagram", "https://www.instagram.com/suryami62/", "fa-brands fa-square-instagram"),
+		new SocialMediaLink ("twitter", "https://twitter.com/suryami62/", "fa-brands fa-square-x-twitter"),
+		new SocialMediaLink ("linkedin", "https://www.linkedin.com/in/suryami62/", "fa-brands fa-linkedin"),
+	};
+}

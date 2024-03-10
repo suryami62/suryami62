@@ -1,24 +1,30 @@
 ﻿<nav class="pt-3">
     <ul class="nav nav-tabs nav-justified">
-
-        <!-- Navbar Components -->
-        <li class="nav-item">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                Home
-            </NavLink>
-        </li>
-
-        <li class="nav-item">
-            <NavLink class="nav-link" href="blog">
-                Blog
-            </NavLink>
-        </li>
-
-        <li class="nav-item">
-            <NavLink class="nav-link" href="aboutme">
-                About Me
-            </NavLink>
-        </li>
-
+        @foreach (var navItem in NavItems)
+        {
+            <li class="nav-item">
+                <NavLink class="nav-link" href="@navItem.Href" Match="NavLinkMatch.All">@navItem.Text</NavLink>
+            </li>
+        }
     </ul>
 </nav>
+
+@code {
+    public class NavItem
+    {
+        public string Text { get; set; }
+        public string Href { get; set; }
+
+        public NavItem(string text, string href)
+        {
+            Text = text;
+            Href = href;
+        }
+    }
+    private List<NavItem> NavItems = new List<NavItem>
+    {
+        new NavItem("Home", ""),
+        new NavItem("Blog", "blog"),
+        new NavItem("About Me", "aboutme")
+    };
+}
