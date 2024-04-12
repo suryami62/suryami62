@@ -1,15 +1,20 @@
-﻿<img src="img/photo.webp" alt="@Alt" class="mx-auto d-block rounded-circle img-thumbnail" width="150" />
+﻿<div class="text-center">
+	<div class="avatar">
+		<div class="w-40 h-40 rounded-full">
+			<img src="img/photo.webp" alt="@Alt" class="rounded-circle img-thumbnail" width="150" height="150" />
+		</div>
+	</div>
 
-<h1 class="text-center">@Name</h1>
-<p class="text-center">@Username</p>
+	<h1 class="text-5xl">@Name</h1>
 
-<p class="text-center">
-	Halo all, <br />
-	I am an enthusiastic web and application developer who is constantly on the lookout for new opportunities to expand my skills.
-</p>
+	<span class="text-sm font-semibold italic">@@@Username</span>
+
+	<p>@Text</p>
+</div>
 
 @code {
 	string Alt = "Foto Surya Ramadhan";
 	string Name = "Surya Ramadhan";
-	string Username = "@suryami62";
+	string Username = "suryami62";
+	string Text = "Halo all, I am a physics teacher and enthusiastic web/app developer.";
 }

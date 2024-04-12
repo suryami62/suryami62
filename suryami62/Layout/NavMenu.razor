@@ -1,12 +1,10 @@
-﻿<nav class="pt-3">
-    <ul class="nav nav-tabs nav-justified">
-        @foreach (var navItem in NavItems)
-        {
-            <li class="nav-item">
-                <NavLink class="nav-link" href="@navItem.Href" Match="NavLinkMatch.All">@navItem.Text</NavLink>
-            </li>
-        }
-    </ul>
+﻿<nav role="tablist" class="py-5 tabs tabs-bordered">
+    @foreach (var navItem in NavItems)
+    {
+        <NavLink role="tab" class="tab" href="@navItem.Href" ActiveClass="tab-active" Match="NavLinkMatch.All">
+            @navItem.Text
+        </NavLink>
+    }
 </nav>
 
 @code {

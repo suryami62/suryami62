@@ -1,8 +1,8 @@
-﻿<div class="text-center">
-	@foreach (var socialMediaLink in socialMediaLinks)
+﻿<div class="text-center pt-2.5">
+	@foreach (var socialMedia in socialMedias)
 	{
-		<a aria-label="@socialMediaLink.AriaLabel" href="@socialMediaLink.Href" target="_blank">
-			<i class="@socialMediaLink.IconClass fa-3x px-1"></i>
+		<a aria-label="@socialMedia.AriaLabel" href="@socialMedia.Href" target="_blank">
+			<i class="@socialMedia.IconClass fa-2x px-1"></i>
 		</a>
 	}
 </div>
@@ -22,7 +22,7 @@
 		}
 	}
 
-	private List<SocialMediaLink> socialMediaLinks = new List<SocialMediaLink>
+	private List<SocialMediaLink> socialMedias = new List<SocialMediaLink>
 	{
 		new SocialMediaLink ("facebook", "https://www.facebook.com/suryami62/", "fa-brands fa-square-facebook"),
 		new SocialMediaLink ("instagram", "https://www.instagram.com/suryami62/", "fa-brands fa-square-instagram"),

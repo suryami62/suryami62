@@ -1,14 +1,12 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="container">
+<div class="m-auto my-5 max-w-xl">
     <Header />
     <NavMenu />
 
-    <!-- Idk what the point of this is. If it works, leave it that way. -->
+    <!-- Show page components -->
     <main>
-        <article class="px-3 pt-3">
-            @Body
-        </article>
+        @Body
     </main>
 
     <Footer />
