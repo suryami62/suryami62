@@ -8,25 +8,18 @@
 </div>
 
 @code {
-	public class SocialMediaLink
+	private class SocialMediaLink
 	{
-		public string AriaLabel { get; set; }
-		public string Href { get; set; }
-		public string IconClass { get; set; }
-
-		public SocialMediaLink(string label, string href, string icon)
-		{
-			AriaLabel = label;
-			Href = href;
-			IconClass = icon;
-		}
+		public string? AriaLabel { get; set; }
+		public string? Href { get; set; }
+		public string? IconClass { get; set; }
 	}
 
-	private List<SocialMediaLink> socialMedias = new List<SocialMediaLink>
+	private List<SocialMediaLink> socialMedias = new()
 	{
-		new SocialMediaLink ("facebook", "https://www.facebook.com/suryami62/", "fa-brands fa-square-facebook"),
-		new SocialMediaLink ("instagram", "https://www.instagram.com/suryami62/", "fa-brands fa-square-instagram"),
-		new SocialMediaLink ("twitter", "https://twitter.com/suryami62/", "fa-brands fa-square-x-twitter"),
-		new SocialMediaLink ("linkedin", "https://www.linkedin.com/in/suryami62/", "fa-brands fa-linkedin"),
+		new SocialMediaLink { AriaLabel = "facebook", Href = "https://www.facebook.com/suryami62/", IconClass = "fa-brands fa-square-facebook" },
+		new SocialMediaLink { AriaLabel = "instagram", Href = "https://www.instagram.com/suryami62/", IconClass = "fa-brands fa-square-instagram" },
+		new SocialMediaLink { AriaLabel = "twitter", Href = "https://twitter.com/suryami62/", IconClass = "fa-brands fa-square-x-twitter" },
+		new SocialMediaLink { AriaLabel = "linkedin", Href = "https://www.linkedin.com/in/suryami62/", IconClass = "fa-brands fa-linkedin" }
 	};
 }

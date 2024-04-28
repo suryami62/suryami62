@@ -8,21 +8,16 @@
 </nav>
 
 @code {
-    public class NavItem
+    private class NavItem
     {
-        public string Text { get; set; }
-        public string Href { get; set; }
-
-        public NavItem(string text, string href)
-        {
-            Text = text;
-            Href = href;
-        }
+        public string? Text { get; set; }
+        public string? Href { get; set; }
     }
-    private List<NavItem> NavItems = new List<NavItem>
+
+    private List<NavItem> NavItems = new()
     {
-        new NavItem("Home", ""),
-        new NavItem("Blog", "blog"),
-        new NavItem("About Me", "aboutme")
+        new NavItem { Text = "Bio Link", Href = "" },
+        new NavItem { Text = "Blog", Href = "blog" },
+        new NavItem { Text = "About Me", Href = "aboutme" }
     };
 }
