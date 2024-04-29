@@ -1,0 +1,29 @@
+﻿@typeparam TItem
+@using System.Diagnostics.CodeAnalysis
+
+<div class="my-2.5 collapse collapse-arrow border-2">
+	<input aria-labelledby="linkItems" type="checkbox" />
+	<div class="collapse-title content-center">
+		@Title
+	</div>
+	<div id="linkItems" class="collapse-content text-center">
+		@foreach (var item in Items)
+		{
+			if (Links is not null)
+			{
+				@Links(item)
+			}
+		}
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public string? Title { get; set; }
+
+	[Parameter]
+	public RenderFragment<TItem>? Links { get; set; }
+
+	[Parameter, AllowNull]
+	public IReadOnlyList<TItem> Items { get; set; }
+}

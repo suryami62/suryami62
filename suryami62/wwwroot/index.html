@@ -1,32 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+    <!-- Just standard metadata for the web. -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="title" content="suryami62" />
+    <meta name="author" content="Surya Ramadhan" />
+    <meta name="description" content="suryami62's website" />
+    <meta name="keywords" content="HTML, CSS, C#, Blazor, Cloudflare, Blog, Portfolio, Curriculum Vitae" />
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="5 days" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="suryami62.my.id/" />
+    <meta property="og:title" content="suryami62" />
+    <meta property="og:description" content="suryami62's website" />
+    <meta property="og:image" content="img/socialCard.webp" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="suryami62.my.id/" />
+    <meta property="twitter:title" content="suryami62" />
+    <meta property="twitter:description" content="suryami62's website" />
+    <meta property="twitter:image" content="img/socialCard.webp" />
+
     <title>suryami62</title>
+
     <base href="/" />
-    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <link href="suryami62.styles.css" rel="stylesheet" />
+
+    <!-- Local resource -->
+    <link rel="icon" type="image/x-icon" href="img/favicon.ico" />
+    <link rel="stylesheet" href="css/app.min.css" />
+
+    <!-- Leave it as it is for now.
+    <link rel="stylesheet" href="suryami62.styles.css" />
+    -->
+
+    <!-- Just leave it to big companies. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js" integrity="sha512-u3fPA7V8qQmhBPNT5quvaXVa1mnnLSXUep5PS1qo5NRzHwG19aHmNJnj1Q8hpA/nBWZtZD4r4AX6YOt5ynLN2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
-
 <body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
-    </div>
+    <div id="app"></div>
+    <script src="_framework/blazor.webassembly.js" defer autostart="false"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(function () { Blazor.start(); }, 1500);
+        });
+    </script>
 
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
-    </div>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <!-- Cloudflare Web Analytics -->
+    <script src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "bddd345566c74ced805af1b952abfa95"}' defer></script>
 </body>
-
 </html>

@@ -1,7 +1,67 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>suryami62</PageTitle>
 
-<h1>Hello, world!</h1>
+<!-- Intro component -->
+<Intro />
 
-Welcome to your new app.
+<!-- Social media component -->
+<SocialMedia />
+
+<!-- Collapse link component -->
+<CollapseLink Items="repositories" Context="repository" Title="My Code Repositories">
+	<Links>
+		<a class="btn btn-outline border-2 border-gray-200 m-1" href="@repository.Href" target="_blank">
+			<i class="@repository.IconClass fa-2xl"></i>
+			<span>@repository.Name</span>
+		</a>
+	</Links>
+</CollapseLink>
+
+<CollapseLink Items="forums" Context="forum" Title="Developer Forums">
+	<Links>
+		<a class="btn btn-outline border-2 border-gray-200 m-1" href="@forum.Href" target="_blank">
+			<i class="@forum.IconClass fa-2xl"></i>
+			<span>@forum.Name</span>
+		</a>
+	</Links>
+</CollapseLink>
+
+<CollapseLink Items="videos" Context="video" Title="My video platforms">
+	<Links>
+		<a class="btn btn-outline border-2 border-gray-200 m-1" href="@video.Href" target="_blank">
+			<i class="@video.IconClass fa-2xl"></i>
+			<span>@video.Name</span>
+		</a>
+	</Links>
+</CollapseLink>
+
+@code {
+	private class Items
+	{
+		public string? Name { get; set; }
+		public string? Href { get; set; }
+		public string? IconClass { get; set; }
+	}
+
+	private List<Items> repositories = new()
+	{
+		new Items { Name = "GitHub", Href = "https://github.com/suryami62/", IconClass = "fa-brands fa-github" },
+		new Items { Name = "GitLab", Href = "https://gitlab.com/suryami62/", IconClass = "fa-brands fa-gitlab" },
+		new Items { Name = "Docker", Href = "https://hub.docker.com/u/suryami62/", IconClass = "fa-brands fa-docker" }
+	};
+
+	private List<Items> forums = new()
+	{
+		new Items { Name = "DEV", Href = "https://dev.to/suryami62/", IconClass = "fa-brands fa-dev" },
+		new Items { Name = "Stack Overflow", Href = "https://stackoverflow.com/users/23341600", IconClass = "fa-brands fa-stack-overflow" },
+		new Items { Name = "Hashnode", Href = "https://hashnode.com/@suryami62", IconClass = "fa-brands fa-hashnode" }
+	};
+
+	private List<Items> videos = new()
+	{
+		new Items { Name = "Facebook", Href = "https://www.facebook.com/watch.suryami62/", IconClass = "fa-brands fa-facebook-f" },
+		new Items { Name = "Youtube", Href = "https://www.youtube.com/@suryami62", IconClass = "fa-brands fa-youtube" },
+		new Items { Name = "Twitch", Href = "https://www.twitch.tv/suryami62/", IconClass = "fa-brands fa-twitch" }
+	};
+}
