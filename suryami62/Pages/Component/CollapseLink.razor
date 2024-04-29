@@ -2,11 +2,11 @@
 @using System.Diagnostics.CodeAnalysis
 
 <div class="my-2.5 collapse collapse-arrow border-2">
-	<input type="checkbox" />
+	<input aria-labelledby="linkItems" type="checkbox" />
 	<div class="collapse-title content-center">
 		@Title
 	</div>
-	<div class="collapse-content text-center">
+	<div id="linkItems" class="collapse-content text-center">
 		@foreach (var item in Items)
 		{
 			if (Links is not null)
