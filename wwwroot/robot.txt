@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: 
+Sitemap: https://suryami62.my.id/sitemap.xml
