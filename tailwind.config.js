@@ -4,5 +4,22 @@ module.exports = {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+    require('daisyui'),
+  ],
+  daisyui: {
+    themes: [
+      {
+        dim: {
+          ...require("daisyui/src/theming/themes")["dim"],
+          "--tab-border": "4px",
+        },
+        light: {
+          ...require("daisyui/src/theming/themes")["light"],
+          "--tab-border": "4px",
+        },
+      },
+    ],
+  },
 }
