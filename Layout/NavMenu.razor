@@ -1,8 +1,10 @@
 <nav class="navbar">
     <div class="navbar-start">
         <a class="btn btn-link" href="">
-            <img src="img/logoHz.svg" alt="Logo suryami62" class="h-12 w-auto max-sm:hidden" />
-            <img src="img/logoBx.svg" alt="Logo suryami62" class="h-12 w-auto sm:hidden" />
+            @foreach (var navBrand in NavBrands)
+            {
+                <img src="@navBrand.Logo" alt="@navBrand.Alt" class="h-12 w-auto @navBrand.Class" />
+            }
         </a>
     </div>
     <div class="navbar-center">
@@ -17,24 +19,49 @@
     </div>
     <div class="navbar-end">
         <label class="swap swap-rotate">
-            <input type="checkbox" class="theme-controller" value="light" />
-            <i class="fa-solid fa-sun fa-2x swap-on fill-current"></i>
-            <i class="fa-solid fa-moon fa-2x swap-off fill-current"></i>
+            <input type="checkbox" class="theme-controller" value="dim" />
+            @foreach (var themeList in ThemeLists)
+            {
+                <i class="@themeList.Icon fill-current"></i>
+            }
         </label>
     </div>
 </nav>
 
 @code {
-    private class NavItem
+    private class NavBrand {
+        public string? Logo { get; set; }
+        public string? Alt { get; set; }
+        public string? Class { get; set; }
+    }
+
+        private class NavItem
     {
         public string? Text { get; set; }
         public string? Href { get; set; }
     }
+
+        private class ThemeList
+    {
+        public string? Icon { get; set; }
+    }
+        private List<NavBrand> NavBrands = new()
+    {
+        new NavBrand { Logo = "img/logoHz.svg", Alt = "suryami62's Logo", Class = "max-md:hidden" },
+        new NavBrand { Logo = "img/logoBx.svg", Alt = "suryami62's Logo Simplified", Class = "md:hidden" }
+        
+    };
 
     private List<NavItem> NavItems = new()
     {
         new NavItem { Text = "Home", Href = "" },
         new NavItem { Text = "Blog", Href = "blog" },
         new NavItem { Text = "About Me", Href = "aboutme" }
+    };
+
+        private List<ThemeList> ThemeLists = new()
+    {
+        new ThemeList { Icon = "fa-solid fa-sun fa-2x swap-on" },
+        new ThemeList { Icon = "fa-solid fa-moon fa-2x swap-off" }
     };
 }

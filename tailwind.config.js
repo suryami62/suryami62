@@ -11,12 +11,12 @@ module.exports = {
   daisyui: {
     themes: [
       {
-        dim: {
-          ...require("daisyui/src/theming/themes")["dim"],
+        garden: {
+          ...require("daisyui/src/theming/themes")["garden"],
           "--tab-border": "4px",
         },
-        light: {
-          ...require("daisyui/src/theming/themes")["light"],
+        dim: {
+          ...require("daisyui/src/theming/themes")["dim"],
           "--tab-border": "4px",
         },
       },
