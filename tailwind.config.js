@@ -9,17 +9,6 @@ module.exports = {
     require('daisyui'),
   ],
   daisyui: {
-    themes: [
-      {
-        garden: {
-          ...require("daisyui/src/theming/themes")["garden"],
-          "--tab-border": "4px",
-        },
-        dim: {
-          ...require("daisyui/src/theming/themes")["dim"],
-          "--tab-border": "4px",
-        },
-      },
-    ],
+    themes: ['garden', 'dim'],
   },
 }

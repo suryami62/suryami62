@@ -10,7 +10,7 @@
         </a>
     </div>
     <div class="navbar-center">
-        <div role="tablist" class="tabs tabs-bordered tabs-lg">
+        <div role="tablist" class="tabs tabs-bordered tabs-lg [--tab-border:4px]">
             @foreach (var navItem in NavItems)
             {
                 <NavLink role="tab" class="tab" href="@navItem.Href" ActiveClass="tab-active" Match="NavLinkMatch.All">
