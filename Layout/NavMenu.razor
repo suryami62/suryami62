@@ -48,7 +48,6 @@
     private class ThemeMode
     {
         public string? Icon { get; set; }
-
         public string? State { get; set; }
     }
 
@@ -56,7 +55,6 @@
     {
         new NavBrand { Logo = "img/logoHz.svg", Alt = "suryami62's Logo", Display = "max-md:hidden" },
         new NavBrand { Logo = "img/logoBx.svg", Alt = "suryami62's Logo Simplified", Display = "md:hidden" }
-        
     };
 
     private List<NavItem> NavItems = new()
@@ -69,7 +67,7 @@
     private List<ThemeMode> ThemeModes = new()
     {
         new ThemeMode { Icon = "fa-solid fa-sun fa-2x", State = "swap-on" },
-        new ThemeMode { Icon = "fa-solid fa-moon fa-2x", State = "swap-off"  }
+        new ThemeMode { Icon = "fa-solid fa-moon fa-2x", State = "swap-off" }
     };
 
     private Dictionary<string, object> CheckedAttributes { get; set; } = new();
