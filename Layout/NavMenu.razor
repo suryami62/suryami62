@@ -10,45 +10,25 @@
         </a>
     </div>
     <div class="navbar-center">
-        <div role="tablist" class="tabs tabs-bordered tabs-lg [--tab-border:4px]">
-            @foreach (var navItem in NavItems)
-            {
-                <NavLink role="tab" class="tab" href="@navItem.Href" ActiveClass="tab-active" Match="NavLinkMatch.All">
-                    @navItem.Text
-                </NavLink>
-            }
-        </div>
+        <TabBordered />
     </div>
     <div class="navbar-end">
         <label class="swap swap-rotate">
             <input type="checkbox" class="theme-controller" value="dim" @attributes="CheckedAttributes" @onclick="ThemeController"/> 
             @foreach (var themeMode in ThemeModes)
             {
-                <i class="@themeMode.Icon @themeMode.State fill-current"></i>
+                <i class="@themeMode.Icon fa-2x @themeMode.State fill-current"></i>
             }
         </label>
     </div>
 </nav>
 
 @code {
-    private bool ThemeChange { get; set; }
-
-    private class NavBrand {
+    private class NavBrand 
+    {
         public string? Logo { get; set; }
         public string? Alt { get; set; }
         public string? Display { get; set; }
-    }
-
-    private class NavItem
-    {
-        public string? Text { get; set; }
-        public string? Href { get; set; }
-    }
-
-    private class ThemeMode
-    {
-        public string? Icon { get; set; }
-        public string? State { get; set; }
     }
 
     private List<NavBrand> NavBrands = new()
@@ -57,17 +37,18 @@
         new NavBrand { Logo = "img/logoBx.svg", Alt = "suryami62's Logo Simplified", Display = "md:hidden" }
     };
 
-    private List<NavItem> NavItems = new()
+    private bool ThemeChange { get; set; }
+
+    private class ThemeMode
     {
-        new NavItem { Text = "Home", Href = "" },
-        new NavItem { Text = "Blog", Href = "blog" },
-        new NavItem { Text = "About Me", Href = "aboutme" }
-    };
+        public string? Icon { get; set; }
+        public string? State { get; set; }
+    }
 
     private List<ThemeMode> ThemeModes = new()
     {
-        new ThemeMode { Icon = "fa-solid fa-sun fa-2x", State = "swap-on" },
-        new ThemeMode { Icon = "fa-solid fa-moon fa-2x", State = "swap-off" }
+        new ThemeMode { Icon = "fa-solid fa-sun", State = "swap-on" },
+        new ThemeMode { Icon = "fa-solid fa-moon", State = "swap-off" }
     };
 
     private Dictionary<string, object> CheckedAttributes { get; set; } = new();

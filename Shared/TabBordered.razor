@@ -1,0 +1,23 @@
+﻿<div role="tablist" class="tabs tabs-bordered tabs-lg [--tab-border:4px]">
+    @foreach (var navItem in NavItems)
+    {
+        <NavLink role="tab" class="tab" href="@navItem.Href" ActiveClass="tab-active" Match="NavLinkMatch.All">
+            @navItem.Text
+        </NavLink>
+    }
+</div>
+
+@code {
+    private class NavItem
+    {
+        public string? Text { get; set; }
+        public string? Href { get; set; }
+    }
+
+    private List<NavItem> NavItems = new()
+    {
+        new NavItem { Text = "Home", Href = "" },
+        new NavItem { Text = "Blog", Href = "blog" },
+        new NavItem { Text = "About Me", Href = "aboutme" }
+    };
+}
