@@ -3,4 +3,4 @@ https://:suryami62.pages.dev/*
 
 /*
   X-Frame-Options: DENY
-  Content-Security-Policy: base-uri 'self'; default-src 'self'; img-src data: https:; object-src 'none'; script-src 'self' 'wasm-unsafe-eval' https://ajax.cloudflare.com https://static.cloudflareinsights.com https://kit.fontawesome.com; style-src 'self' https://fonts.googleapis.com; connect-src 'self' https://cloudflareinsights.com https://preview.suryami62.pages.dev https://suryami62.pages.dev https://suryami62.my.id https://ka-f.fontawesome.com; font-src 'self' https://fonts.gstatic.com; upgrade-insecure-requests;
+  Content-Security-Policy: base-uri 'self'; default-src 'self'; img-src data: https:; object-src 'none'; script-src 'self' 'wasm-unsafe-eval' 'nonce-rAnd0m123' https://ajax.cloudflare.com https://static.cloudflareinsights.com https://kit.fontawesome.com; style-src 'self' https://fonts.googleapis.com; connect-src 'self' https://cloudflareinsights.com https://preview.suryami62.pages.dev https://suryami62.pages.dev https://suryami62.my.id https://ka-f.fontawesome.com; font-src 'self' https://fonts.gstatic.com; upgrade-insecure-requests;
