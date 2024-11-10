@@ -1,3 +1,7 @@
+https://:suryami62.pages.dev/*
+  X-Robots-Tag: noindex
+
 /*
   X-Frame-Options: DENY
-  Content-Security-Policy: base-uri 'self'; default-src 'self'; img-src data: https:; object-src 'none'; upgrade-insecure-requests; require-trusted-types-for 'script';
+  Content-Security-Policy: base-uri 'self'; default-src 'self'; img-src data: https:; object-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; upgrade-insecure-requests;
+  
