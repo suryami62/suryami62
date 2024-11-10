@@ -1,0 +1,26 @@
+﻿@inject NavigationManager NavigationManager
+
+<div role="tablist" class="tabs tabs-bordered tabs-lg [--tab-border:4px]">
+    @foreach (var navItem in NavItems)
+    {
+        <NavLink role="tab" class="tab" href="@navItem.Href" ActiveClass="tab-active" Match="NavLinkMatch.All" aria-selected="@IsActive(navItem.Href)">
+            @navItem.Text
+        </NavLink>
+    }
+</div>
+
+@code {
+    private record NavItem(string Text, string Href);
+
+    private readonly List<NavItem> NavItems = new()
+    {
+        new NavItem("Home", ""),
+        new NavItem("About", "about"),
+        new NavItem("Blog", "https://suryami62.hashnode.dev/")
+    };
+
+    private bool IsActive(string href)
+    {
+        return NavigationManager.Uri.EndsWith(href, StringComparison.OrdinalIgnoreCase);
+    }
+}

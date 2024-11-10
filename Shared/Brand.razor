@@ -1,0 +1,16 @@
+﻿<a class="btn btn-link" href="/" aria-label="Home">
+    @foreach (var navBrand in NavBrands)
+    {
+        <img src="@navBrand.Logo" alt="@navBrand.Alt" class="h-12 w-auto @navBrand.Display" />
+    }
+</a>
+
+@code {
+    private record NavBrand(string Logo, string Alt, string Display);
+
+    private readonly List<NavBrand> NavBrands = new()
+    {
+        new NavBrand("img/logoHz.svg", "suryami62's Logo", "max-md:hidden"),
+        new NavBrand("img/logoBx.svg", "suryami62's Logo Simplified", "md:hidden")
+    };
+}

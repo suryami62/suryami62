@@ -1,0 +1,14 @@
+{
+    "name": "suryami62",
+    "version": "2.2.2",
+    "scripts": {
+        "watch": "tailwindcss -i ./wwwroot/css/app.css -o ./wwwroot/css/app.min.css --watch",
+        "build": "tailwindcss -i ./wwwroot/css/app.css -o ./wwwroot/css/app.min.css --minify"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@tailwindcss/typography": "^0.5.15",
+        "daisyui": "^4.12.14",
+        "tailwindcss": "^3.4.14"
+    }
+}

@@ -1,0 +1,19 @@
+﻿<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+    </Found>
+    <NotFound>
+        <PageTitle>suryami62 | Page Not Found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <div class="hero min-h-screen" role="alert" aria-live="assertive">
+                <div class="hero-content flex-row">
+                    <div class="text-center">
+                        <h1 class="py-4 text-6xl font-bold">404</h1>
+                        <i class="fa-solid fa-link-slash fa-10x d-block mx-auto" aria-hidden="true"></i>
+                        <h2 class="py-4">Page Not Found</h2>
+                    </div>
+                </div>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

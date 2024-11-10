@@ -1,0 +1,13 @@
+﻿<div class="avatar">
+    <div class="max-w-sm rounded-full">
+        <img src="@ImageSrc" alt="@AltText" />
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ImageSrc { get; set; } = "img/photo.webp";
+
+    [Parameter]
+    public string AltText { get; set; } = "Surya Ramadhan";
+}
