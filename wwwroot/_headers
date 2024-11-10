@@ -3,5 +3,5 @@ https://:suryami62.pages.dev/*
 
 /*
   X-Frame-Options: DENY
-  Content-Security-Policy: base-uri 'self'; default-src 'self'; img-src data: https:; object-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; upgrade-insecure-requests;
+  Content-Security-Policy: base-uri 'self'; default-src 'self'; img-src data: https:; object-src 'none'; script-src 'wasm-unsafe-eval'; upgrade-insecure-requests;
   

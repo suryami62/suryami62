@@ -1,6 +1,6 @@
 {
     "name": "suryami62",
-    "version": "2.2.6",
+    "version": "2.2.7",
     "scripts": {
         "watch": "tailwindcss -i ./wwwroot/css/app.css -o ./wwwroot/css/app.min.css --watch",
         "build": "tailwindcss -i ./wwwroot/css/app.css -o ./wwwroot/css/app.min.css --minify"
