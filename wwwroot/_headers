@@ -1,7 +1,3 @@
-https://:suryami62.pages.dev/*
-  X-Robots-Tag: noindex
-
 /*
   X-Frame-Options: DENY
-  Content-Security-Policy: base-uri 'self'; default-src 'self'; img-src data: https:; object-src 'none'; script-src 'wasm-unsafe-eval' 'strict-dynamic' 'nonce-rAnd0m123' 'unsafe-inline' http: https:; style-src 'self'; upgrade-insecure-requests; require-trusted-types-for 'script';
-  
+  Content-Security-Policy: base-uri 'self'; default-src 'self'; img-src data: https:; object-src 'none'; script-src 'wasm-unsafe-eval' 'strict-dynamic' 'nonce-rAnd0m123' 'unsafe-inline' http: https: https://suryami62.my.id; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests; require-trusted-types-for 'script';
