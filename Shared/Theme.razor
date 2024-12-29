@@ -1,7 +1,7 @@
 ﻿@inject ILocalStorageService LocalStorage
 
 <label class="swap swap-rotate" aria-label="Theme Toggle">
-    <input type="checkbox" class="theme-controller" value="dim" @attributes="CheckedAttributes" @onclick="ThemeController" aria-checked="@ThemeChange" />
+    <input type="checkbox" class="theme-controller" value="dim" @attributes="CheckedAttributes" @onclick="ThemeController" />
     @foreach (var themeMode in ThemeModes)
     {
         <i class="@themeMode.Icon fa-2x @themeMode.State fill-current" aria-hidden="true"></i>
@@ -9,8 +9,6 @@
 </label>
 
 @code {
-    private bool ThemeChange { get; set; }
-
     private record ThemeMode(string Icon, string State);
 
     private readonly List<ThemeMode> ThemeModes = new()
@@ -18,6 +16,8 @@
         new ThemeMode("fa-solid fa-sun", "swap-on"),
         new ThemeMode("fa-solid fa-moon", "swap-off")
     };
+
+    private bool ThemeChange { get; set; }
 
     private Dictionary<string, object> CheckedAttributes { get; set; } = new();
 
@@ -29,13 +29,13 @@
     private async Task ThemeController()
     {
         ThemeChange = !ThemeChange;
-        await LocalStorage.SetItemAsync("theme", ThemeChange);
+        await LocalStorage.SetItemAsync("darkTheme", ThemeChange);
         await GetThemeState();
     }
 
     private async Task GetThemeState()
     {
-        ThemeChange = await LocalStorage.GetItemAsync<bool>("theme");
+        ThemeChange = await LocalStorage.GetItemAsync<bool>("darkTheme");
         CheckedAttributes = ThemeChange ? new() { { "checked", "checked" } } : new();
     }
 }

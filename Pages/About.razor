@@ -5,32 +5,21 @@
 
 <PageTitle>suryami62 | About</PageTitle>
 
-<div class="m-auto my-10 text-justify prose">
-    @((MarkupString)Markdown.ToHtml(AboutContent))
+<div class="m-auto my-10 min-h-screen text-justify prose">
+    @if (markdownContent != null)
+    {
+        @((MarkupString)Markdown.ToHtml(markdownContent))
+    }
 </div>
 
 @code {
-    private string AboutContent = @"
-# Surya Ramadhan
+    private string? markdownContent;
 
-I am a Physics Education graduate with a strong foundation in problem solving and logical thinking. My interest in education and technology has led me to develop expertise in web and application development. I believe I have the ability to learn quickly, adapt to new environments, and contribute effectively in teams.
-
-## Experience
-- **Internship Physics Teacher at SMA Negeri 1 Piyungan** (Jul 2022 - Agu 2022)
-  - Analyzing the curriculum
-  - Utilization of information and communication technology in learning
-  - Implementation of learning assessments and evaluations
-
-## Education
-- **Bachelor of Education in Physics Education**
-  - Sarjanawiyata Tamansiswa University, 2019 - 2024
-
-## Skills
-- PHP
-- C#
-- SQL
-- .NET
-- Wordpress
-- Moodle
-";
+    protected override async Task OnInitializedAsync()
+    {
+        using (var httpClient = new HttpClient())
+        {
+            markdownContent = await httpClient.GetStringAsync("https://media.suryami62.my.id/content/about.md");
+        }
+    }
 }
