@@ -1,7 +1,6 @@
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Toolbelt.Blazor.Extensions.DependencyInjection;
 using suryami62;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -20,6 +19,5 @@ await builder.Build().RunAsync();
 static void ConfigureServices(IServiceCollection services, string baseAddress)
 {
     services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(baseAddress) });
-    services.AddHeadElementHelper();
     services.AddBlazoredLocalStorage();
 }
