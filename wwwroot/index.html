@@ -3,27 +3,54 @@
 
 <head>
     <base href="/" />
-    <link rel="icon" type="image/x-icon" href="img/favicon.ico" />
-    <link rel="stylesheet" href="css/app.min.css" />
+
+    <link rel="apple-touch-icon" sizes="57x57" href="img/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="img/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="img/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="img/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="img/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="img/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="img/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="img/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="img/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="img/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="img/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="author" content="Surya Ramadhan" />
-    <meta name="description" content="Welcome to Surya Ramadhan's personal website. Explore my blog, portfolio, and curriculum vitae to learn more about my work as a physics teacher and .NET developer."/>
-    <meta name="keywords" content="Blog, Portfolio, Curriculum Vitae, Physics Teacher, .NET Developer, Surya Ramadhan, Personal Website"/>
+    <meta name="description"
+        content="Welcome to Surya Ramadhan's personal website. Explore my blog, portfolio, and curriculum vitae to learn more about my work as a physics teacher and .NET developer." />
+    <meta name="keywords"
+        content="Blog, Portfolio, Curriculum Vitae, Physics Teacher, .NET Developer, Surya Ramadhan, Personal Website" />
+
+    <link rel="stylesheet" href="css/app.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css" integrity="sha512-9xKTRVabjVeZmc+GUW8GgSmcREDunMM+Dt/GrzchfN8tkwHizc5RP4Ok/MXFFy5rIjJjzhndFScTceq5e6GvVQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <meta property="og:title" content="suryami62" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css"
+        integrity="sha512-9xKTRVabjVeZmc+GUW8GgSmcREDunMM+Dt/GrzchfN8tkwHizc5RP4Ok/MXFFy5rIjJjzhndFScTceq5e6GvVQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <meta property="og:title" content="suryami62's website" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://suryami62.my.id/img/socialCard.webp" />
     <meta property="og:url" content="https://suryami62.my.id/" />
-    <meta property="og:description" content="suryami62's website" />
-    <meta property="twitter:title" content="suryami62" />
+    <meta property="og:description"
+        content="Welcome to Surya Ramadhan's personal website. Explore my blog, portfolio, and curriculum vitae to learn more about my work as a physics teacher and .NET developer." />
+
+    <meta property="twitter:title" content="suryami62's website" />
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:image" content="https://suryami62.my.id/img/socialCard.webp" />
     <meta property="twitter:url" content="https://suryami62.my.id/" />
-    <meta property="twitter:description" content="suryami62's website" />
+    <meta property="twitter:description"
+        content="Welcome to Surya Ramadhan's personal website. Explore my blog, portfolio, and curriculum vitae to learn more about my work as a physics teacher and .NET developer." />
 </head>
 
 <body>
@@ -34,12 +61,14 @@
         </svg>
         <div class="loading-progress-text"></div>
     </div>
+
     <div id="blazor-error-ui">
         An unhandled error has occurred.
         <a href="" class="reload">Reload</a>
         <a class="reload">🗙</a>
     </div>
-    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+
+    <script src="_framework/blazor.webassembly.js" autostart="false" defer></script>
     <script type="module">
         import { BrotliDecode } from './js/decode.min.js';
         Blazor.start({
@@ -53,10 +82,8 @@
                         const originalResponseBuffer = await response.arrayBuffer();
                         const originalResponseArray = new Int8Array(originalResponseBuffer);
                         const decompressedResponseArray = BrotliDecode(originalResponseArray);
-                        const contentType = type ===
-                            'dotnetwasm' ? 'application/wasm' : 'application/octet-stream';
-                        return new Response(decompressedResponseArray,
-                            { headers: { 'content-type': contentType } });
+                        const contentType = type === 'dotnetwasm' ? 'application/wasm' : 'application/octet-stream';
+                        return new Response(decompressedResponseArray, { headers: { 'content-type': contentType } });
                     })();
                 }
             }
