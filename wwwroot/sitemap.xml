@@ -2,6 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://suryami62.my.id</loc>
-        <lastmod>2024-09-20T12:00:00+07:00</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+        <lastmod>2024-12-31T12:00:00+07:00</lastmod>
+    </url>
+    <url>
+        <loc>https://suryami62.my.id/about</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+        <lastmod>2024-12-31T12:00:00+07:00</lastmod>
     </url>
 </urlset>
