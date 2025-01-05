@@ -1,0 +1,59 @@
+﻿@page "/projects"
+
+@inject HttpClient Http
+
+<PageTitle>Projects | suryami62's website</PageTitle>
+
+<HeadContent>
+    <link rel="canonical" href="https://suryami62.my.id/projects" />
+</HeadContent>
+
+<div class="m-auto my-10 min-h-screen">
+    <h1 class="text-4xl font-extrabold mb-8 text-center">List of My Projects</h1>
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        @if (projects == null)
+        {
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+        }
+        else
+        {
+            @foreach (var project in projects)
+            {
+                <a href="@project.Url" class="card bg-base-100 h-auto shadow-xl">
+                    <figure>
+                        <img src="@project.Img" alt="@project.Title" />
+                    </figure>
+                    <div class="card-body">
+                        <h2 class="card-title">@project.Title</h2>
+                    </div>
+                </a>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private Project[]? projects;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            projects = await Http.GetFromJsonAsync<Project[]>("https://media.suryami62.my.id/content/projects/projects.json");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error fetching projects: {ex.Message}");
+            projects = Array.Empty<Project>();
+        }
+    }
+
+    public class Project
+    {
+        public string? Title { get; set; }
+        public string? Img { get; set; }
+        public string? Url { get; set; }
+    }
+}
