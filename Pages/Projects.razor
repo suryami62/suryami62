@@ -2,7 +2,7 @@
 
 @inject HttpClient Http
 
-<PageTitle>Projects | suryami62's website</PageTitle>
+<PageTitle>Projects | Surya Ramadhan's website</PageTitle>
 
 <HeadContent>
     <link rel="canonical" href="https://suryami62.my.id/projects" />
@@ -21,7 +21,7 @@
         {
             @foreach (var project in projects)
             {
-                <a href="@project.Url" class="card bg-base-100 h-auto shadow-xl">
+                <a class="card bg-base-100 h-auto shadow-xl" href="@project.Url" target="_blank" rel="noopener noreferrer">
                     <figure>
                         <img src="@project.Img" alt="@project.Title" />
                     </figure>

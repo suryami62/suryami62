@@ -81,8 +81,7 @@ code {
 }
 
 body {
-    font-family: "Roboto", sans-serif;
+    font-family: "Roboto", serif;
     font-weight: 400;
     font-style: normal;
-    src: url(../webfonts/roboto.woff2) format('woff2'), url(../webfonts/roboto.ttf) format("truetype");
 }

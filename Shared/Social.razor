@@ -1,7 +1,7 @@
 ﻿@foreach (var socialMedia in socialMedias)
 {
-    <a aria-label="@socialMedia.AriaLabel" class="m-2" href="@socialMedia.Href" target="_blank" rel="noopener noreferrer">
-        <i class="@socialMedia.IconClass fa-3x" aria-hidden="true"></i>
+    <a class="m-2" href="@socialMedia.Href" aria-label="@socialMedia.AriaLabel" target="_blank" rel="noopener noreferrer">
+        <i class="@socialMedia.IconClass fa-3x"></i>
     </a>
 }
 

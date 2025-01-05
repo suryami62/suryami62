@@ -1,9 +1,9 @@
 ﻿@inject NavigationManager NavigationManager
 
-<div role="tablist" class="tabs tabs-bordered tabs-lg [--tab-border:4px]">
+<div class="tabs tabs-bordered tabs-lg [--tab-border:4px]">
     @foreach (var navItem in NavItems)
     {
-        <NavLink role="tab" class="tab" href="@navItem.Href" ActiveClass="tab-active" Match="NavLinkMatch.All" aria-selected="@IsActive(navItem.Href)">
+        <NavLink class="tab" href="@navItem.Href" ActiveClass="tab-active" Match="NavLinkMatch.All">
             @navItem.Text
         </NavLink>
     }
@@ -19,9 +19,4 @@
         new NavItem("Projects", "projects"),
         new NavItem("Blog", "https://suryami62.hashnode.dev/")
     };
-
-    private bool IsActive(string href)
-    {
-        return NavigationManager.Uri.EndsWith(href, StringComparison.OrdinalIgnoreCase);
-    }
 }
