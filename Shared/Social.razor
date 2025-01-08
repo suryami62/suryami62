@@ -1,19 +1,14 @@
-﻿@foreach (var socialMedia in socialMedias)
-{
-    <a class="m-2" href="@socialMedia.Href" aria-label="@socialMedia.AriaLabel" target="_blank" rel="noopener noreferrer">
-        <i class="@socialMedia.IconClass fa-3x"></i>
-    </a>
-}
+﻿<a class="m-2" href="@Href" aria-label="@AriaLabel" target="_blank" rel="noopener noreferrer">
+    <i class="@IconClass fa-3x"></i>
+</a>
 
 @code {
-    private record SocialMediaLink(string AriaLabel, string Href, string IconClass);
+    [Parameter]
+    public string? Href { get; set; }
 
-    private readonly List<SocialMediaLink> socialMedias = new()
-    {
-        new SocialMediaLink("Instagram", "https://www.instagram.com/suryami62/", "fa-brands fa-square-instagram"),
-        new SocialMediaLink("Twitter", "https://twitter.com/suryami62/", "fa-brands fa-square-x-twitter"),
-        new SocialMediaLink("Linkedin", "https://www.linkedin.com/in/suryami62/", "fa-brands fa-linkedin"),
-        new SocialMediaLink("GitHub", "https://github.com/suryami62/", "fa-brands fa-square-github"),
-        new SocialMediaLink("Email", "mailto:suryami62@outlook.com", "fa-solid fa-envelope-square")
-    };
+    [Parameter]
+    public string? AriaLabel { get; set; }
+
+    [Parameter]
+    public string? IconClass { get; set; }
 }

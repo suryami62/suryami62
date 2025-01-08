@@ -3,19 +3,36 @@
 <PageTitle>Surya Ramadhan's website</PageTitle>
 
 <HeadContent>
-    <link rel="canonical" href="https://suryami62.my.id/ " />
+    <link rel="canonical" href="https://suryami62.my.id" />
 </HeadContent>
 
 <div class="hero min-h-screen">
     <div class="hero-content flex-col md:flex-row">
-        <Avatar />
+        <Avatar Img="img/photo.webp" Alt="Surya Ramadhan Image" />
         <div class="text-center md:text-left">
             <h1 class="pb-2 text-6xl font-bold">SURYA RAMADHAN</h1>
             <span class="font-semibold italic">@@suryami62</span>
             <p class="py-2">Physics teacher and .NET developer.</p>
             <div class="pt-2.5">
-                <Social />
+                @foreach (var socialMedia in socialMedias)
+                {
+                    <Social AriaLabel="@socialMedia.AriaLabel" Href="@socialMedia.Href"
+                        IconClass="@socialMedia.IconClass" />
+                }
             </div>
         </div>
     </div>
 </div>
+
+@code {
+    private record SocialMediaLink(string AriaLabel, string Href, string IconClass);
+
+    private readonly List<SocialMediaLink> socialMedias = new()
+    {
+    new SocialMediaLink("Instagram", "https://www.instagram.com/suryami62/", "fa-brands fa-square-instagram"),
+    new SocialMediaLink("Twitter", "https://twitter.com/suryami62/", "fa-brands fa-square-x-twitter"),
+    new SocialMediaLink("Linkedin", "https://www.linkedin.com/in/suryami62/", "fa-brands fa-linkedin"),
+    new SocialMediaLink("GitHub", "https://github.com/suryami62/", "fa-brands fa-square-github"),
+    new SocialMediaLink("Email", "mailto:suryami62@outlook.com", "fa-solid fa-envelope-square")
+    };
+}

@@ -1,11 +1,37 @@
 <nav class="navbar">
     <div class="navbar-start">
-        <Brand />
+        @foreach (var navBrand in NavBrands)
+        {
+            <Brand Logo="@navBrand.Logo" Alt="@navBrand.Alt" Display="@navBrand.Display" />
+        }
     </div>
     <div class="navbar-center">
-        <Tab />
+        @foreach (var navItem in NavItems)
+        {
+            <Tab Text="@navItem.Text" Href="@navItem.Href" />
+        }
     </div>
     <div class="navbar-end">
-        <Theme />
+        <Theme DarkTheme="dim" />
     </div>
 </nav>
+
+@code {
+    private record NavBrand(string Logo, string Alt, string Display);
+
+    private record NavItem(string Text, string Href);
+
+    private readonly List<NavBrand> NavBrands = new()
+    {
+    new NavBrand("img/logoHz.svg", "suryami62's Logo", "max-md:hidden"),
+    new NavBrand("img/logoBx.svg", "suryami62's Logo Simplified", "md:hidden")
+    };
+
+    private readonly List<NavItem> NavItems = new()
+    {
+    new NavItem("Home", "/"),
+    new NavItem("About", "about"),
+    new NavItem("Projects", "projects"),
+    new NavItem("Blog", "https://suryami62.hashnode.dev")
+    };
+}

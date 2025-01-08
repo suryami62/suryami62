@@ -10,14 +10,33 @@
 </HeadContent>
 
 <div class="m-auto my-10 min-h-screen text-justify prose">
-    @if (markdownContent != null)
+    @if (IsDataLoaded)
     {
-        @((MarkupString)Markdown.ToHtml(markdownContent))
+        @if (markdownContent != null)
+        {
+            @((MarkupString)Markdown.ToHtml(markdownContent))
+        }
+    }
+    else
+    {
+        <SkeletonAbout />
     }
 </div>
 
 @code {
     private string? markdownContent;
+
+    private bool IsDataLoaded { get; set; }
+
+    protected async override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(1000);
+            IsDataLoaded = true;
+            StateHasChanged();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {

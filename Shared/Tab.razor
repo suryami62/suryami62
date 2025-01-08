@@ -1,22 +1,16 @@
 ﻿@inject NavigationManager NavigationManager
 
 <div class="tabs tabs-bordered tabs-lg [--tab-border:4px]">
-    @foreach (var navItem in NavItems)
-    {
-        <NavLink class="tab" href="@navItem.Href" ActiveClass="tab-active" Match="NavLinkMatch.All">
-            @navItem.Text
-        </NavLink>
-    }
+    <NavLink class="tab" href="@Href" ActiveClass="tab-active" Match="NavLinkMatch.All">
+        @Text
+    </NavLink>
 </div>
 
 @code {
-    private record NavItem(string Text, string Href);
 
-    private readonly List<NavItem> NavItems = new()
-    {
-        new NavItem("Home", ""),
-        new NavItem("About", "about"),
-        new NavItem("Projects", "projects"),
-        new NavItem("Blog", "https://suryami62.hashnode.dev/")
-    };
+    [Parameter]
+    public string? Text { get; set; }
+
+    [Parameter]
+    public string? Href { get; set; }
 }

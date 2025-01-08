@@ -1,13 +1,13 @@
 {
     "name": "suryami62",
-    "version": "2.3.5",
+    "version": "2.4.0",
     "scripts": {
         "watch": "tailwindcss -i ./wwwroot/css/app.css -o ./wwwroot/css/app.min.css --postcss --watch",
         "build": "postcss ./wwwroot/css/app.css -o ./wwwroot/css/app.min.css"
     },
     "dependencies": {},
     "devDependencies": {
-        "@tailwindcss/typography": "^0.5.15",
+        "@tailwindcss/typography": "^0.5.16",
         "autoprefixer": "^10.4.20",
         "cssnano": "^7.0.6",
         "daisyui": "^4.12.23",

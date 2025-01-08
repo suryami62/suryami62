@@ -11,25 +11,21 @@
 <div class="m-auto my-10 min-h-screen">
     <h1 class="text-4xl font-extrabold mb-8 text-center">List of My Projects</h1>
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        @if (projects == null)
+        @if (IsDataLoaded)
         {
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
+            @if (projects != null)
+            {
+                @foreach (var project in projects)
+                {
+                    <Card Title="@project.Title" Img="@project.Img" Url="@project.Url" />
+                }
+            }
         }
         else
         {
-            @foreach (var project in projects)
-            {
-                <a class="card bg-base-100 h-auto shadow-xl" href="@project.Url" target="_blank" rel="noopener noreferrer">
-                    <figure>
-                        <img src="@project.Img" alt="@project.Title" />
-                    </figure>
-                    <div class="card-body">
-                        <h2 class="card-title">@project.Title</h2>
-                    </div>
-                </a>
-            }
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
         }
     </div>
 </div>
@@ -37,23 +33,25 @@
 @code {
     private Project[]? projects;
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            projects = await Http.GetFromJsonAsync<Project[]>("https://media.suryami62.my.id/content/projects/projects.json");
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error fetching projects: {ex.Message}");
-            projects = Array.Empty<Project>();
-        }
-    }
-
     public class Project
     {
         public string? Title { get; set; }
         public string? Img { get; set; }
         public string? Url { get; set; }
     }
+
+    private bool IsDataLoaded { get; set; }
+
+    protected async override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(1000);
+            IsDataLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync() => projects =
+    await Http.GetFromJsonAsync<Project[]>("https://media.suryami62.my.id/content/projects/projects.json");
 }
