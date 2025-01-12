@@ -1,78 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <base href="/" />
 
-<head>
-    <base href="/" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="img/favicon-32x32.png" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="96x96"
+            href="img/favicon-96x96.png" />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            href="img/favicon-16x16.png" />
 
-    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="img/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="author" content="Surya Ramadhan" />
+        <meta
+            name="description"
+            content="This is the personal website of Surya Ramadhan, a physics teacher and .NET developer. Explore my blog, portfolio, and curriculum vitae." />
+        <meta
+            name="keywords"
+            content="Curriculum Vitae, Portfolio, Blog, Physics Teacher, .NET Developer, Personal Website, Surya Ramadhan, suryami62" />
 
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="author" content="Surya Ramadhan" />
-    <meta name="description"
-        content="Welcome to Surya Ramadhan's personal website. Explore my blog, portfolio, and curriculum vitae to learn more about my work as a physics teacher and .NET developer." />
-    <meta name="keywords"
-        content="Curriculum Vitae, Portfolio, Blog, Physics Teacher, .NET Developer, Personal Website, Surya Ramadhan, suryami62" />
+        <link rel="stylesheet" href="css/app.min.css" />
+        <link rel="stylesheet" href="css/fontawesome.min.css" />
+        <link rel="stylesheet" href="css/brands.min.css" />
+        <link rel="stylesheet" href="css/solid.min.css" />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" />
 
-    <link rel="stylesheet" href="css/app.min.css" />
-    <link rel="stylesheet" href="css/fontawesome.min.css" />
-    <link rel="stylesheet" href="css/brands.min.css" />
-    <link rel="stylesheet" href="css/solid.min.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" />
+        <meta property="og:title" content="Surya Ramadhan's website" />
+        <meta property="og:type" content="website" />
+        <meta
+            property="og:image"
+            content="https://suryami62.my.id/img/socialCard.webp" />
+        <meta property="og:url" content="https://suryami62.my.id" />
+        <meta
+            property="og:description"
+            content="This is the personal website of Surya Ramadhan, a physics teacher and .NET developer. Explore my blog, portfolio, and curriculum vitae." />
 
-    <meta property="og:title" content="Surya Ramadhan's website" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://suryami62.my.id/img/socialCard.webp" />
-    <meta property="og:url" content="https://suryami62.my.id" />
-    <meta property="og:description"
-        content="Welcome to Surya Ramadhan's personal website. Explore my blog, portfolio, and curriculum vitae to learn more about my work as a physics teacher and .NET developer." />
+        <meta property="twitter:title" content="Surya Ramadhan's website" />
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta
+            property="twitter:image"
+            content="https://suryami62.my.id/img/socialCard.webp" />
+        <meta property="twitter:url" content="https://suryami62.my.id" />
+        <meta
+            property="twitter:description"
+            content="This is the personal website of Surya Ramadhan, a physics teacher and .NET developer. Explore my blog, portfolio, and curriculum vitae." />
+    </head>
 
-    <meta property="twitter:title" content="Surya Ramadhan's website" />
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:image" content="https://suryami62.my.id/img/socialCard.webp" />
-    <meta property="twitter:url" content="https://suryami62.my.id" />
-    <meta property="twitter:description"
-        content="Welcome to Surya Ramadhan's personal website. Explore my blog, portfolio, and curriculum vitae to learn more about my work as a physics teacher and .NET developer." />
-</head>
+    <body>
+        <div id="app">
+            <svg class="loading-progress">
+                <circle r="40%" cx="50%" cy="50%" />
+                <circle r="40%" cx="50%" cy="50%" />
+            </svg>
+            <div class="loading-progress-text"></div>
+        </div>
 
-<body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
-    </div>
+        <div id="blazor-error-ui">
+            An unhandled error has occurred.
+            <a href="" class="reload">Reload</a>
+            <a class="reload">🗙</a>
+        </div>
 
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="reload">🗙</a>
-    </div>
-
-    <script src="_framework/blazor.webassembly.js" autostart="false" defer></script>
-    <script type="module">
-        import { BrotliDecode } from './js/decode.min.js';
-        Blazor.start({
-            loadBootResource: function (type, name, defaultUri, integrity) {
-                if (type !== 'dotnetjs' && location.hostname !== 'localhost' && type !== 'configuration') {
-                    return (async function () {
-                        const response = await fetch(defaultUri + '.br', { cache: 'no-cache' });
-                        if (!response.ok) {
-                            throw new Error(response.statusText);
-                        }
-                        const originalResponseBuffer = await response.arrayBuffer();
-                        const originalResponseArray = new Int8Array(originalResponseBuffer);
-                        const decompressedResponseArray = BrotliDecode(originalResponseArray);
-                        const contentType = type === 'dotnetwasm' ? 'application/wasm' : 'application/octet-stream';
-                        return new Response(decompressedResponseArray, { headers: { 'content-type': contentType } });
-                    })();
-                }
-            }
-        });
-    </script>
-</body>
-
+        <script
+            src="_framework/blazor.webassembly.js"
+            autostart="false"
+            defer></script>
+        <script type="module">
+            import { BrotliDecode } from "./js/decode.min.js";
+            Blazor.start({
+                loadBootResource: function (type, name, defaultUri, integrity) {
+                    if (
+                        type !== "dotnetjs" &&
+                        location.hostname !== "localhost" &&
+                        type !== "configuration"
+                    ) {
+                        return (async function () {
+                            const response = await fetch(defaultUri + ".br", {
+                                cache: "no-cache",
+                            });
+                            if (!response.ok) {
+                                throw new Error(response.statusText);
+                            }
+                            const originalResponseBuffer =
+                                await response.arrayBuffer();
+                            const originalResponseArray = new Int8Array(
+                                originalResponseBuffer
+                            );
+                            const decompressedResponseArray = BrotliDecode(
+                                originalResponseArray
+                            );
+                            const contentType =
+                                type === "dotnetwasm"
+                                    ? "application/wasm"
+                                    : "application/octet-stream";
+                            return new Response(decompressedResponseArray, {
+                                headers: { "content-type": contentType },
+                            });
+                        })();
+                    }
+                },
+            });
+        </script>
+    </body>
 </html>

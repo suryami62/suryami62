@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://suryami62.my.id</loc>
+        <loc>https://suryami62.my.id/</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
-        <lastmod>2024-12-31T12:00:00+07:00</lastmod>
+        <lastmod>2025-01-12T12:00:00+07:00</lastmod>
     </url>
     <url>
-        <loc>https://suryami62.my.id/about</loc>
+        <loc>https://suryami62.my.id/about/</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
-        <lastmod>2024-12-31T12:00:00+07:00</lastmod>
+        <lastmod>2025-01-12T12:00:00+07:00</lastmod>
     </url>
     <url>
-        <loc>https://suryami62.my.id/projects</loc>
+        <loc>https://suryami62.my.id/projects/</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
-        <lastmod>2024-12-5T12:00:00+07:00</lastmod>
+        <lastmod>2025-01-12T12:00:00+07:00</lastmod>
     </url>
 </urlset>
