@@ -1,5 +1,5 @@
 ﻿<a class="card bg-base-100 h-auto shadow-xl @(Hidden ? "hidden" : "")" href="@Url" target="_blank" rel="noopener noreferrer">
-    <figure class="h-44 sm:h-44 xl:h-60 w-full">
+    <figure class="w-full h-44 sm:h-44 xl:h-60">
         <img src="@Img" alt="@Title" />
     </figure>
     <div class="card-body">
@@ -10,7 +10,7 @@
 @code {
     [Parameter]
     public string? Title { get; set; }
-    
+
     [Parameter]
     public string? Img { get; set; }
 
