@@ -20,6 +20,12 @@
     else
     {
         <SkeletonAbout />
+        <div class="hidden">
+            @if (markdownContent != null)
+            {
+                @((MarkupString)Markdown.ToHtml(markdownContent))
+            }
+        </div>
     }
 </div>
 

@@ -1,4 +1,4 @@
-﻿<a class="card bg-base-100 h-auto shadow-xl" href="@Url" target="_blank" rel="noopener noreferrer">
+﻿<a class="card bg-base-100 h-auto shadow-xl @(Hidden ? "hidden" : "")" href="@Url" target="_blank" rel="noopener noreferrer">
     <figure class="h-44 sm:h-44 xl:h-60 w-full">
         <img src="@Img" alt="@Title" />
     </figure>
@@ -16,4 +16,7 @@
 
     [Parameter]
     public string? Url { get; set; }
+
+    [Parameter]
+    public bool Hidden { get; set; } = false;
 }

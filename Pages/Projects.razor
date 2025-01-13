@@ -26,6 +26,13 @@
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
+            @if (projects != null)
+            {
+                @foreach (var project in projects)
+                {
+                    <Card Title="@project.Title" Img="@project.Img" Url="@project.Url" Hidden="true" />
+                }
+            }
         }
     </div>
 </div>
