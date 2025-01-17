@@ -2,14 +2,18 @@
     <figure class="w-full h-44 sm:h-44 xl:h-60">
         <img src="@Img" alt="@Title" />
     </figure>
-    <div class="card-body">
+    <div class="prose text-justify card-body">
         <h2 class="card-title">@Title</h2>
+        <p>@Desc</p>
     </div>
 </a>
 
 @code {
     [Parameter]
     public string? Title { get; set; }
+
+    [Parameter]
+    public string? Desc { get; set; }
 
     [Parameter]
     public string? Img { get; set; }
