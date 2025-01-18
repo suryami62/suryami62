@@ -35,11 +35,13 @@
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+        <div id="loading" class="min-h-screen hero">
+            <div class="flex-row hero-content">
+                <div class="text-center">
+                    <span class="loading loading-spinner text-primary size-40"></span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="blazor-error-ui">
@@ -47,7 +49,14 @@
         <a href="" class="reload">Reload</a>
         <a class="reload">🗙</a>
     </div>
-
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loadingElement = document.getElementById("loading");
+            const darkTheme = localStorage.getItem("darkTheme") === "true";
+            loadingElement.setAttribute("data-theme", darkTheme ? "dim" : "garden");
+        });
+    </script>
     <script src="_framework/blazor.webassembly.js" autostart="false" defer></script>
     <script type="module">
         import { BrotliDecode } from "./js/decode.min.js";
