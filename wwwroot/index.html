@@ -31,6 +31,14 @@
     <meta property="twitter:image" content="https://suryami62.my.id/img/socialCard.webp" />
     <meta property="twitter:url" content="https://suryami62.my.id" />
     <meta property="twitter:description" content="This is the personal website of Surya Ramadhan, a physics teacher and .NET developer. Explore my blog, portfolio, and curriculum vitae." />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loadingElement = document.getElementById("loading");
+            const darkTheme = localStorage.getItem("darkTheme") === "true";
+            loadingElement.setAttribute("data-theme", darkTheme ? "dim" : "garden");
+        });
+    </script>
 </head>
 
 <body>
@@ -49,14 +57,7 @@
         <a href="" class="reload">Reload</a>
         <a class="reload">🗙</a>
     </div>
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const loadingElement = document.getElementById("loading");
-            const darkTheme = localStorage.getItem("darkTheme") === "true";
-            loadingElement.setAttribute("data-theme", darkTheme ? "dim" : "garden");
-        });
-    </script>
+
     <script src="_framework/blazor.webassembly.js" autostart="false" defer></script>
     <script type="module">
         import { BrotliDecode } from "./js/decode.min.js";
