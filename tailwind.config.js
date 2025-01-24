@@ -13,6 +13,23 @@ module.exports = {
         require('daisyui'),
     ],
     daisyui: {
-        themes: ['garden', 'dim'],
+        themes: [
+            {
+                garden: {
+                    ...require("daisyui/src/theming/themes")["garden"],
+                    ".brand": {
+                        "fill": "#000",
+                    },
+                },
+            },
+            {
+                dim: {
+                    ...require("daisyui/src/theming/themes")["dim"],
+                    ".brand": {
+                        "fill": "#fff",
+                    },
+                },
+            },
+        ],
     },
 }

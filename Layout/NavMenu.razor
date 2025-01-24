@@ -1,9 +1,6 @@
 <nav class="navbar">
     <div class="navbar-start">
-        @foreach (var navBrand in NavBrands)
-        {
-            <Brand Logo="@navBrand.Logo" Alt="@navBrand.Alt" Display="@navBrand.Display" />
-        }
+        <Brand />
     </div>
     <div class="navbar-center">
         @foreach (var navItem in NavItems)
@@ -17,15 +14,7 @@
 </nav>
 
 @code {
-    private record NavBrand(string Logo, string Alt, string Display);
-
     private record NavItem(string Text, string Href);
-
-    private readonly List<NavBrand> NavBrands = new()
-    {
-    new NavBrand("img/logoHz.svg", "suryami62's Logo", "max-md:hidden"),
-    new NavBrand("img/logoBx.svg", "suryami62's Logo Simplified", "md:hidden")
-    };
 
     private readonly List<NavItem> NavItems = new()
     {
