@@ -33,10 +33,18 @@
     <meta property="twitter:description" content="This is the personal website of Surya Ramadhan, a physics teacher and .NET developer. Explore my blog, portfolio, and curriculum vitae." />
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", () => {
+            const THEME_DARK = "dim";
+            const THEME_LIGHT = "garden";
             const loadingElement = document.getElementById("loading");
             const darkTheme = localStorage.getItem("darkTheme") === "true";
-            loadingElement.setAttribute("data-theme", darkTheme ? "dim" : "garden");
+            if (loadingElement) {
+                if (darkTheme) {
+                    loadingElement.setAttribute("data-theme", THEME_DARK);
+                } else {
+                    loadingElement.setAttribute("data-theme", THEME_LIGHT);
+                }
+            }
         });
     </script>
 </head>
