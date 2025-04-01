@@ -1,4 +1,7 @@
-﻿@page "/"
+﻿@inject IConfiguration Configuration
+@inject UserProfileService UserProfileService
+
+@page "/"
 
 <PageTitle>Surya Ramadhan's website</PageTitle>
 
@@ -8,31 +11,53 @@
 
 <div class="min-h-screen hero">
     <div class="flex-col hero-content md:flex-row">
-        <Avatar Img="img/photo.webp" Alt="Surya Ramadhan Image" />
-        <div class="text-center md:text-left">
-            <h1 class="pb-2 text-6xl font-bold">SURYA RAMADHAN</h1>
-            <span class="italic font-semibold">@@suryami62</span>
-            <p class="py-2">Physics teacher and .NET developer.</p>
-            <div class="pt-2.5">
-                @foreach (var socialMedia in socialMedias)
-                {
-                    <Social AriaLabel="@socialMedia.AriaLabel" Href="@socialMedia.Href"
-                        IconClass="@socialMedia.IconClass" />
-                }
+        @if (Data?.UserData is not null)
+        {
+            var userData = Data.UserData;
+            <Avatar Img="@userData.ProfilePicture" Alt="@($"{userData.Name} Image")" />
+            <div class="text-center md:text-left">
+                <h1 class="pb-2 text-6xl font-bold">@userData.Name</h1>
+                <span class="italic font-semibold">@("@" + userData.Username)</span>
+                <p class="py-2">@userData.Bio?.Text</p>
+                <div class="pt-2.5">
+                    @if (userData.SocialMediaLinks is not null)
+                    {
+                        foreach (var social in GetSocialMediaLinks(userData.SocialMediaLinks))
+                        {
+                            <Social AriaLabel="@social.AriaLabel" Href="@social.Href" IconClass="@social.IconClass" />
+                        }
+                    }
+                    <Social AriaLabel="Email" Href=@($"mailto:{Configuration["Site:Email"]}") IconClass="fa-solid fa-envelope-square" />
+                </div>
             </div>
-        </div>
+        }
     </div>
 </div>
 
 @code {
+    private UserProfile? Data;
+
     private record SocialMediaLink(string AriaLabel, string Href, string IconClass);
 
-    private readonly List<SocialMediaLink> socialMedias = new()
+    protected override async Task OnInitializedAsync()
     {
-    new SocialMediaLink("Instagram", "https://www.instagram.com/suryami62/", "fa-brands fa-square-instagram"),
-    new SocialMediaLink("Twitter", "https://twitter.com/suryami62/", "fa-brands fa-square-x-twitter"),
-    new SocialMediaLink("Linkedin", "https://www.linkedin.com/in/suryami62/", "fa-brands fa-linkedin"),
-    new SocialMediaLink("GitHub", "https://github.com/suryami62/", "fa-brands fa-square-github"),
-    new SocialMediaLink("Email", "mailto:ramadhan.s@suryami62.my.id", "fa-solid fa-envelope-square")
-    };
+        var username = Configuration["GraphQL:Variables:Username"];
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            throw new InvalidOperationException("The username configuration value is missing or empty.");
+        }
+        Data = await UserProfileService.GetUserProfileAsync(username);
+    }
+
+    private IEnumerable<SocialMediaLink> GetSocialMediaLinks(SocialMediaLinks links)
+    {
+        if (!string.IsNullOrWhiteSpace(links.Instagram))
+            yield return new SocialMediaLink("Instagram", links.Instagram, "fa-brands fa-square-instagram");
+        if (!string.IsNullOrWhiteSpace(links.Twitter))
+            yield return new SocialMediaLink("Twitter", links.Twitter, "fa-brands fa-square-x-twitter");
+        if (!string.IsNullOrWhiteSpace(links.Linkedin))
+            yield return new SocialMediaLink("Linkedin", links.Linkedin, "fa-brands fa-linkedin");
+        if (!string.IsNullOrWhiteSpace(links.Github))
+            yield return new SocialMediaLink("GitHub", links.Github, "fa-brands fa-square-github");
+    }
 }
