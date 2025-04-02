@@ -18,4 +18,5 @@ static void ConfigureServices(IServiceCollection services, string baseAddress)
     services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(baseAddress) });
     services.AddBlazoredLocalStorage();
     services.AddSingleton<UserProfileService>();
+    services.AddSingleton<PublicationAboutService>();
 }

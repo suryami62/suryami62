@@ -1,7 +1,8 @@
-﻿@page "/about"
-
-@inject NavigationManager Navigation
+﻿@inject IConfiguration Configuration
+@inject PublicationAboutService PublicationAboutService
 @using Markdig
+
+@page "/about"
 
 <PageTitle>About | Surya Ramadhan's website</PageTitle>
 
@@ -12,7 +13,7 @@
 <div class="min-h-screen m-auto my-10 prose text-justify">
     @if (IsDataLoaded)
     {
-        @if (markdownContent != null)
+        @if (!string.IsNullOrWhiteSpace(markdownContent))
         {
             @((MarkupString)Markdown.ToHtml(markdownContent))
         }
@@ -20,35 +21,26 @@
     else
     {
         <SkeletonAbout />
-        <div class="hidden">
-            @if (markdownContent != null)
-            {
-                @((MarkupString)Markdown.ToHtml(markdownContent))
-            }
-        </div>
     }
 </div>
 
 @code {
-    private string? markdownContent;
-
     private bool IsDataLoaded { get; set; }
 
-    protected async override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await Task.Delay(1000);
-            IsDataLoaded = true;
-            StateHasChanged();
-        }
-    }
+    private PublicationAbout? Data;
+
+    private string? markdownContent;
 
     protected override async Task OnInitializedAsync()
     {
-        using (var httpClient = new HttpClient())
+        var host = Configuration["GraphQL:Variables:Host"];
+        if (string.IsNullOrWhiteSpace(host))
         {
-            markdownContent = await httpClient.GetStringAsync("https://media.suryami62.my.id/content/about.md");
+            throw new InvalidOperationException("The host configuration value is missing or empty.");
         }
+        Data = await PublicationAboutService.GetUserAboutAsync(host);
+        markdownContent = Data?.PublicationData?.StaticPage?.Content?.Markdown;
+
+        IsDataLoaded = true;
     }
 }
