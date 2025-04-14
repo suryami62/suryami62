@@ -1,6 +1,7 @@
 ﻿@page "/projects"
 
 @inject HttpClient Http
+@inject IConfiguration Configuration
 
 <PageTitle>Projects | Surya Ramadhan's website</PageTitle>
 
@@ -11,55 +12,39 @@
 <div class="min-h-screen m-auto my-10">
     <h1 class="mb-8 text-4xl font-extrabold text-center">List of My Projects</h1>
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        @if (IsDataLoaded)
+        @if (!IsDataLoaded)
         {
-            @if (projects != null)
+            @for (int i = 0; i < 3; i++)
             {
-                @foreach (var project in projects)
-                {
-                    <Card Title="@project.Title" Desc="@project.Desc" Img="@project.Img" Url="@project.Url" />
-                }
+                <SkeletonCard />
             }
         }
-        else
+        else if (projects.Any())
         {
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            @if (projects != null)
+            foreach (var project in projects)
             {
-                @foreach (var project in projects)
-                {
-                    <Card Title="@project.Title" Desc="@project.Desc" Img="@project.Img" Url="@project.Url" Hidden="true" />
-                }
+                <Card Title="@project.Title" Desc="@project.Desc" Img="@project.Img" Url="@project.Url" />
             }
         }
     </div>
 </div>
 
 @code {
-    private Project[]? projects;
-
-    public class Project
-    {
-        public string? Title { get; set; }
-        public string? Desc { get; set; }
-        public string? Img { get; set; }
-        public string? Url { get; set; }
-    }
-
     private bool IsDataLoaded { get; set; }
 
-    protected async override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await Task.Delay(1000);
-            IsDataLoaded = true;
-            StateHasChanged();
-        }
-    }
+    private Project[] projects = Array.Empty<Project>();
 
-    protected override async Task OnInitializedAsync() => projects =
-    await Http.GetFromJsonAsync<Project[]>("https://media.suryami62.my.id/content/projects/projects.json");
+    public record Project(string? Title, string? Desc, string? Img, string? Url);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var projectsJsonUrl = Configuration["Site:Project"];
+        if (string.IsNullOrEmpty(projectsJsonUrl))
+        {
+            throw new InvalidOperationException("ProjectsJsonUrl setting is not configured.");
+        }
+
+        projects = await Http.GetFromJsonAsync<Project[]>(projectsJsonUrl) ?? Array.Empty<Project>();
+        IsDataLoaded = true;
+    }
 }

@@ -1,13 +1,10 @@
-﻿@inject NavigationManager NavigationManager
-
-<div class="tabs tabs-border tabs-lg">
+﻿<div class="tabs tabs-border tabs-lg">
     <NavLink class="tab [&.tab]:before:[height:4px]" href="@Href" ActiveClass="tab-active" Match="NavLinkMatch.All">
         @Text
     </NavLink>
 </div>
 
 @code {
-
     [Parameter]
     public string? Text { get; set; }
 

@@ -13,7 +13,7 @@
     [Parameter]
     public string? DarkTheme { get; set; }
 
-    private record ThemeMode(string Icon, string State);
+    private sealed record ThemeMode(string Icon, string State);
 
     private readonly List<ThemeMode> ThemeModes = new()
     {

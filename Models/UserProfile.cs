@@ -1,28 +1,20 @@
 ﻿namespace suryami62.Models;
 
-public record UserProfile
-{
-    public UserData? UserData { get; init; }
-}
+public record UserProfile(UserData? UserData);
 
-public record UserData
-{
-    public string? Username { get; init; }
-    public string? Name { get; init; }
-    public Bio? Bio { get; init; }
-    public string? ProfilePicture { get; init; }
-    public SocialMediaLinks? SocialMediaLinks { get; init; }
-}
+public record UserData(
+    string? Username,
+    string? Name,
+    Bio? Bio,
+    string? ProfilePicture,
+    SocialMediaLinks? SocialMediaLinks
+);
 
-public record Bio
-{
-    public string? Text { get; init; }
-}
+public record Bio(string? Text);
 
-public record SocialMediaLinks
-{
-    public string? Instagram { get; init; }
-    public string? Twitter { get; init; }
-    public string? Linkedin { get; init; }
-    public string? Github { get; init; }
-}
+public record SocialMediaLinks(
+    string? Instagram,
+    string? Twitter,
+    string? Linkedin,
+    string? Github
+);

@@ -1,3 +1,7 @@
 ﻿<footer class="mt-5 border-t-4 footer footer-center border-base-content">
-    <p class="pt-5">This website created by Surya Ramadhan &copy; @DateTime.Now.Year</p>
+    <p class="pt-5">This website created by Surya Ramadhan &copy; @CurrentYear</p>
 </footer>
+
+@code {
+    private readonly int CurrentYear = DateTime.Now.Year;
+}

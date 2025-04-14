@@ -1,6 +1,6 @@
-﻿<a class="card bg-base-100 h-auto shadow-xl @(Hidden ? "hidden" : "")" href="@Url" target="_blank" rel="noopener noreferrer">
-    <figure class="w-full h-44 sm:h-44 xl:h-60">
-        <img src="@Img" alt="@Title" />
+﻿<a class="card bg-base-100 h-auto shadow-xl @(Hidden ? "hidden" : string.Empty)" href="@Url" target="_blank" rel="noopener noreferrer">
+    <figure class="w-full h-44 xl:h-60">
+        <img src="@Img" alt="@Title" loading="lazy" />
     </figure>
     <div class="prose text-justify card-body">
         <h2 class="card-title">@Title</h2>
@@ -22,5 +22,5 @@
     public string? Url { get; set; }
 
     [Parameter]
-    public bool Hidden { get; set; } = false;
+    public bool Hidden { get; set; }
 }

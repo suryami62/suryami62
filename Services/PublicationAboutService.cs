@@ -23,18 +23,18 @@ public sealed class PublicationAboutService : IDisposable
 
     public PublicationAboutService(IConfiguration configuration)
     {
-        ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
+        ArgumentNullException.ThrowIfNull(configuration);
 
         var endpoint = configuration["GraphQL:Endpoint"];
         if (string.IsNullOrWhiteSpace(endpoint))
         {
-            throw new ArgumentNullException(nameof(endpoint), "GraphQL endpoint value is missing or empty.");
+            throw new ArgumentNullException(nameof(configuration), "GraphQL endpoint value is missing or empty.");
         }
 
-        _graphqlClient = new GraphQLHttpClient(endpoint, new NewtonsoftJsonSerializer());
+        _graphqlClient = new GraphQLHttpClient(new Uri(endpoint), new NewtonsoftJsonSerializer());
     }
 
-    public async Task<PublicationAbout?> GetUserAboutAsync(string host)
+    public async Task<PublicationAbout?> GetUserAboutAsync(string host, CancellationToken cancellationToken = default)
     {
         var request = new GraphQLRequest
         {
@@ -42,13 +42,21 @@ public sealed class PublicationAboutService : IDisposable
             Variables = new { host }
         };
 
-        var response = await _graphqlClient.SendQueryAsync<PublicationAbout>(request).ConfigureAwait(false);
+        var response = await _graphqlClient.SendQueryAsync<PublicationAbout>(request, cancellationToken)
+                                             .ConfigureAwait(false);
+
+        if (response.Errors != null && response.Errors.Length > 0)
+        {
+            var errorMessages = string.Join(", ", response.Errors.Select(e => e.Message));
+            throw new InvalidOperationException($"GraphQL errors: {errorMessages}");
+        }
+
         return response.Data;
     }
 
     public void Dispose()
     {
-        _graphqlClient?.Dispose();
+        _graphqlClient.Dispose();
         GC.SuppressFinalize(this);
     }
 }

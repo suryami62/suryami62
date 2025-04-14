@@ -1,7 +1,7 @@
-﻿@inject IConfiguration Configuration
-@inject UserProfileService UserProfileService
+﻿@page "/"
 
-@page "/"
+@inject IConfiguration Configuration
+@inject UserProfileService UserProfileService
 
 <PageTitle>Surya Ramadhan's website</PageTitle>
 
@@ -10,34 +10,39 @@
 </HeadContent>
 
 <div class="min-h-screen hero">
-    <div class="flex-col hero-content md:flex-row">
-        @if (Data?.UserData is not null)
-        {
-            var userData = Data.UserData;
-            <Avatar Img="@userData.ProfilePicture" Alt="@($"{userData.Name} Image")" />
+    @if (Data?.UserData is null)
+    {
+        <SkeletonHome />
+    }
+    else
+    {
+        <div class="flex-col hero-content md:flex-row">
+            <Avatar Img="@Data.UserData.ProfilePicture" Alt="@($"{Data.UserData.Name} Image")" />
             <div class="text-center md:text-left">
-                <h1 class="pb-2 text-6xl font-bold">@userData.Name</h1>
-                <span class="italic font-semibold">@("@" + userData.Username)</span>
-                <p class="py-2">@userData.Bio?.Text</p>
+                <h1 class="pb-2 text-6xl font-bold">@Data.UserData.Name</h1>
+                <span class="italic font-semibold">@($"@{Data.UserData.Username}")</span>
+                <p class="py-2">@Data.UserData.Bio?.Text</p>
                 <div class="pt-2.5">
-                    @if (userData.SocialMediaLinks is not null)
+                    @if (Data.UserData.SocialMediaLinks is not null)
                     {
-                        foreach (var social in GetSocialMediaLinks(userData.SocialMediaLinks))
+                        foreach (var social in GetSocialMediaLinks(Data.UserData.SocialMediaLinks))
                         {
                             <Social AriaLabel="@social.AriaLabel" Href="@social.Href" IconClass="@social.IconClass" />
                         }
                     }
-                    <Social AriaLabel="Email" Href=@($"mailto:{Configuration["Site:Email"]}") IconClass="fa-solid fa-envelope-square" />
+                    <Social AriaLabel="Email" Href="@($"mailto:{siteEmail}")" IconClass="fa-solid fa-envelope-square" />
                 </div>
             </div>
-        }
-    </div>
+        </div>
+    }
 </div>
 
 @code {
     private UserProfile? Data;
 
-    private record SocialMediaLink(string AriaLabel, string Href, string IconClass);
+    private string? siteEmail;
+
+    private sealed record SocialMediaLink(string AriaLabel, string Href, string IconClass);
 
     protected override async Task OnInitializedAsync()
     {
@@ -46,18 +51,31 @@
         {
             throw new InvalidOperationException("The username configuration value is missing or empty.");
         }
+
         Data = await UserProfileService.GetUserProfileAsync(username);
+
+        siteEmail = Configuration["Site:Email"];
     }
 
     private IEnumerable<SocialMediaLink> GetSocialMediaLinks(SocialMediaLinks links)
     {
+        var results = new List<SocialMediaLink>(capacity: 4);
         if (!string.IsNullOrWhiteSpace(links.Instagram))
-            yield return new SocialMediaLink("Instagram", links.Instagram, "fa-brands fa-square-instagram");
+        {
+            results.Add(new SocialMediaLink("Instagram", links.Instagram, "fa-brands fa-square-instagram"));
+        }
         if (!string.IsNullOrWhiteSpace(links.Twitter))
-            yield return new SocialMediaLink("Twitter", links.Twitter, "fa-brands fa-square-x-twitter");
+        {
+            results.Add(new SocialMediaLink("Twitter", links.Twitter, "fa-brands fa-square-x-twitter"));
+        }
         if (!string.IsNullOrWhiteSpace(links.Linkedin))
-            yield return new SocialMediaLink("Linkedin", links.Linkedin, "fa-brands fa-linkedin");
+        {
+            results.Add(new SocialMediaLink("Linkedin", links.Linkedin, "fa-brands fa-linkedin"));
+        }
         if (!string.IsNullOrWhiteSpace(links.Github))
-            yield return new SocialMediaLink("GitHub", links.Github, "fa-brands fa-square-github");
+        {
+            results.Add(new SocialMediaLink("GitHub", links.Github, "fa-brands fa-square-github"));
+        }
+        return results;
     }
 }

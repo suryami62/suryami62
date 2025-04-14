@@ -10,35 +10,35 @@ public sealed class UserProfileService : IDisposable
     private readonly GraphQLHttpClient _graphqlClient;
 
     private static readonly string UserQuery = @"
-        query User($username: String!) {
-            UserData: user(username: $username) {
-                username
-                name
-                bio { text }
-                profilePicture
-                socialMediaLinks {
-                    instagram
-                    twitter
-                    linkedin
-                    github
+            query User($username: String!) {
+                UserData: user(username: $username) {
+                    username
+                    name
+                    bio { text }
+                    profilePicture
+                    socialMediaLinks {
+                        instagram
+                        twitter
+                        linkedin
+                        github
+                    }
                 }
-            }
-        }";
+            }";
 
     public UserProfileService(IConfiguration configuration)
     {
-        ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
+        ArgumentNullException.ThrowIfNull(configuration);
 
         var endpoint = configuration["GraphQL:Endpoint"];
         if (string.IsNullOrWhiteSpace(endpoint))
         {
-            throw new ArgumentNullException(nameof(endpoint), "GraphQL endpoint value is missing or empty.");
+            throw new ArgumentNullException(nameof(configuration), "GraphQL endpoint value is missing or empty.");
         }
 
-        _graphqlClient = new GraphQLHttpClient(endpoint, new NewtonsoftJsonSerializer());
+        _graphqlClient = new GraphQLHttpClient(new Uri(endpoint), new NewtonsoftJsonSerializer());
     }
 
-    public async Task<UserProfile?> GetUserProfileAsync(string username)
+    public async Task<UserProfile?> GetUserProfileAsync(string username, CancellationToken cancellationToken = default)
     {
         var request = new GraphQLRequest
         {
@@ -46,13 +46,21 @@ public sealed class UserProfileService : IDisposable
             Variables = new { username }
         };
 
-        var response = await _graphqlClient.SendQueryAsync<UserProfile>(request).ConfigureAwait(false);
+        var response = await _graphqlClient.SendQueryAsync<UserProfile>(request, cancellationToken)
+                                             .ConfigureAwait(false);
+
+        if (response.Errors != null && response.Errors.Length > 0)
+        {
+            var errorMessages = string.Join(", ", response.Errors.Select(e => e.Message));
+            throw new InvalidOperationException($"GraphQL errors: {errorMessages}");
+        }
+
         return response.Data;
     }
 
     public void Dispose()
     {
-        _graphqlClient?.Dispose();
+        _graphqlClient.Dispose();
         GC.SuppressFinalize(this);
     }
 }
