@@ -1,8 +1,8 @@
-﻿@inject IConfiguration Configuration
+﻿@page "/about"
+
+@inject IConfiguration Configuration
 @inject PublicationAboutService PublicationAboutService
 @using Markdig
-
-@page "/about"
 
 <PageTitle>About | Surya Ramadhan's website</PageTitle>
 
@@ -11,16 +11,13 @@
 </HeadContent>
 
 <div class="min-h-screen m-auto my-10 prose text-justify">
-    @if (IsDataLoaded)
-    {
-        @if (!string.IsNullOrWhiteSpace(markdownContent))
-        {
-            @((MarkupString)Markdown.ToHtml(markdownContent))
-        }
-    }
-    else
+    @if (!IsDataLoaded)
     {
         <SkeletonAbout />
+    }
+    else if (!string.IsNullOrWhiteSpace(markdownContent))
+    {
+        @((MarkupString)Markdown.ToHtml(markdownContent))
     }
 </div>
 
@@ -38,7 +35,9 @@
         {
             throw new InvalidOperationException("The host configuration value is missing or empty.");
         }
+
         Data = await PublicationAboutService.GetUserAboutAsync(host);
+
         markdownContent = Data?.PublicationData?.StaticPage?.Content?.Markdown;
 
         IsDataLoaded = true;

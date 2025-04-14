@@ -5,7 +5,7 @@
     <div class="navbar-center">
         @foreach (var navItem in NavItems)
         {
-            <Tab Text="@navItem.Text" Href="@navItem.Href" />
+            <Tab @key="navItem" Text="@navItem.Text" Href="@navItem.Href" />
         }
     </div>
     <div class="navbar-end">
@@ -14,13 +14,13 @@
 </nav>
 
 @code {
-    private record NavItem(string Text, string Href);
+    private sealed record NavItem(string Text, string Href);
 
-    private readonly List<NavItem> NavItems = new()
+    private static readonly NavItem[] NavItems = new[]
     {
-    new NavItem("Home", "/"),
-    new NavItem("About", "about"),
-    new NavItem("Projects", "projects"),
-    new NavItem("Blog", "https://suryami62.hashnode.dev/")
+        new NavItem("Home", "/"),
+        new NavItem("About", "about"),
+        new NavItem("Projects", "projects"),
+        new NavItem("Blog", "https://suryami62.hashnode.dev/")
     };
 }

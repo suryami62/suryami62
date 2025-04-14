@@ -1,22 +1,9 @@
 ﻿namespace suryami62.Models;
 
-public record PublicationAbout
-{
-    public PublicationData? PublicationData { get; init; }
-}
+public record PublicationAbout(PublicationData? PublicationData);
 
-public record PublicationData
-{
-    public StaticPage? StaticPage { get; init; }
-}
+public record PublicationData(StaticPage? StaticPage);
 
-public record StaticPage
-{
-    public string? Title { get; init; }
-    public Content? Content { get; init; }
-}
+public record StaticPage(string? Title, Content? Content);
 
-public record Content
-{
-    public string? Markdown { get; init; }
-}
+public record Content(string? Markdown);
