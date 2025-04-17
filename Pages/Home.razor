@@ -3,17 +3,20 @@
 @inject IConfiguration Configuration
 @inject UserProfileService UserProfileService
 
-<PageTitle>Surya Ramadhan's website</PageTitle>
+<PageTitle>@Configuration["Site:Title"]</PageTitle>
 
 <HeadContent>
-    <link rel="canonical" href="https://suryami62.my.id/" />
+    <MetaOpenGraphCard Title="@Configuration["Site:Title"]"
+                       Description="Surya Ramadhan - Physics teacher and .NET developer. Explore my blog, portfolio, and curriculum vitae."
+                       Image="https://suryami62.my.id/img/socialCard.webp"
+                       Url="@Configuration["Site:BaseUrl"]" />
 </HeadContent>
 
 <div class="min-h-screen hero">
     @if (Data?.UserData is null)
     {
         <SkeletonHome />
-    }
+    } 
     else
     {
         <div class="flex-col hero-content md:flex-row">
@@ -47,6 +50,7 @@
     protected override async Task OnInitializedAsync()
     {
         var username = Configuration["GraphQL:Variables:Username"];
+
         if (string.IsNullOrWhiteSpace(username))
         {
             throw new InvalidOperationException("The username configuration value is missing or empty.");
@@ -60,6 +64,7 @@
     private IEnumerable<SocialMediaLink> GetSocialMediaLinks(SocialMediaLinks links)
     {
         var results = new List<SocialMediaLink>(capacity: 4);
+
         if (!string.IsNullOrWhiteSpace(links.Instagram))
         {
             results.Add(new SocialMediaLink("Instagram", links.Instagram, "fa-brands fa-square-instagram"));
@@ -76,6 +81,7 @@
         {
             results.Add(new SocialMediaLink("GitHub", links.Github, "fa-brands fa-square-github"));
         }
+
         return results;
     }
 }

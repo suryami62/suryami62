@@ -1,12 +1,14 @@
 ﻿@page "/projects"
 
-@inject HttpClient Http
 @inject IConfiguration Configuration
+@inject HttpClient Http
 
-<PageTitle>Projects | Surya Ramadhan's website</PageTitle>
+<PageTitle>@($"Projects | {Configuration["Site:Title"]}")</PageTitle>
 
 <HeadContent>
-    <link rel="canonical" href="https://suryami62.my.id/projects/" />
+    <MetaOpenGraphCard Title="@($"Projects | {Configuration["Site:Title"]}")"
+                       Description="Explore Surya Ramadhan's innovative projects in education and technology."
+                       Url="@($"{Configuration["Site:BaseUrl"]}/projects")" />
 </HeadContent>
 
 <div class="min-h-screen m-auto my-10">

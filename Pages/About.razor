@@ -4,10 +4,12 @@
 @inject PublicationAboutService PublicationAboutService
 @using Markdig
 
-<PageTitle>About | Surya Ramadhan's website</PageTitle>
+<PageTitle>@($"About | {Configuration["Site:Title"]}")</PageTitle>
 
 <HeadContent>
-    <link rel="canonical" href="https://suryami62.my.id/about/" />
+    <MetaOpenGraphCard Title="@($"About | {Configuration["Site:Title"]}")"
+                       Description="Physics teacher with expertise in C# programming language. Experienced in educational and technological innovation."
+                       Url="@($"{Configuration["Site:BaseUrl"]}/about")" />
 </HeadContent>
 
 <div class="min-h-screen m-auto my-10 prose text-justify">
