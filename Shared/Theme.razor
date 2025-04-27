@@ -2,7 +2,8 @@
 @inject IJSRuntime JSRuntime
 
 <label class="swap swap-rotate">
-    <input class="theme-controller" type="checkbox" value="@DarkTheme" @attributes="CheckedAttributes" @onclick="ThemeController" />
+    <input class="theme-controller" type="checkbox" value="@DarkTheme" @attributes="CheckedAttributes"
+        @onclick="ThemeController" />
     @foreach (var themeMode in ThemeModes)
     {
         <i class="fill-current @themeMode.Icon fa-2x @themeMode.State"></i>
@@ -16,10 +17,10 @@
     private sealed record ThemeMode(string Icon, string State);
 
     private readonly List<ThemeMode> ThemeModes = new()
-    {
-        new ThemeMode("fa-solid fa-sun", "swap-on"),
-        new ThemeMode("fa-solid fa-moon", "swap-off")
-    };
+{
+new ThemeMode("fa-solid fa-sun", "swap-on"),
+new ThemeMode("fa-solid fa-moon", "swap-off")
+};
 
     private bool ThemeChange { get; set; }
 

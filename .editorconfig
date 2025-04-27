@@ -1,0 +1,27 @@
+# Top-most EditorConfig file
+root = true
+
+# General C# and Razor formatting
+[*.{cs,razor}]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C# coding conventions
+[*.cs]
+# Organize usings
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# Naming conventions
+dotnet_naming_rule.types_should_be_pascal_case.symbols = types
+dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
+
+# Razor specific settings
+[*.razor]
+# Indent Razor directives
+razor_indent_directives = true
+# Indent Razor code blocks
+razor_indent_code = true

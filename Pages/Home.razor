@@ -7,16 +7,15 @@
 
 <HeadContent>
     <MetaOpenGraphCard Title="@Configuration["Site:Title"]"
-                       Description="Physics teacher and .NET developer. Explore my blog, portfolio, and curriculum vitae."
-                       Image="https://suryami62.my.id/img/socialCard.webp"
-                       Url="@Configuration["Site:BaseUrl"]" />
+        Description="Physics teacher and .NET developer. Explore my blog, portfolio, and curriculum vitae."
+        Image="https://suryami62.my.id/img/socialCard.webp" Url="@(Configuration["Site:BaseUrl"] + "/")" />
 </HeadContent>
 
 <div class="min-h-screen hero">
     @if (Data?.UserData is null)
     {
         <SkeletonHome />
-    } 
+    }
     else
     {
         <div class="flex-col hero-content md:flex-row">
