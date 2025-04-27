@@ -272,3 +272,4 @@ FodyWeavers.xsd
 *.msm
 *.msp
 *.sln.iml
+.clinerules/
