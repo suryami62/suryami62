@@ -1,6 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.Newtonsoft;
+
 using suryami62.Models;
 
 namespace suryami62.Services;
