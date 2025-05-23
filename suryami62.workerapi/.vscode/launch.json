@@ -10,5 +10,8 @@
       "cwd": "${workspaceFolder}",
       "console": "externalTerminal"
     }
-  ]
+  ],
+  "files.associations": {
+    "wrangler.json": "jsonc"
+  }
 }

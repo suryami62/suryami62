@@ -47,6 +47,7 @@ dist
 public
 .vuepress/dist
 .temp
+.cache
 **/.vitepress/dist
 **/.vitepress/cache
 .docusaurus
@@ -60,6 +61,8 @@ public
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+.dev.vars
+.wrangler/
 *.rsuser
 *.suo
 *.user

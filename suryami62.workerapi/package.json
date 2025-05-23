@@ -1,19 +1,23 @@
 {
   "name": "suryami62.workerapi",
-  "version": "1.0.0",
-  "main": "app.js",
+  "version": "0.0.1",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc --build",
-    "clean": "tsc --build --clean"
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "cf-typegen": "wrangler types"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "dependencies": {
+    "chanfana": "^2.8.0",
+    "hono": "^4.7.10",
+    "zod": "^3.25.23"
+  },
   "devDependencies": {
     "@types/node": "^22.15.21",
+    "@types/service-worker-mock": "^2.0.4",
     "eslint": "^9.27.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wrangler": "^4.16.1"
   }
 }
