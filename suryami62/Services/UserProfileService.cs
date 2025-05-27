@@ -11,20 +11,23 @@ public sealed class UserProfileService : IDisposable
     private readonly GraphQLHttpClient _graphqlClient;
 
     private static readonly string UserQuery = @"
-            query User($username: String!) {
-                UserData: user(username: $username) {
-                    username
-                    name
-                    bio { text }
-                    profilePicture
-                    socialMediaLinks {
-                        instagram
-                        twitter
-                        linkedin
-                        github
-                    }
+        query User($username: String!) {
+            UserData: user(username: $username) {
+                username
+                name
+                bio { text }
+                profilePicture
+                socialMediaLinks {
+                    instagram
+                    twitter
+                    linkedin
+                    github
+                    facebook
+                    youtube
+                    bluesky
                 }
-            }";
+            }
+        }";
 
     public UserProfileService(IConfiguration configuration)
     {

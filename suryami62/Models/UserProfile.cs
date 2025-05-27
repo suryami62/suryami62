@@ -16,5 +16,8 @@ public record SocialMediaLinks(
     string? Instagram,
     string? Twitter,
     string? Linkedin,
-    string? Github
+    string? Github,
+    string? Facebook,
+    string? Youtube,
+    string? Bluesky
 );

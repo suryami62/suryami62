@@ -1,6 +1,6 @@
 {
   "name": "suryami62",
-  "version": "2.5.0",
+  "version": "3.0.0",
   "scripts": {
     "dev": "bunx @tailwindcss/cli -i ./wwwroot/css/app.css -o ./wwwroot/css/app.min.css --watch",
     "build": "bunx @tailwindcss/cli -i ./wwwroot/css/app.css -o ./wwwroot/css/app.min.css --minify"
@@ -9,7 +9,7 @@
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.7",
     "@tailwindcss/typography": "^0.5.16",
-    "daisyui": "^5.0.35",
+    "daisyui": "^5.0.37",
     "tailwindcss": "^4.1.7"
   }
 }

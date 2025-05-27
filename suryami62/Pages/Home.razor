@@ -62,7 +62,7 @@
 
     private IEnumerable<SocialMediaLink> GetSocialMediaLinks(SocialMediaLinks links)
     {
-        var results = new List<SocialMediaLink>(capacity: 4);
+        var results = new List<SocialMediaLink>();
 
         if (!string.IsNullOrWhiteSpace(links.Instagram))
         {
@@ -79,6 +79,18 @@
         if (!string.IsNullOrWhiteSpace(links.Github))
         {
             results.Add(new SocialMediaLink("GitHub", links.Github, "fa-brands fa-square-github"));
+        }
+        if (!string.IsNullOrWhiteSpace(links.Facebook))
+        {
+            results.Add(new SocialMediaLink("Facebook", links.Facebook, "fa-brands fa-square-facebook"));
+        }
+        if (!string.IsNullOrWhiteSpace(links.Youtube))
+        {
+            results.Add(new SocialMediaLink("YouTube", links.Youtube, "fa-brands fa-square-youtube"));
+        }
+        if (!string.IsNullOrWhiteSpace(links.Bluesky))
+        {
+            results.Add(new SocialMediaLink("Bluesky", links.Bluesky, "fa-brands fa-square-bluesky"));
         }
 
         return results;
