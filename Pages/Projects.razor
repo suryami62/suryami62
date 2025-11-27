@@ -1,0 +1,53 @@
+﻿@page "/projects"
+
+@inject IConfiguration Configuration
+@inject HttpClient Http
+
+<PageTitle>@($"Projects | {Configuration["Site:Title"]}")</PageTitle>
+
+<HeadContent>
+    <MetaOpenGraphCard Title="@($"Projects | {Configuration["Site:Title"]}")"
+                       Description="Explore Surya Ramadhan's innovative projects in education and technology."
+                       Image="https://suryami62.my.id/img/socialCard.webp"
+                       Url="@(Configuration["Site:BaseUrl"] + "/projects")" />
+</HeadContent>
+
+<div class="min-h-screen m-auto my-10">
+    <h1 class="mb-8 text-4xl font-extrabold text-center">List of My Projects</h1>
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        @if (!IsDataLoaded)
+        {
+            @for (int i = 0; i < 3; i++)
+            {
+                <SkeletonCard />
+            }
+        }
+        else if (projects.Any())
+        {
+            foreach (var project in projects)
+            {
+                <Card Title="@project.Title" Desc="@project.Desc" Img="@project.Img" Url="@project.Url" />
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private bool IsDataLoaded { get; set; }
+
+    private Project[] projects = Array.Empty<Project>();
+
+    public record Project(string? Title, string? Desc, string? Img, string? Url);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var projectsJsonUrl = Configuration["Site:Project"];
+        if (string.IsNullOrEmpty(projectsJsonUrl))
+        {
+            throw new InvalidOperationException("ProjectsJsonUrl setting is not configured.");
+        }
+
+        projects = await Http.GetFromJsonAsync<Project[]>(projectsJsonUrl) ?? Array.Empty<Project>();
+        IsDataLoaded = true;
+    }
+}
