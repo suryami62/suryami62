@@ -1,0 +1,13 @@
+﻿services:
+  suryami62:
+    image: suryami62
+    build:
+      context: .
+      dockerfile: suryami62/Dockerfile
+
+  suryami62-1:
+    image: suryami62-1
+    build:
+      context: .
+      dockerfile: suryami62/Dockerfile
+
