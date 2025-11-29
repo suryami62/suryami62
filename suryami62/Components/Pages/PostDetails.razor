@@ -2,6 +2,7 @@
 @page "/blog/path/{*Path}"
 @using suryami62.Models
 @using suryami62.Services
+@using Ganss.Xss
 @inject IBloggerService BloggerService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -19,9 +20,13 @@
             </div>
         </div>
     }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+         <div class="alert alert-danger">@errorMessage</div>
+    }
     else if (post == null)
     {
-        <div class="alert alert-danger">Post not found. Please check the URL or ID.</div>
+        <div class="alert alert-warning">Post not found.</div>
     }
     else
     {
@@ -36,7 +41,7 @@
             </div>
             
             <div class="blog-content">
-                @((MarkupString)post.Content)
+                @((MarkupString)Sanitize(post.Content))
             </div>
         </article>
     }
@@ -51,31 +56,56 @@
 
     private BlogPost? post;
     private bool isLoading = true;
+    private string? errorMessage;
 
     protected override async Task OnParametersSetAsync()
     {
         isLoading = true;
+        errorMessage = null;
         post = null;
+
+        ServiceResult<BlogPost>? result = null;
 
         try 
         {
             if (!string.IsNullOrEmpty(Id))
             {
-                post = await BloggerService.GetPostByIdAsync(Id);
+                result = await BloggerService.GetPostByIdAsync(Id);
             }
             else if (!string.IsNullOrEmpty(Path))
             {
-                // The path parameter might come without the leading slash from the route wildcard, 
-                // but Blogger API expects it starts with /.
                 var lookupPath = Path.StartsWith("/") ? Path : "/" + Path;
-                post = await BloggerService.GetPostByPathAsync(lookupPath);
+                result = await BloggerService.GetPostByPathAsync(lookupPath);
+            }
+            else
+            {
+                 isLoading = false;
+                 return;
+            }
+
+            if (result != null)
+            {
+                if (result.Success)
+                {
+                    post = result.Data;
+                }
+                else
+                {
+                    errorMessage = result.ErrorMessage;
+                }
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            post = null;
+            errorMessage = $"Unexpected error: {ex.Message}";
         }
 
         isLoading = false;
+    }
+
+    private string Sanitize(string html)
+    {
+        var sanitizer = new HtmlSanitizer();
+        return sanitizer.Sanitize(html);
     }
 }

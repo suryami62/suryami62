@@ -1,107 +1,133 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.Caching.Memory;
 using suryami62.Models;
 
 namespace suryami62.Services
 {
     public interface IBloggerService
     {
-        Task<PostList> GetPostsAsync();
-        Task<BlogPost?> GetPostByIdAsync(string postId);
-        Task<BlogPost?> GetPostByPathAsync(string path);
-        Task<PostList> SearchPostsAsync(string query);
+        Task<ServiceResult<PostList>> GetPostsAsync();
+        Task<ServiceResult<BlogPost>> GetPostByIdAsync(string postId);
+        Task<ServiceResult<BlogPost>> GetPostByPathAsync(string path);
+        Task<ServiceResult<PostList>> SearchPostsAsync(string query);
     }
 
     public class BloggerService : IBloggerService
     {
         private readonly HttpClient _httpClient;
+        private readonly IMemoryCache _cache;
         private readonly string _apiKey;
         private readonly string _blogId;
         private const string BaseUrl = "https://blogger.googleapis.com/v3/blogs";
 
-        public BloggerService(HttpClient httpClient, IConfiguration configuration)
+        public BloggerService(HttpClient httpClient, IMemoryCache cache, IConfiguration configuration)
         {
             _httpClient = httpClient;
+            _cache = cache;
             _apiKey = configuration["Blogger:ApiKey"] ?? string.Empty;
             _blogId = configuration["Blogger:BlogId"] ?? string.Empty;
         }
 
-        public async Task<PostList> GetPostsAsync()
+        public async Task<ServiceResult<PostList>> GetPostsAsync()
         {
             if (string.IsNullOrEmpty(_blogId) || string.IsNullOrEmpty(_apiKey))
             {
-                return new PostList();
+                return ServiceResult<PostList>.Fail("Configuration missing: BlogId or ApiKey not set.");
+            }
+
+            var cacheKey = $"blogger_posts_{_blogId}";
+            if (_cache.TryGetValue(cacheKey, out PostList? cachedPosts))
+            {
+                return ServiceResult<PostList>.Ok(cachedPosts ?? new PostList());
             }
 
             var url = $"{BaseUrl}/{_blogId}/posts?fetchBodies=true&view=READER&key={_apiKey}";
             try
             {
                 var result = await _httpClient.GetFromJsonAsync<PostList>(url);
-                return result ?? new PostList();
+                var data = result ?? new PostList();
+                _cache.Set(cacheKey, data, TimeSpan.FromMinutes(10));
+                return ServiceResult<PostList>.Ok(data);
+            }
+            catch (HttpRequestException ex)
+            {
+                return ServiceResult<PostList>.Fail($"Network/API Error: {ex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching posts: {ex.Message}");
-                return new PostList();
+                return ServiceResult<PostList>.Fail($"Unexpected Error: {ex.Message}");
             }
         }
 
-        public async Task<BlogPost?> GetPostByIdAsync(string postId)
+        public async Task<ServiceResult<BlogPost>> GetPostByIdAsync(string postId)
         {
             if (string.IsNullOrEmpty(_blogId) || string.IsNullOrEmpty(_apiKey))
             {
-                return null;
+                return ServiceResult<BlogPost>.Fail("Configuration missing.");
             }
 
             var url = $"{BaseUrl}/{_blogId}/posts/{postId}?view=READER&key={_apiKey}";
             try
             {
-                return await _httpClient.GetFromJsonAsync<BlogPost>(url);
+                var result = await _httpClient.GetFromJsonAsync<BlogPost>(url);
+                if (result == null) return ServiceResult<BlogPost>.Fail("Post not found (null response).");
+                return ServiceResult<BlogPost>.Ok(result);
+            }
+            catch (HttpRequestException ex)
+            {
+                return ServiceResult<BlogPost>.Fail($"Failed to load post: {ex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching post {postId}: {ex.Message}");
-                return null;
+                return ServiceResult<BlogPost>.Fail($"Error: {ex.Message}");
             }
         }
 
-        public async Task<BlogPost?> GetPostByPathAsync(string path)
+        public async Task<ServiceResult<BlogPost>> GetPostByPathAsync(string path)
         {
             if (string.IsNullOrEmpty(_blogId) || string.IsNullOrEmpty(_apiKey))
             {
-                return null;
+                return ServiceResult<BlogPost>.Fail("Configuration missing.");
             }
 
-            // Ensure path starts with / if not present, though usually passed correctly.
-            // Blogger API expects path parameter.
+            // Ensure path starts with / if not present
             var url = $"{BaseUrl}/{_blogId}/posts/bypath?path={path}&view=READER&key={_apiKey}";
             try
             {
-                return await _httpClient.GetFromJsonAsync<BlogPost>(url);
+                var result = await _httpClient.GetFromJsonAsync<BlogPost>(url);
+                if (result == null) return ServiceResult<BlogPost>.Fail("Post not found.");
+                return ServiceResult<BlogPost>.Ok(result);
+            }
+             catch (HttpRequestException ex)
+            {
+                return ServiceResult<BlogPost>.Fail($"Failed to load post by path: {ex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching post by path {path}: {ex.Message}");
-                return null;
+                return ServiceResult<BlogPost>.Fail($"Error: {ex.Message}");
             }
         }
 
-        public async Task<PostList> SearchPostsAsync(string query)
+        public async Task<ServiceResult<PostList>> SearchPostsAsync(string query)
         {
             if (string.IsNullOrEmpty(_blogId) || string.IsNullOrEmpty(_apiKey))
             {
-                return new PostList();
+                 return ServiceResult<PostList>.Fail("Configuration missing.");
             }
 
             var url = $"{BaseUrl}/{_blogId}/posts/search?q={query}&fetchBodies=true&key={_apiKey}";
             try
             {
                 var result = await _httpClient.GetFromJsonAsync<PostList>(url);
-                return result ?? new PostList();
+                return ServiceResult<PostList>.Ok(result ?? new PostList());
+            }
+            catch (HttpRequestException ex)
+            {
+                return ServiceResult<PostList>.Fail($"Search failed: {ex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error searching posts with query {query}: {ex.Message}");
-                return new PostList();
+                return ServiceResult<PostList>.Fail($"Error: {ex.Message}");
             }
         }
     }

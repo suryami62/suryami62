@@ -14,8 +14,8 @@
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search posts..." @bind="searchQuery" @bind:event="oninput" @onkeyup="HandleKeyUp" />
-                <button class="btn btn-primary" @onclick="SearchPosts">Search</button>
+                <input type="text" class="form-control" placeholder="Search posts..." value="@searchQuery" @oninput="HandleInput" />
+                <button class="btn btn-primary" @onclick="() => SearchPosts(searchQuery)">Search</button>
             </div>
         </div>
     </div>
@@ -28,9 +28,13 @@
             </div>
         </div>
     }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
     else if (posts == null || !posts.Any())
     {
-        <div class="alert alert-info">No posts found. @(string.IsNullOrEmpty(searchQuery) ? "Check your API Key and Blog ID configuration." : "Try a different search term.")</div>
+        <div class="alert alert-info">No posts found. @(string.IsNullOrEmpty(searchQuery) ? "" : "Try a different search term.")</div>
     }
     else
     {
@@ -60,56 +64,77 @@
     private List<BlogPost> posts = new();
     private string searchQuery = "";
     private bool isLoading = true;
+    private string? errorMessage;
+    private CancellationTokenSource? _searchCts;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadPosts();
     }
 
-    private async Task LoadPosts()
+    private async Task HandleInput(ChangeEventArgs e)
     {
-        isLoading = true;
-        try 
-        {
-            var result = await BloggerService.GetPostsAsync();
-            posts = result.Items ?? new List<BlogPost>();
-        }
-        catch (Exception) 
-        {
-            posts = new List<BlogPost>();
-        }
-        isLoading = false;
-    }
+        searchQuery = e.Value?.ToString() ?? "";
+        
+        // Debounce logic
+        _searchCts?.Cancel();
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
 
-    private async Task SearchPosts()
-    {
-        isLoading = true;
         try
         {
-            if (string.IsNullOrWhiteSpace(searchQuery))
+            await Task.Delay(500, token); // Debounce time
+            await SearchPosts(searchQuery);
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignore if cancelled
+        }
+    }
+
+    private async Task PerformFetch(Func<Task<ServiceResult<PostList>>> fetchAction)
+    {
+        isLoading = true;
+        errorMessage = null;
+        // Force UI update for loading state if called from background
+        StateHasChanged();
+
+        try 
+        {
+            var result = await fetchAction();
+            if (result.Success)
             {
-                var result = await BloggerService.GetPostsAsync();
-                posts = result.Items ?? new List<BlogPost>();
+                posts = result.Data?.Items ?? new List<BlogPost>();
             }
             else
             {
-                var result = await BloggerService.SearchPostsAsync(searchQuery);
-                posts = result.Items ?? new List<BlogPost>();
+                errorMessage = result.ErrorMessage;
+                posts = new List<BlogPost>();
             }
         }
-        catch (Exception)
+        catch (Exception ex) 
         {
-            posts = new List<BlogPost>();
+            errorMessage = $"Unexpected error: {ex.Message}";
         }
+        
         isLoading = false;
+        StateHasChanged();
     }
-    
-    private async Task HandleKeyUp(KeyboardEventArgs e)
+
+    private async Task LoadPosts()
     {
-        if (e.Key == "Enter")
+        await PerformFetch(() => BloggerService.GetPostsAsync());
+    }
+
+    private async Task SearchPosts(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
         {
-            await SearchPosts();
+            await LoadPosts();
+            return;
         }
+
+        await PerformFetch(() => BloggerService.SearchPostsAsync(query));
     }
 
     private string GetExcerpt(string content)
