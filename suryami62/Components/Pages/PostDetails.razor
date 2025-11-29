@@ -1,0 +1,81 @@
+@page "/blog/{Id}"
+@page "/blog/path/{*Path}"
+@using suryami62.Models
+@using suryami62.Services
+@inject IBloggerService BloggerService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>@(post?.Title ?? "Blog Post")</PageTitle>
+
+<div class="container mt-4">
+    <a href="/blog" class="btn btn-outline-secondary mb-3">&larr; Back to Blog</a>
+
+    @if (isLoading)
+    {
+         <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (post == null)
+    {
+        <div class="alert alert-danger">Post not found. Please check the URL or ID.</div>
+    }
+    else
+    {
+        <article>
+            <h1 class="display-4 mb-3">@post.Title</h1>
+            <div class="text-muted mb-4 border-bottom pb-3">
+                <span>Published on @post.Published.ToLocalTime().ToString("f")</span>
+                @if(!string.IsNullOrEmpty(post.Url)) {
+                    <span class="mx-2">|</span>
+                    <a href="@post.Url" target="_blank" class="text-decoration-none">View on Blogger</a>
+                }
+            </div>
+            
+            <div class="blog-content">
+                @((MarkupString)post.Content)
+            </div>
+        </article>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    [Parameter]
+    public string? Path { get; set; }
+
+    private BlogPost? post;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        post = null;
+
+        try 
+        {
+            if (!string.IsNullOrEmpty(Id))
+            {
+                post = await BloggerService.GetPostByIdAsync(Id);
+            }
+            else if (!string.IsNullOrEmpty(Path))
+            {
+                // The path parameter might come without the leading slash from the route wildcard, 
+                // but Blogger API expects it starts with /.
+                var lookupPath = Path.StartsWith("/") ? Path : "/" + Path;
+                post = await BloggerService.GetPostByPathAsync(lookupPath);
+            }
+        }
+        catch (Exception)
+        {
+            post = null;
+        }
+
+        isLoading = false;
+    }
+}

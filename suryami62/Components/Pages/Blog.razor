@@ -1,0 +1,128 @@
+@page "/blog"
+@using suryami62.Models
+@using suryami62.Services
+@using System.Text.RegularExpressions
+@inject IBloggerService BloggerService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Blog</PageTitle>
+
+<div class="container">
+    <h1 class="mb-4">Blog</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search posts..." @bind="searchQuery" @bind:event="oninput" @onkeyup="HandleKeyUp" />
+                <button class="btn btn-primary" @onclick="SearchPosts">Search</button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (posts == null || !posts.Any())
+    {
+        <div class="alert alert-info">No posts found. @(string.IsNullOrEmpty(searchQuery) ? "Check your API Key and Blog ID configuration." : "Try a different search term.")</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var post in posts)
+            {
+                <div class="col-12 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="/blog/@post.Id" class="text-decoration-none">@post.Title</a>
+                            </h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@post.Published.ToLocalTime().ToString("f")</h6>
+                            <p class="card-text">
+                                @GetExcerpt(post.Content)
+                            </p>
+                            <a href="/blog/@post.Id" class="card-link">Read more</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<BlogPost> posts = new();
+    private string searchQuery = "";
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPosts();
+    }
+
+    private async Task LoadPosts()
+    {
+        isLoading = true;
+        try 
+        {
+            var result = await BloggerService.GetPostsAsync();
+            posts = result.Items ?? new List<BlogPost>();
+        }
+        catch (Exception) 
+        {
+            posts = new List<BlogPost>();
+        }
+        isLoading = false;
+    }
+
+    private async Task SearchPosts()
+    {
+        isLoading = true;
+        try
+        {
+            if (string.IsNullOrWhiteSpace(searchQuery))
+            {
+                var result = await BloggerService.GetPostsAsync();
+                posts = result.Items ?? new List<BlogPost>();
+            }
+            else
+            {
+                var result = await BloggerService.SearchPostsAsync(searchQuery);
+                posts = result.Items ?? new List<BlogPost>();
+            }
+        }
+        catch (Exception)
+        {
+            posts = new List<BlogPost>();
+        }
+        isLoading = false;
+    }
+    
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchPosts();
+        }
+    }
+
+    private string GetExcerpt(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return string.Empty;
+        
+        // Remove HTML tags
+        var plainText = Regex.Replace(content, "<.*?>", string.Empty);
+        
+        if (plainText.Length > 200)
+        {
+            return plainText.Substring(0, 200) + "...";
+        }
+        return plainText;
+    }
+}

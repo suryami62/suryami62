@@ -1,10 +1,14 @@
 using suryami62.Components;
+using suryami62.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IBloggerService, BloggerService>();
 
 var app = builder.Build();
 
