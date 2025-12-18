@@ -1,5 +1,9 @@
+#region
+
 using Microsoft.Extensions.Caching.Memory;
 using suryami62.Models;
+
+#endregion
 
 namespace suryami62.Services;
 
@@ -13,7 +17,6 @@ public interface IBloggerService
 
 public class BloggerService : IBloggerService
 {
-    private const string BaseUrl = "https://blogger.googleapis.com/v3/blogs";
     private readonly string _apiKey;
     private readonly string _blogId;
     private readonly IMemoryCache _cache;
@@ -25,22 +28,19 @@ public class BloggerService : IBloggerService
         _cache = cache;
         _apiKey = configuration["Blogger:ApiKey"] ?? string.Empty;
         _blogId = configuration["Blogger:BlogId"] ?? string.Empty;
+
+        if (string.IsNullOrEmpty(_apiKey) || string.IsNullOrEmpty(_blogId))
+            throw new InvalidOperationException("Blogger configuration (BlogId or ApiKey) is missing.");
     }
 
     public async Task<ServiceResult<PostList>> GetPostsAsync(string? pageToken = null)
     {
-        if (string.IsNullOrEmpty(_blogId) || string.IsNullOrEmpty(_apiKey))
-            return ServiceResult<PostList>.Fail("Configuration missing: BlogId or ApiKey not set.");
-
-        var cacheKey = $"blogger_posts_{_blogId}_{(pageToken ?? "default")}";
+        var cacheKey = $"blogger_posts_{_blogId}_{pageToken ?? "default"}";
         if (_cache.TryGetValue(cacheKey, out PostList? cachedPosts))
             return ServiceResult<PostList>.Ok(cachedPosts ?? new PostList());
 
-        var url = $"{BaseUrl}/{_blogId}/posts?fetchBodies=true&view=READER&key={_apiKey}";
-        if (!string.IsNullOrEmpty(pageToken))
-        {
-            url += $"&pageToken={pageToken}";
-        }
+        var url = $"{_blogId}/posts?fetchBodies=true&view=READER&key={_apiKey}";
+        if (!string.IsNullOrEmpty(pageToken)) url += $"&pageToken={pageToken}";
         try
         {
             var result = await _httpClient.GetFromJsonAsync<PostList>(url);
@@ -60,14 +60,11 @@ public class BloggerService : IBloggerService
 
     public async Task<ServiceResult<BlogPost>> GetPostByIdAsync(string postId)
     {
-        if (string.IsNullOrEmpty(_blogId) || string.IsNullOrEmpty(_apiKey))
-            return ServiceResult<BlogPost>.Fail("Configuration missing.");
-
         var cacheKey = $"blogger_post_{postId}";
         if (_cache.TryGetValue(cacheKey, out BlogPost? cachedPost))
             return ServiceResult<BlogPost>.Ok(cachedPost ?? new BlogPost());
 
-        var url = $"{BaseUrl}/{_blogId}/posts/{postId}?view=READER&key={_apiKey}";
+        var url = $"{_blogId}/posts/{postId}?view=READER&key={_apiKey}";
         try
         {
             var result = await _httpClient.GetFromJsonAsync<BlogPost>(url);
@@ -87,11 +84,7 @@ public class BloggerService : IBloggerService
 
     public async Task<ServiceResult<BlogPost>> GetPostByPathAsync(string path)
     {
-        if (string.IsNullOrEmpty(_blogId) || string.IsNullOrEmpty(_apiKey))
-            return ServiceResult<BlogPost>.Fail("Configuration missing.");
-
-        // Ensure path starts with / if not present
-        var url = $"{BaseUrl}/{_blogId}/posts/bypath?path={path}&view=READER&key={_apiKey}";
+        var url = $"{_blogId}/posts/bypath?path={path}&view=READER&key={_apiKey}";
         try
         {
             var result = await _httpClient.GetFromJsonAsync<BlogPost>(url);
@@ -110,10 +103,7 @@ public class BloggerService : IBloggerService
 
     public async Task<ServiceResult<PostList>> SearchPostsAsync(string query)
     {
-        if (string.IsNullOrEmpty(_blogId) || string.IsNullOrEmpty(_apiKey))
-            return ServiceResult<PostList>.Fail("Configuration missing.");
-
-        var url = $"{BaseUrl}/{_blogId}/posts/search?q={query}&fetchBodies=true&key={_apiKey}";
+        var url = $"{_blogId}/posts/search?q={query}&fetchBodies=true&key={_apiKey}";
         try
         {
             var result = await _httpClient.GetFromJsonAsync<PostList>(url);

@@ -4,6 +4,7 @@
 @using suryami62.Models
 @using suryami62.Services
 @inject IBloggerService BloggerService
+@inject IHtmlSanitizer HtmlSanitizer
 @rendermode InteractiveServer
 
 <PageTitle>@(_post?.Title ?? "Blog Post")</PageTitle>
@@ -100,8 +101,7 @@
 
     private string Sanitize(string html)
     {
-        var sanitizer = new HtmlSanitizer();
-        return sanitizer.Sanitize(html);
+        return HtmlSanitizer.Sanitize(html);
     }
 
 }

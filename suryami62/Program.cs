@@ -1,5 +1,10 @@
+#region
+
+using Ganss.Xss;
 using suryami62.Components;
 using suryami62.Services;
+
+#endregion
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,9 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
-builder.Services.AddScoped<IBloggerService, BloggerService>();
+builder.Services.AddSingleton<IHtmlSanitizer, HtmlSanitizer>();
+
+builder.Services.AddHttpClient<IBloggerService, BloggerService>(client =>
+{
+    client.BaseAddress = new Uri("https://blogger.googleapis.com/v3/blogs/");
+});
 
 var app = builder.Build();
 
@@ -21,7 +30,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+app.UseStatusCodePagesWithReExecute("/not-found");
 app.UseHttpsRedirection();
 
 app.UseAntiforgery();

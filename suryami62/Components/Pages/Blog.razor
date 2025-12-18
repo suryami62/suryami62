@@ -1,8 +1,7 @@
 @page "/blog"
-@using System.Text.RegularExpressions
+@using Ganss.Xss
 @using suryami62.Models
 @using suryami62.Services
-@using Ganss.Xss
 @inject IBloggerService BloggerService
 @rendermode InteractiveServer
 
@@ -59,7 +58,7 @@
                 </div>
             }
         </div>
-        
+
         @if (!string.IsNullOrEmpty(_nextPageToken))
         {
             <div class="d-flex justify-content-center mt-4">
@@ -83,10 +82,17 @@
     private List<BlogPost> _posts = new();
     private string _searchQuery = "";
     private bool _isLoading = true;
-    private bool _isLoadingMore = false;
+    private bool _isLoadingMore;
     private string? _errorMessage;
     private string? _nextPageToken;
     private CancellationTokenSource? _searchCts;
+
+    private static readonly HtmlSanitizer _plainTextSanitizer = new();
+
+    static Blog()
+    {
+        _plainTextSanitizer.AllowedTags.Clear();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -176,11 +182,8 @@
                 _posts.AddRange(newPosts);
                 _nextPageToken = result.Data?.NextPageToken;
             }
-            else
-            {
-                // Optionally handle error for load more specifically using a toast or small alert
-                // For now, we prefer not to disrupt the user flow too much
-            }
+            // Optionally handle error for load more specifically using a toast or small alert
+            // For now, we prefer not to disrupt the user flow too much
         }
         catch (Exception)
         {
@@ -195,10 +198,8 @@
     {
         if (string.IsNullOrEmpty(content)) return string.Empty;
 
-        // Use HtmlSanitizer to strip tags (AllowedTags empty)
-        var sanitizer = new HtmlSanitizer();
-        sanitizer.AllowedTags.Clear();
-        var plainText = sanitizer.Sanitize(content);
+        // Use static HtmlSanitizer to strip tags (configured in static ctor)
+        var plainText = _plainTextSanitizer.Sanitize(content);
 
         if (plainText.Length > 200)
         {
