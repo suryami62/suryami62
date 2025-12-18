@@ -1,9 +1,9 @@
 @page "/blog"
+@using System.Text.RegularExpressions
 @using suryami62.Models
 @using suryami62.Services
-@using System.Text.RegularExpressions
+@using Ganss.Xss
 @inject IBloggerService BloggerService
-@inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 <PageTitle>Blog</PageTitle>
@@ -14,13 +14,14 @@
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search posts..." value="@searchQuery" @oninput="HandleInput" />
-                <button class="btn btn-primary" @onclick="() => SearchPosts(searchQuery)">Search</button>
+                <input type="text" class="form-control" placeholder="Search posts..." value="@_searchQuery"
+                       @oninput="HandleInput"/>
+                <button class="btn btn-primary" @onclick="() => SearchPosts(_searchQuery)">Search</button>
             </div>
         </div>
     </div>
 
-    @if (isLoading)
+    @if (_isLoading)
     {
         <div class="d-flex justify-content-center">
             <div class="spinner-border" role="status">
@@ -28,18 +29,19 @@
             </div>
         </div>
     }
-    else if (!string.IsNullOrEmpty(errorMessage))
+    else if (!string.IsNullOrEmpty(_errorMessage))
     {
-        <div class="alert alert-danger">@errorMessage</div>
+        <div class="alert alert-danger">@_errorMessage</div>
     }
-    else if (posts == null || !posts.Any())
+    else if (!_posts.Any())
     {
-        <div class="alert alert-info">No posts found. @(string.IsNullOrEmpty(searchQuery) ? "" : "Try a different search term.")</div>
+        <div class="alert alert-info">No posts
+            found. @(string.IsNullOrEmpty(_searchQuery) ? "" : "Try a different search term.")</div>
     }
     else
     {
         <div class="row">
-            @foreach (var post in posts)
+            @foreach (var post in _posts)
             {
                 <div class="col-12 mb-3">
                     <div class="card">
@@ -57,14 +59,33 @@
                 </div>
             }
         </div>
+        
+        @if (!string.IsNullOrEmpty(_nextPageToken))
+        {
+            <div class="d-flex justify-content-center mt-4">
+                <button class="btn btn-outline-primary" @onclick="LoadMorePosts" disabled="@_isLoadingMore">
+                    @if (_isLoadingMore)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span class="visually-hidden">Loading...</span>
+                    }
+                    else
+                    {
+                        <span>Load More</span>
+                    }
+                </button>
+            </div>
+        }
     }
 </div>
 
 @code {
-    private List<BlogPost> posts = new();
-    private string searchQuery = "";
-    private bool isLoading = true;
-    private string? errorMessage;
+    private List<BlogPost> _posts = new();
+    private string _searchQuery = "";
+    private bool _isLoading = true;
+    private bool _isLoadingMore = false;
+    private string? _errorMessage;
+    private string? _nextPageToken;
     private CancellationTokenSource? _searchCts;
 
     protected override async Task OnInitializedAsync()
@@ -74,8 +95,8 @@
 
     private async Task HandleInput(ChangeEventArgs e)
     {
-        searchQuery = e.Value?.ToString() ?? "";
-        
+        _searchQuery = e.Value?.ToString() ?? "";
+
         // Debounce logic
         _searchCts?.Cancel();
         _searchCts = new CancellationTokenSource();
@@ -84,7 +105,7 @@
         try
         {
             await Task.Delay(500, token); // Debounce time
-            await SearchPosts(searchQuery);
+            await SearchPosts(_searchQuery);
         }
         catch (TaskCanceledException)
         {
@@ -94,30 +115,32 @@
 
     private async Task PerformFetch(Func<Task<ServiceResult<PostList>>> fetchAction)
     {
-        isLoading = true;
-        errorMessage = null;
+        _isLoading = true;
+        _errorMessage = null;
         // Force UI update for loading state if called from background
         StateHasChanged();
 
-        try 
+        try
         {
             var result = await fetchAction();
             if (result.Success)
             {
-                posts = result.Data?.Items ?? new List<BlogPost>();
+                _posts = result.Data?.Items ?? new List<BlogPost>();
+                _nextPageToken = result.Data?.NextPageToken;
             }
             else
             {
-                errorMessage = result.ErrorMessage;
-                posts = new List<BlogPost>();
+                _errorMessage = result.ErrorMessage;
+                _posts = new List<BlogPost>();
+                _nextPageToken = null;
             }
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
-            errorMessage = $"Unexpected error: {ex.Message}";
+            _errorMessage = $"Unexpected error: {ex.Message}";
         }
-        
-        isLoading = false;
+
+        _isLoading = false;
         StateHasChanged();
     }
 
@@ -137,17 +160,52 @@
         await PerformFetch(() => BloggerService.SearchPostsAsync(query));
     }
 
+    private async Task LoadMorePosts()
+    {
+        if (string.IsNullOrEmpty(_nextPageToken)) return;
+
+        _isLoadingMore = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await BloggerService.GetPostsAsync(_nextPageToken);
+            if (result.Success)
+            {
+                var newPosts = result.Data?.Items ?? new List<BlogPost>();
+                _posts.AddRange(newPosts);
+                _nextPageToken = result.Data?.NextPageToken;
+            }
+            else
+            {
+                // Optionally handle error for load more specifically using a toast or small alert
+                // For now, we prefer not to disrupt the user flow too much
+            }
+        }
+        catch (Exception)
+        {
+            // Ignore for now
+        }
+
+        _isLoadingMore = false;
+        StateHasChanged();
+    }
+
     private string GetExcerpt(string content)
     {
         if (string.IsNullOrEmpty(content)) return string.Empty;
-        
-        // Remove HTML tags
-        var plainText = Regex.Replace(content, "<.*?>", string.Empty);
-        
+
+        // Use HtmlSanitizer to strip tags (AllowedTags empty)
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Clear();
+        var plainText = sanitizer.Sanitize(content);
+
         if (plainText.Length > 200)
         {
             return plainText.Substring(0, 200) + "...";
         }
+
         return plainText;
     }
+
 }

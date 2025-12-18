@@ -1,72 +1,70 @@
 @page "/blog/{Id}"
 @page "/blog/path/{*Path}"
+@using Ganss.Xss
 @using suryami62.Models
 @using suryami62.Services
-@using Ganss.Xss
 @inject IBloggerService BloggerService
-@inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-<PageTitle>@(post?.Title ?? "Blog Post")</PageTitle>
+<PageTitle>@(_post?.Title ?? "Blog Post")</PageTitle>
 
 <div class="container mt-4">
     <a href="/blog" class="btn btn-outline-secondary mb-3">&larr; Back to Blog</a>
 
-    @if (isLoading)
+    @if (_isLoading)
     {
-         <div class="d-flex justify-content-center my-5">
+        <div class="d-flex justify-content-center my-5">
             <div class="spinner-border" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
     }
-    else if (!string.IsNullOrEmpty(errorMessage))
+    else if (!string.IsNullOrEmpty(_errorMessage))
     {
-         <div class="alert alert-danger">@errorMessage</div>
+        <div class="alert alert-danger">@_errorMessage</div>
     }
-    else if (post == null)
+    else if (_post == null)
     {
         <div class="alert alert-warning">Post not found.</div>
     }
     else
     {
         <article>
-            <h1 class="display-4 mb-3">@post.Title</h1>
+            <h1 class="display-4 mb-3">@_post.Title</h1>
             <div class="text-muted mb-4 border-bottom pb-3">
-                <span>Published on @post.Published.ToLocalTime().ToString("f")</span>
-                @if(!string.IsNullOrEmpty(post.Url)) {
+                <span>Published on @_post.Published.ToLocalTime().ToString("f")</span>
+                @if (!string.IsNullOrEmpty(_post.Url))
+                {
                     <span class="mx-2">|</span>
-                    <a href="@post.Url" target="_blank" class="text-decoration-none">View on Blogger</a>
+                    <a href="@_post.Url" target="_blank" class="text-decoration-none">View on Blogger</a>
                 }
             </div>
-            
+
             <div class="blog-content">
-                @((MarkupString)Sanitize(post.Content))
+                @((MarkupString)Sanitize(_post.Content))
             </div>
         </article>
     }
 </div>
 
 @code {
-    [Parameter]
-    public string? Id { get; set; }
+    [Parameter] public string? Id { get; set; }
 
-    [Parameter]
-    public string? Path { get; set; }
+    [Parameter] public string? Path { get; set; }
 
-    private BlogPost? post;
-    private bool isLoading = true;
-    private string? errorMessage;
+    private BlogPost? _post;
+    private bool _isLoading = true;
+    private string? _errorMessage;
 
     protected override async Task OnParametersSetAsync()
     {
-        isLoading = true;
-        errorMessage = null;
-        post = null;
+        _isLoading = true;
+        _errorMessage = null;
+        _post = null;
 
-        ServiceResult<BlogPost>? result = null;
+        ServiceResult<BlogPost>? result;
 
-        try 
+        try
         {
             if (!string.IsNullOrEmpty(Id))
             {
@@ -79,28 +77,25 @@
             }
             else
             {
-                 isLoading = false;
-                 return;
+                _isLoading = false;
+                return;
             }
 
-            if (result != null)
+            if (result.Success)
             {
-                if (result.Success)
-                {
-                    post = result.Data;
-                }
-                else
-                {
-                    errorMessage = result.ErrorMessage;
-                }
+                _post = result.Data;
+            }
+            else
+            {
+                _errorMessage = result.ErrorMessage;
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Unexpected error: {ex.Message}";
+            _errorMessage = $"Unexpected error: {ex.Message}";
         }
 
-        isLoading = false;
+        _isLoading = false;
     }
 
     private string Sanitize(string html)
@@ -108,4 +103,5 @@
         var sanitizer = new HtmlSanitizer();
         return sanitizer.Sanitize(html);
     }
+
 }
