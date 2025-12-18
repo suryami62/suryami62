@@ -34,7 +34,7 @@
             <h1 class="display-4 mb-3">@_post.Title</h1>
             <div class="text-muted mb-4 border-bottom pb-3">
                 <span>Published on @_post.Published.ToLocalTime().ToString("f")</span>
-                @if (!string.IsNullOrEmpty(_post.Url))
+                @if (_post.Url != null)
                 {
                     <span class="mx-2">|</span>
                     <a href="@_post.Url" target="_blank" class="text-decoration-none">View on Blogger</a>

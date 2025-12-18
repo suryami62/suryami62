@@ -1,17 +1,20 @@
 namespace suryami62.Models;
 
-public class ServiceResult<T>
+internal sealed class ServiceResult<T>
 {
     public bool Success { get; set; }
     public T? Data { get; set; }
     public string? ErrorMessage { get; set; }
+}
 
-    public static ServiceResult<T> Ok(T data)
+internal static class ServiceResult
+{
+    public static ServiceResult<T> Ok<T>(T data)
     {
         return new ServiceResult<T> { Success = true, Data = data };
     }
 
-    public static ServiceResult<T> Fail(string errorMessage)
+    public static ServiceResult<T> Fail<T>(string errorMessage)
     {
         return new ServiceResult<T> { Success = false, ErrorMessage = errorMessage };
     }

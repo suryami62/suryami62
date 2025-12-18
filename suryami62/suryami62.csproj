@@ -8,6 +8,11 @@
         <UserSecretsId>7c80fd57-5b1f-4f62-84ec-4d2149262e7e</UserSecretsId>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <AnalysisLevel>10.0</AnalysisLevel>
+        <AnalysisMode>All</AnalysisMode>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="HtmlSanitizer" Version="9.0.889"/>
     </ItemGroup>

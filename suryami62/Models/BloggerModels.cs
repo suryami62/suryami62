@@ -1,12 +1,13 @@
 #region
 
+using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 
 #endregion
 
 namespace suryami62.Models;
 
-public class BlogPost
+internal sealed class BlogPost
 {
     [JsonPropertyName("id")] public string Id { get; set; } = string.Empty;
 
@@ -16,10 +17,10 @@ public class BlogPost
 
     [JsonPropertyName("published")] public DateTime Published { get; set; }
 
-    [JsonPropertyName("url")] public string Url { get; set; } = string.Empty;
+    [JsonPropertyName("url")] public Uri? Url { get; set; }
 }
 
-public class PostList
+internal sealed class PostList
 {
     [JsonPropertyName("items")] public List<BlogPost>? Items { get; set; }
 
