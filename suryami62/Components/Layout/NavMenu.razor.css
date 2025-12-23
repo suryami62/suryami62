@@ -1,11 +1,7 @@
 /* NavMenu.razor.css */
-/* Most styling is handled by Bootstrap classes in the razor file */
 
-.nav-link {
-    color: var(--bs-body-color);
-}
-
-.nav-link.active {
-    background-color: #0d6efd !important;
-    color: white !important;
+/* Define active state for the links since Blazor adds the .active class */
+::deep .active {
+    background-color: #0d6efd; /* Tailwind blue-600 is approx #2563eb, bootstrap primary is #0d6efd */
+    color: white;
 }
