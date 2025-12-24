@@ -1,7 +1,0 @@
-/* NavMenu.razor.css */
-
-/* Define active state for the links since Blazor adds the .active class */
-::deep .active {
-    background-color: #0d6efd; /* Tailwind blue-600 is approx #2563eb, bootstrap primary is #0d6efd */
-    color: white;
-}

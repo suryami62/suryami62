@@ -1,22 +1,36 @@
-<div class="container mx-auto">
-    <header class="flex justify-center py-3">
-        <ul class="flex space-x-2">
-            <li>
-                <NavLink class="px-4 py-2 rounded-md hover:bg-gray-200 transition-colors" href="" Match="NavLinkMatch.All">Home</NavLink>
-            </li>
-            <li>
-                <NavLink class="px-4 py-2 rounded-md hover:bg-gray-200 transition-colors" href="blog">Blog</NavLink>
-            </li>
-            <li>
-                <NavLink class="px-4 py-2 rounded-md hover:bg-gray-200 transition-colors" href="projects">Projects</NavLink>
-            </li>
-            <li>
-                <NavLink class="px-4 py-2 rounded-md hover:bg-gray-200 transition-colors" href="about">About</NavLink>
-            </li>
+<header class="w-full border-b-4 border-black bg-white p-4">
+    <nav class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
+        <!-- Brand / Logo Area -->
+        <div
+            class="-rotate-2 transform border-2 border-black bg-black px-3 py-1 text-2xl font-black tracking-tighter text-white uppercase select-none">
+            SURYAMI62
+        </div>
+
+        <ul class="flex flex-wrap justify-center gap-4">
+            @foreach (var link in Links)
+            {
+                <li>
+                    <NavLink class="@ClassName"
+                             href="@link.Href" Match="@link.Match">
+                        @link.Text
+                    </NavLink>
+                </li>
+            }
         </ul>
-    </header>
-</div>
+    </nav>
+</header>
 
 @code {
-    // No code needed for this simple layout
+    private const string ClassName = "block -translate-y-1 border-2 border-black bg-white px-6 py-2 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-0 active:translate-y-0 active:shadow-none";
+
+    private record NavItem(string Href, string Text, NavLinkMatch Match = NavLinkMatch.Prefix);
+
+    private List<NavItem> Links { get; } =
+    [
+        new("", "home", NavLinkMatch.All),
+        new("blog", "blog"),
+        new("projects", "projects"),
+        new("about", "about")
+    ];
+
 }
