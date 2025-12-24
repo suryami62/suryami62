@@ -1,17 +1,15 @@
 @inherits LayoutComponentBase
 
-<div class="min-h-screen flex flex-col">
-    <NavMenu />
+<div class="flex min-h-screen flex-col bg-neutral-100 font-sans text-black selection:bg-black selection:text-white">
+    <NavMenu/>
 
-    <main>
-        <article class="flex-1 p-4 pt-[1.1rem]">
+    <main class="mx-auto flex w-full max-w-7xl flex-1 flex-col p-4 md:p-8">
+        <article class="flex-1 border-2 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             @Body
         </article>
     </main>
-</div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <footer class="border-t-4 border-black bg-white p-4 text-center font-bold uppercase">
+        This website created by Surya Ramadhan &copy; @DateTime.Now.Year
+    </footer>
 </div>
