@@ -35,4 +35,71 @@
             </div>
         </div>
     </section>
+
+    <!-- Latest Blog Section -->
+    <section>
+        <div class="mb-12 flex items-end justify-between border-b-4 border-black pb-4 dark:border-white">
+            <h2 class="text-4xl font-black tracking-tighter uppercase md:text-6xl">Latest Writings</h2>
+            <a href="#" class="hidden text-xl font-bold uppercase underline decoration-4 underline-offset-4 hover:text-neutral-600 md:block dark:hover:text-neutral-400">
+                View All Posts
+            </a>
+        </div>
+
+        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            @foreach (var post in BlogPosts)
+            {
+                <article class="relative flex flex-col border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+                    <div class="mb-4 flex items-center justify-between">
+                        <span class="bg-black px-3 py-1 text-sm font-bold text-white uppercase dark:bg-white dark:text-black">
+                            @post.Category
+                        </span>
+                        <span class="font-mono font-bold">@post.Date</span>
+                    </div>
+                    
+                    <h3 class="mb-4 text-2xl leading-none font-black uppercase md:text-3xl">
+                        <a href="#" class="before:absolute before:inset-0">
+                            @post.Title
+                        </a>
+                    </h3>
+                    
+                    <p class="mb-6 line-clamp-3 text-lg leading-snug font-medium">
+                        @post.Summary
+                    </p>
+
+                    <div class="mt-auto flex items-center gap-2 font-black uppercase decoration-4 underline-offset-4 group-hover:underline">
+                        Read Article <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
 </div>
+
+@code {
+    private List<BlogPost> BlogPosts = new()
+    {
+        new BlogPost(
+            "The Art of Neo-Brutalism", 
+            "Design", 
+            "Dec 27, 2025", 
+            "Exploring the raw, unpolished, and bold aesthetic that is taking the web by storm. Why high contrast and hard shadows matter in 2025.",
+            "neo-brutalism"
+        ),
+        new BlogPost(
+            "Mastering Blazor & Tailwind", 
+            "Dev", 
+            "Dec 20, 2025", 
+            "How to integrate Tailwind CSS v4.0 with Blazor for a seamless developer experience and lightning-fast UI components.",
+            "blazor-tailwind"
+        ),
+        new BlogPost(
+            "Minimalist Workspace Setup", 
+            "Lifestyle", 
+            "Dec 15, 2025", 
+            "A look into my productivity setup. Less clutter, more focus. How environment affects coding flow.",
+            "workspace-setup"
+        )
+    };
+
+    public record BlogPost(string Title, string Category, string Date, string Summary, string Slug);
+}
