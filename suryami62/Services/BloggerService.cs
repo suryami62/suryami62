@@ -16,7 +16,8 @@ internal interface IBloggerService
     Task<ServiceResult<PostList>> SearchPostsAsync(string query);
 }
 
-[SuppressMessage("Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Instantiated via Dependency Injection")]
+[SuppressMessage("Performance", "CA1812:AvoidUninstantiatedInternalClasses",
+    Justification = "Instantiated via Dependency Injection")]
 internal sealed class BloggerService : IBloggerService
 {
     private readonly string _apiKey;
@@ -36,7 +37,8 @@ internal sealed class BloggerService : IBloggerService
             throw new InvalidOperationException("Blogger configuration (BlogId or ApiKey) is missing.");
     }
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Wrapper service designed to return failures as results")]
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types",
+        Justification = "Wrapper service designed to return failures as results")]
     public async Task<ServiceResult<PostList>> GetPostsAsync(string? pageToken = null)
     {
         var cacheKey = $"blogger_posts_{_blogId}_{pageToken ?? "default"}";
@@ -62,7 +64,8 @@ internal sealed class BloggerService : IBloggerService
         }
     }
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Wrapper service designed to return failures as results")]
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types",
+        Justification = "Wrapper service designed to return failures as results")]
     public async Task<ServiceResult<BlogPost>> GetPostByIdAsync(string postId)
     {
         var cacheKey = $"blogger_post_{postId}";
@@ -87,7 +90,8 @@ internal sealed class BloggerService : IBloggerService
         }
     }
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Wrapper service designed to return failures as results")]
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types",
+        Justification = "Wrapper service designed to return failures as results")]
     public async Task<ServiceResult<BlogPost>> GetPostByPathAsync(string path)
     {
         var url = $"{_blogId}/posts/bypath?path={path}&view=READER&key={_apiKey}";
@@ -107,7 +111,8 @@ internal sealed class BloggerService : IBloggerService
         }
     }
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Wrapper service designed to return failures as results")]
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types",
+        Justification = "Wrapper service designed to return failures as results")]
     public async Task<ServiceResult<PostList>> SearchPostsAsync(string query)
     {
         var url = $"{_blogId}/posts/search?q={query}&fetchBodies=true&key={_apiKey}";
