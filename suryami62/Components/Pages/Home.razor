@@ -2,6 +2,37 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="flex flex-col gap-12 py-8">
+    <!-- Hero Section -->
+    <section class="border-b-4 border-black pb-12 dark:border-white">
+        <div class="grid gap-12 md:grid-cols-[1fr_auto] md:items-center">
+            <div class="text-center md:text-left">
+                <h1 class="text-5xl leading-none font-black tracking-tighter uppercase sm:text-6xl md:text-8xl">
+                    My Personal<br />
+                    <span class="bg-black px-4 text-white dark:bg-white dark:text-black">Blog</span>
+                </h1>
+                <p class="mx-auto mt-6 max-w-2xl text-xl font-bold md:mx-0 md:text-2xl">
+                    Hi, I'm <span class="underline decoration-4">Surya Ramadhan</span>.
+                    Sharing thoughts on minimal design, coding, and everything in between.
+                </p>
+                
+                <div class="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
+                    <a href="https://instagram.com/" target="_blank" class="block translate-y-0 border-2 border-black bg-white px-6 py-2 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900">
+                        <i class="fa-brands fa-instagram fa-2x"></i>
+                    </a>
+                    <a href="https://linkedin.com/in/" target="_blank" class="block translate-y-0 border-2 border-black bg-white px-6 py-2 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900">
+                        <i class="fa-brands fa-linkedin fa-2x"></i>
+                    </a>
+                    <a href="https://github.com/" target="_blank" class="block translate-y-0 border-2 border-black bg-white px-6 py-2 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900">
+                        <i class="fa-brands fa-github fa-2x"></i>
+                    </a>
+                </div>
+            </div>
 
-Welcome to your new app.
+            <div class="relative mx-auto w-full max-w-70 md:mx-0 md:max-w-[320px]">
+                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Kingston" alt="Surya Ramadhan" 
+                     class="aspect-square w-full border-4 border-black object-cover shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]" />
+            </div>
+        </div>
+    </section>
+</div>
