@@ -1,5 +1,5 @@
-@page "/blog/{Id}"
-@page "/blog/path/{*Path}"
+@page "/posts/{Id}"
+@page "/posts/path/{*Path}"
 @using Ganss.Xss
 @using suryami62.Models
 @using suryami62.Services
@@ -7,10 +7,10 @@
 @inject IHtmlSanitizer HtmlSanitizer
 @rendermode InteractiveServer
 
-<PageTitle>@(_post?.Title ?? "Blog Post")</PageTitle>
+<PageTitle>@(_post?.Title ?? "Post")</PageTitle>
 
 <div class="container mt-4">
-    <a href="/blog" class="btn btn-outline-secondary mb-3">&larr; Back to Blog</a>
+    <a href="/posts" class="btn btn-outline-secondary mb-3">&larr; Back to Posts</a>
 
     @if (_isLoading)
     {

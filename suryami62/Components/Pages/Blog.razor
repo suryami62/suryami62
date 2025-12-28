@@ -1,14 +1,14 @@
-@page "/blog"
+@page "/posts"
 @using Ganss.Xss
 @using suryami62.Models
 @using suryami62.Services
 @inject IBloggerService BloggerService
 @rendermode InteractiveServer
 
-<PageTitle>Blog</PageTitle>
+<PageTitle>Posts</PageTitle>
 
 <div class="container">
-    <h1 class="mb-4">Blog</h1>
+    <h1 class="mb-4">Posts</h1>
 
     <div class="row mb-4">
         <div class="col-md-6">
@@ -46,13 +46,13 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <a href="/blog/@post.Id" class="text-decoration-none">@post.Title</a>
+                                <a href="/posts/@post.Id" class="text-decoration-none">@post.Title</a>
                             </h5>
                             <h6 class="card-subtitle mb-2 text-muted">@post.Published.ToLocalTime().ToString("f")</h6>
                             <p class="card-text">
                                 @GetExcerpt(post.Content)
                             </p>
-                            <a href="/blog/@post.Id" class="card-link">Read more</a>
+                            <a href="/posts/@post.Id" class="card-link">Read more</a>
                         </div>
                     </div>
                 </div>
