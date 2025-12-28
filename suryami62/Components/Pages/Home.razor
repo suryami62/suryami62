@@ -68,10 +68,6 @@
                     </a>
                 </h3>
 
-                <p class="mb-6 line-clamp-3 text-lg leading-snug font-medium">
-                    @post.Summary
-                </p>
-
                 <div
                     class="mt-auto flex items-center gap-2 font-black uppercase decoration-4 underline-offset-4 group-hover:underline">
                     Read Article <i class="fa-solid fa-arrow-right"></i>
@@ -89,24 +85,21 @@ private readonly List<BlogPost> _blogPosts = new()
         "The Art of Neo-Brutalism",
         "Design",
         "Dec 27, 2025",
-        "Exploring the raw, unpolished, and bold aesthetic that is taking the web by storm. Why high contrast and hard shadows matter in 2025.",
         "neo-brutalism"
     ),
     new BlogPost(
         "Mastering Blazor & Tailwind",
         "Dev",
         "Dec 20, 2025",
-        "How to integrate Tailwind CSS v4.0 with Blazor for a seamless developer experience and lightning-fast UI components.",
         "blazor-tailwind"
     ),
     new BlogPost(
         "Minimalist Workspace Setup",
         "Lifestyle",
         "Dec 15, 2025",
-        "A look into my productivity setup. Less clutter, more focus. How environment affects coding flow.",
         "workspace-setup"
     )
 };
 
-public record BlogPost(string Title, string Category, string Date, string Summary, string Slug);
+public record BlogPost(string Title, string Category, string Date, string Slug);
 }
