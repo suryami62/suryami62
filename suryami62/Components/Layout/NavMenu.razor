@@ -10,10 +10,7 @@
             @foreach (var link in Links)
             {
                 <li>
-                    <NavLink class="@ClassName"
-                             href="@link.Href" Match="@link.Match">
-                        @link.Text
-                    </NavLink>
+                    <NavButton Href="@link.Href" Text="@link.Text"/>
                 </li>
             }
         </ul>
@@ -21,13 +18,12 @@
 </header>
 
 @code {
-    private const string ClassName = "block translate-y-0 border-2 border-black bg-white px-6 py-2 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900";
 
-    private record NavItem(string Href, string Text, NavLinkMatch Match = NavLinkMatch.Prefix);
+    private record NavItem(string Href, string Text);
 
     private List<NavItem> Links { get; } =
     [
-        new("", "home", NavLinkMatch.All),
+        new("", "home"),
         new("posts", "posts"),
         new("projects", "projects"),
         new("about", "about")
