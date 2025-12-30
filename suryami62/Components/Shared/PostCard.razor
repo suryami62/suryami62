@@ -1,0 +1,37 @@
+<article
+    class="relative flex flex-col translate-x-0 translate-y-0 border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-300 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-700">
+    <div class="mb-4 flex items-center justify-between">
+        <span
+            class="bg-black px-3 py-1 text-sm font-bold text-white uppercase dark:bg-white dark:text-black">
+            @Label
+        </span>
+        <span class="font-mono font-bold">@Date</span>
+    </div>
+
+    <h3 class="mb-4 text-2xl leading-none font-black uppercase md:text-3xl">
+        <a href="@Href" class="before:absolute before:inset-0">
+            @Title
+        </a>
+    </h3>
+
+    <p class="mb-6 font-medium text-gray-700 dark:text-gray-300">
+        @Content
+    </p>
+
+    <div
+        class="mt-auto flex items-center gap-2 font-black uppercase decoration-4 underline-offset-4 group-hover:underline">
+        Read Article <i class="fa-solid fa-arrow-right"></i>
+    </div>
+</article>
+
+@code {
+    [Parameter] public string? Label { get; set; }
+
+    [Parameter] public string? Date { get; set; }
+
+    [Parameter] public string? Href { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+
+    [Parameter] public string? Content { get; set; }
+}

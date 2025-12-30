@@ -1,0 +1,10 @@
+<div class="relative mx-auto w-full max-w-70 md:mx-0 md:max-w-[320px]">
+    <img src="@AvatarUrl" alt="@Alt"
+         class="aspect-square w-full border-4 border-black object-cover shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]"/>
+</div>
+
+@code {
+    [Parameter] public string? AvatarUrl { get; set; }
+
+    [Parameter] public string? Alt { get; set; }
+}

@@ -7,35 +7,29 @@
     <section class="border-b-4 border-black pb-12 dark:border-white">
         <div class="grid gap-12 md:grid-cols-[1fr_auto] md:items-center">
             <div class="text-center md:text-left">
+                <!-- Intro -->
                 <h1 class="text-5xl leading-none font-black tracking-tighter uppercase sm:text-6xl md:text-8xl">
                     My Personal<br/>
                     <span class="bg-black px-4 text-white dark:bg-white dark:text-black">Blog</span>
                 </h1>
+                
+                <!-- Bio -->
                 <p class="mx-auto mt-6 max-w-2xl text-xl font-bold md:mx-0 md:text-2xl">
                     Hi, I'm <span class="underline decoration-4">Surya Ramadhan</span>.
                     A .NET Developer and Teacher sharing insights on minimal design, coding, and learning.
                 </p>
 
+                <!-- Social Buttons -->
                 <div class="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
-                    <a href="https://instagram.com/" target="_blank"
-                       class="block translate-y-0 border-2 border-black bg-white px-6 py-2 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900">
-                        <i class="fa-brands fa-instagram fa-2x"></i>
-                    </a>
-                    <a href="https://linkedin.com/in/" target="_blank"
-                       class="block translate-y-0 border-2 border-black bg-white px-6 py-2 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900">
-                        <i class="fa-brands fa-linkedin fa-2x"></i>
-                    </a>
-                    <a href="https://github.com/" target="_blank"
-                       class="block translate-y-0 border-2 border-black bg-white px-6 py-2 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900">
-                        <i class="fa-brands fa-github fa-2x"></i>
-                    </a>
+                    @foreach (var social in Socials)
+                    {
+                        <SocialButton Href="@social.Href" IconClass="@social.IconClass"/>
+                    }
                 </div>
             </div>
 
-            <div class="relative mx-auto w-full max-w-70 md:mx-0 md:max-w-[320px]">
-                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Kingston" alt="Surya Ramadhan"
-                     class="aspect-square w-full border-4 border-black object-cover shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]"/>
-            </div>
+            <!-- Image Profile -->
+            <Avatar AvatarUrl="https://api.dicebear.com/9.x/avataaars/svg?seed=Kingston" Alt="Surya Ramadhan"/>
         </div>
     </section>
 
@@ -52,54 +46,47 @@
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             @foreach (var post in _blogPosts)
             {
-            <article
-                class="relative flex flex-col border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
-                <div class="mb-4 flex items-center justify-between">
-                        <span
-                            class="bg-black px-3 py-1 text-sm font-bold text-white uppercase dark:bg-white dark:text-black">
-                            @post.Category
-                        </span>
-                    <span class="font-mono font-bold">@post.Date</span>
-                </div>
-
-                <h3 class="mb-4 text-2xl leading-none font-black uppercase md:text-3xl">
-                    <a href="#" class="before:absolute before:inset-0">
-                        @post.Title
-                    </a>
-                </h3>
-
-                <div
-                    class="mt-auto flex items-center gap-2 font-black uppercase decoration-4 underline-offset-4 group-hover:underline">
-                    Read Article <i class="fa-solid fa-arrow-right"></i>
-                </div>
-            </article>
+                <PostCard Label="@post.Category" Date="@post.Date" Title="@post.Title" Href="#"
+                          Content="Lorem Ipsum Dolor Sit Amet"/>
             }
         </div>
     </section>
 </div>
 
 @code {
-private readonly List<BlogPost> _blogPosts = new()
-{
-    new BlogPost(
-        "The Art of Neo-Brutalism",
-        "Design",
-        "Dec 27, 2025",
-        "neo-brutalism"
-    ),
-    new BlogPost(
-        "Mastering Blazor & Tailwind",
-        "Dev",
-        "Dec 20, 2025",
-        "blazor-tailwind"
-    ),
-    new BlogPost(
-        "Minimalist Workspace Setup",
-        "Lifestyle",
-        "Dec 15, 2025",
-        "workspace-setup"
-    )
-};
 
-public record BlogPost(string Title, string Category, string Date, string Slug);
+    private record Social(string Href, string IconClass);
+
+    private List<Social> Socials { get; } =
+    [
+        new("https://instagram.com/", "fa-brands fa-instagram fa-2x"),
+        new("https://linkedin.com/in/", "fa-brands fa-linkedin fa-2x"),
+        new("https://github.com/", "fa-brands fa-github fa-2x"),
+        new("mailto:suryaramadhan62@gmail.com", "fa-regular fa-envelope fa-2x")
+    ];
+
+    private readonly List<BlogPost> _blogPosts = new()
+    {
+        new BlogPost(
+            "The Art of Neo-Brutalism",
+            "Design",
+            "Dec 27, 2025",
+            "neo-brutalism"
+        ),
+        new BlogPost(
+            "Mastering Blazor & Tailwind",
+            "Dev",
+            "Dec 20, 2025",
+            "blazor-tailwind"
+        ),
+        new BlogPost(
+            "Minimalist Workspace Setup",
+            "Lifestyle",
+            "Dec 15, 2025",
+            "workspace-setup"
+        )
+    };
+
+    public record BlogPost(string Title, string Category, string Date, string Slug);
+
 }
