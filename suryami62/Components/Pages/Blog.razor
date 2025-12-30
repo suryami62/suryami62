@@ -5,76 +5,103 @@
 @inject IBloggerService BloggerService
 @rendermode InteractiveServer
 
-<PageTitle>Posts</PageTitle>
+<PageTitle>Blog - Surya Ramadhan</PageTitle>
 
-<div class="container">
-    <h1 class="mb-4">Posts</h1>
+<div class="flex flex-col gap-12 py-8">
+    <!-- Header Section -->
+    <section class="border-b-4 border-black pb-12 dark:border-white">
+        <h1 class="text-5xl leading-none font-black tracking-tighter uppercase sm:text-6xl md:text-8xl">
+            My <br />
+            <span class="bg-black px-4 text-white dark:bg-white dark:text-black">Writings</span>
+        </h1>
+        <p class="mt-6 max-w-2xl text-xl font-bold md:text-2xl">
+            In-depth tutorials and insights on <span class="underline decoration-4">.NET</span>, minimal design, and the art of <span class="underline decoration-4">teaching</span>.
+        </p>
+    </section>
 
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search posts..." value="@_searchQuery"
-                       @oninput="HandleInput"/>
-                <button class="btn btn-primary" @onclick="() => SearchPosts(_searchQuery)">Search</button>
-            </div>
+    <!-- Search Section -->
+    <section>
+        <div class="mb-4 flex w-full max-w-xl items-center gap-4">
+            <input type="text"
+                   class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-gray-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all outline-none focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-gray-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                   placeholder="Search posts..."
+                   value="@_searchQuery"
+                   @oninput="HandleInput" />
+            <button class="border-4 border-black bg-white px-6 py-3 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900"
+                    @onclick="() => SearchPosts(_searchQuery)">
+                Search
+            </button>
         </div>
-    </div>
+    </section>
 
     @if (_isLoading)
     {
-        <div class="d-flex justify-content-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+        <div class="flex justify-center py-12">
+            <div class="h-12 w-12 animate-spin rounded-full border-4 border-black border-t-transparent dark:border-white dark:border-t-transparent"></div>
         </div>
     }
     else if (!string.IsNullOrEmpty(_errorMessage))
     {
-        <div class="alert alert-danger">@_errorMessage</div>
+        <div class="border-4 border-black bg-red-100 p-4 font-bold text-red-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-red-900 dark:text-red-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+            @_errorMessage
+        </div>
     }
     else if (!_posts.Any())
     {
-        <div class="alert alert-info">No posts
-            found. @(string.IsNullOrEmpty(_searchQuery) ? "" : "Try a different search term.")</div>
+        <div class="border-4 border-black bg-blue-100 p-4 font-bold text-blue-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-blue-900 dark:text-blue-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+            No posts found. @(string.IsNullOrEmpty(_searchQuery) ? "" : "Try a different search term.")
+        </div>
     }
     else
     {
-        <div class="row">
-            @foreach (var post in _posts)
-            {
-                <div class="col-12 mb-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <a href="/posts/@post.Id" class="text-decoration-none">@post.Title</a>
-                            </h5>
-                            <h6 class="card-subtitle mb-2 text-muted">@post.Published.ToLocalTime().ToString("f")</h6>
-                            <p class="card-text">
-                                @GetExcerpt(post.Content)
-                            </p>
-                            <a href="/posts/@post.Id" class="card-link">Read more</a>
+        <!-- Blog Posts Grid -->
+        <section>
+            <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                @foreach (var post in _posts)
+                {
+                    <article class="group relative flex flex-col border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+                        <div class="mb-4 flex items-center justify-between">
+                            <span class="bg-black px-3 py-1 text-sm font-bold text-white uppercase dark:bg-white dark:text-black">
+                                Article
+                            </span>
+                            <span class="font-mono font-bold">@post.Published.ToLocalTime().ToString("MMM dd, yyyy")</span>
                         </div>
-                    </div>
+
+                        <h3 class="mb-4 text-2xl leading-none font-black uppercase md:text-3xl">
+                            <a href="/posts/@post.Id" class="before:absolute before:inset-0">
+                                @post.Title
+                            </a>
+                        </h3>
+
+                        <p class="mb-6 font-medium text-gray-700 dark:text-gray-300">
+                             @GetExcerpt(post.Content)
+                        </p>
+
+                        <div class="mt-auto flex items-center gap-2 font-black uppercase decoration-4 underline-offset-4 group-hover:underline">
+                            Read Article <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(_nextPageToken))
+            {
+                <div class="mt-12 mb-8 flex justify-center">
+                    <button class="border-4 border-black bg-white px-8 py-3 font-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:bg-yellow-400 hover:shadow-none disabled:opacity-50 dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                            @onclick="LoadMorePosts"
+                            disabled="@_isLoadingMore">
+                        @if (_isLoadingMore)
+                        {
+                            <span>Loading...</span>
+                        }
+                        else
+                        {
+                            <span>Load More</span>
+                        }
+                    </button>
                 </div>
             }
-        </div>
-
-        @if (!string.IsNullOrEmpty(_nextPageToken))
-        {
-            <div class="d-flex justify-content-center mt-4">
-                <button class="btn btn-outline-primary" @onclick="LoadMorePosts" disabled="@_isLoadingMore">
-                    @if (_isLoadingMore)
-                    {
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span class="visually-hidden">Loading...</span>
-                    }
-                    else
-                    {
-                        <span>Load More</span>
-                    }
-                </button>
-            </div>
-        }
+        </section>
     }
 </div>
 
