@@ -1,0 +1,102 @@
+@page "/projects"
+
+<PageTitle>Projects - Surya Ramadhan</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <!-- Header Section -->
+    <section class="border-b-4 border-black pb-12 dark:border-white">
+        <h1 class="text-5xl leading-none font-black tracking-tighter uppercase sm:text-6xl md:text-8xl">
+            My Selected <br/>
+            <span class="bg-black px-4 text-white dark:bg-white dark:text-black">Projects</span>
+        </h1>
+        <p class="mt-6 max-w-2xl text-xl font-bold md:text-2xl">
+            A collection of <span class="underline decoration-4">open source</span> tools, experiments, and
+            applications built with <span class="underline decoration-4">.NET</span> and modern web technologies.
+        </p>
+    </section>
+
+    <!-- Projects Grid -->
+    <section>
+        <div class="grid gap-12 md:grid-cols-2">
+            @foreach (var project in _projects)
+            {
+                <article
+                    class="flex h-full flex-col border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+
+                    <!-- Title & Header -->
+                    <div class="mb-4">
+                        <h3 class="mb-2 text-3xl leading-none font-black uppercase">@project.Title</h3>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach (var tag in project.Tags)
+                            {
+                                <span
+                                    class="border-2 border-black px-2 py-1 text-xs font-bold uppercase dark:border-white">
+                                    @tag
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <p class="mb-8 font-medium text-gray-700 dark:text-gray-300">
+                        @project.Description
+                    </p>
+
+                    <!-- Links/Actions -->
+                    <div class="mt-auto flex gap-4">
+                        @if (!string.IsNullOrEmpty(project.RepoUrl))
+                        {
+                            <a href="@project.RepoUrl" target="_blank"
+                               class="flex-1 translate-x-0 translate-y-0 border-2 border-white bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_#888] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-black dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_#444] dark:hover:bg-neutral-200">
+                                View Code
+                            </a>
+                        }
+
+                        @if (!string.IsNullOrEmpty(project.DemoUrl))
+                        {
+                            <a href="@project.DemoUrl" target="_blank"
+                               class="flex-1 translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-3 text-center font-bold text-black uppercase shadow-[4px_4px_0px_0px_#000] transition-all hover:bg-neutral-300 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_#FFF] dark:hover:bg-neutral-700">
+                                Live Demo
+                            </a>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+
+    public record Project(string Title, string Description, string[] Tags, string? RepoUrl = null, string? DemoUrl = null);
+
+    private readonly List<Project> _projects =
+    [
+        new(
+            "Suryami62",
+            "My personal portfolio and blog built with Blazor Server and Tailwind CSS with a Neobrutalist design system.",
+            ["Blazor", "Tailwind CSS", "C#", ".NET 9"],
+            "https://github.com/suryami62/suryami62",
+            "https://suryami62.com"
+        ),
+        new(
+            "Agentic Code Assistant",
+            "An experimental AI coding assistant that integrates with local development environments to help write better code faster.",
+            ["Python", "LangChain", "LLM", "CLI"],
+            "https://github.com/suryami62/agentic-code-assistant"
+        ),
+        new(
+            "DotNet Minimal API Starter",
+            "A clean, opinionated template for building production-ready Minimal APIs in .NET 8/9 with Vertical Slice Architecture.",
+            [".NET 9", "Clean Arch", "EF Core"],
+            "https://github.com/suryami62/dotnet-minimal-starter"
+        ),
+        new(
+            "Retro Game Engine",
+            "A 2D game engine written in C# utilizing modern rendering techniques for a retro 8-bit aesthetic.",
+            ["C#", "OpenGL", "Game Dev"],
+            "https://github.com/suryami62/retro-engine"
+        )
+    ];
+
+}
