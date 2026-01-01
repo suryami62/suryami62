@@ -46,8 +46,8 @@
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             @foreach (var post in _blogPosts)
             {
-                <PostCard Label="@post.Category" Date="@post.Date" Title="@post.Title" Href="#"
-                          Content="Lorem Ipsum Dolor Sit Amet"/>
+                <PostCard Label="@post.Label" Date="@post.Date" Title="@post.Title" Href="#"
+                          Summary="@post.Summary"/>
             }
         </div>
     </section>
@@ -71,22 +71,22 @@
             "The Art of Neo-Brutalism",
             "Design",
             "Dec 27, 2025",
-            "neo-brutalism"
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
         ),
         new BlogPost(
             "Mastering Blazor & Tailwind",
             "Dev",
             "Dec 20, 2025",
-            "blazor-tailwind"
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
         ),
         new BlogPost(
             "Minimalist Workspace Setup",
             "Lifestyle",
             "Dec 15, 2025",
-            "workspace-setup"
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
         )
     };
 
-    public record BlogPost(string Title, string Category, string Date, string Slug);
+    public record BlogPost(string Title, string Label, string Date, string Summary);
 
 }
