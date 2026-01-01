@@ -9,7 +9,6 @@
       "Courier New", monospace;
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-900: oklch(39.6% 0.141 25.723);
-    --color-yellow-400: oklch(85.2% 0.199 91.936);
     --color-blue-100: oklch(93.2% 0.032 255.585);
     --color-blue-900: oklch(37.9% 0.146 265.522);
     --color-gray-300: oklch(87.2% 0.01 258.338);
@@ -250,9 +249,6 @@
   .mt-8 {
     margin-top: calc(var(--spacing) * 8);
   }
-  .mt-12 {
-    margin-top: calc(var(--spacing) * 12);
-  }
   .mt-auto {
     margin-top: auto;
   }
@@ -264,9 +260,6 @@
   }
   .mb-6 {
     margin-bottom: calc(var(--spacing) * 6);
-  }
-  .mb-8 {
-    margin-bottom: calc(var(--spacing) * 8);
   }
   .mb-12 {
     margin-bottom: calc(var(--spacing) * 12);
@@ -423,9 +416,6 @@
   }
   .px-6 {
     padding-inline: calc(var(--spacing) * 6);
-  }
-  .px-8 {
-    padding-inline: calc(var(--spacing) * 8);
   }
   .py-1 {
     padding-block: calc(var(--spacing) * 1);
@@ -592,22 +582,6 @@
       inset: calc(var(--spacing) * 0);
     }
   }
-  .hover\:translate-x-1 {
-    &:hover {
-      @media (hover: hover) {
-        --tw-translate-x: calc(var(--spacing) * 1);
-        translate: var(--tw-translate-x) var(--tw-translate-y);
-      }
-    }
-  }
-  .hover\:translate-y-1 {
-    &:hover {
-      @media (hover: hover) {
-        --tw-translate-y: calc(var(--spacing) * 1);
-        translate: var(--tw-translate-x) var(--tw-translate-y);
-      }
-    }
-  }
   .hover\:bg-neutral-100 {
     &:hover {
       @media (hover: hover) {
@@ -622,25 +596,10 @@
       }
     }
   }
-  .hover\:bg-yellow-400 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-yellow-400);
-      }
-    }
-  }
   .hover\:text-neutral-600 {
     &:hover {
       @media (hover: hover) {
         color: var(--color-neutral-600);
-      }
-    }
-  }
-  .hover\:shadow-none {
-    &:hover {
-      @media (hover: hover) {
-        --tw-shadow: 0 0 #0000;
-        box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
       }
     }
   }
@@ -678,11 +637,6 @@
     &:active {
       --tw-shadow: 0 0 #0000;
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-    }
-  }
-  .disabled\:opacity-50 {
-    &:disabled {
-      opacity: 50%;
     }
   }
   .sm\:text-6xl {

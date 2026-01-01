@@ -1,9 +1,4 @@
 @page "/posts"
-@using Ganss.Xss
-@using suryami62.Models
-@using suryami62.Services
-@inject IBloggerService BloggerService
-@rendermode InteractiveServer
 
 <PageTitle>Blog - Surya Ramadhan</PageTitle>
 
@@ -11,229 +6,100 @@
     <!-- Header Section -->
     <section class="border-b-4 border-black pb-12 dark:border-white">
         <h1 class="text-5xl leading-none font-black tracking-tighter uppercase sm:text-6xl md:text-8xl">
-            My <br />
+            My <br/>
             <span class="bg-black px-4 text-white dark:bg-white dark:text-black">Writings</span>
         </h1>
         <p class="mt-6 max-w-2xl text-xl font-bold md:text-2xl">
-            In-depth tutorials and insights on <span class="underline decoration-4">.NET</span>, minimal design, and the art of <span class="underline decoration-4">teaching</span>.
+            In-depth tutorials and insights on <span class="underline decoration-4">.NET</span>, minimal design, and the
+            art of <span class="underline decoration-4">teaching</span>.
         </p>
     </section>
 
     <!-- Search Section -->
     <section>
-        <div class="mb-4 flex w-full max-w-xl items-center gap-4">
-            <input type="text"
-                   class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-gray-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all outline-none focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-gray-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                   placeholder="Search posts..."
-                   value="@_searchQuery"
-                   @oninput="HandleInput" />
-            <button class="border-4 border-black bg-white px-6 py-3 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900"
-                    @onclick="() => SearchPosts(_searchQuery)">
-                Search
-            </button>
-        </div>
+        <SearchForm/>
     </section>
 
-    @if (_isLoading)
-    {
-        <div class="flex justify-center py-12">
-            <div class="h-12 w-12 animate-spin rounded-full border-4 border-black border-t-transparent dark:border-white dark:border-t-transparent"></div>
-        </div>
-    }
-    else if (!string.IsNullOrEmpty(_errorMessage))
-    {
-        <div class="border-4 border-black bg-red-100 p-4 font-bold text-red-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-red-900 dark:text-red-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-            @_errorMessage
-        </div>
-    }
-    else if (!_posts.Any())
-    {
-        <div class="border-4 border-black bg-blue-100 p-4 font-bold text-blue-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-blue-900 dark:text-blue-100 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-            No posts found. @(string.IsNullOrEmpty(_searchQuery) ? "" : "Try a different search term.")
-        </div>
-    }
-    else
-    {
-        <!-- Blog Posts Grid -->
-        <section>
-            <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                @foreach (var post in _posts)
-                {
-                    <article class="group relative flex flex-col border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
-                        <div class="mb-4 flex items-center justify-between">
-                            <span class="bg-black px-3 py-1 text-sm font-bold text-white uppercase dark:bg-white dark:text-black">
-                                Article
-                            </span>
-                            <span class="font-mono font-bold">@post.Published.ToLocalTime().ToString("MMM dd, yyyy")</span>
-                        </div>
-
-                        <h3 class="mb-4 text-2xl leading-none font-black uppercase md:text-3xl">
-                            <a href="/posts/@post.Id" class="before:absolute before:inset-0">
-                                @post.Title
-                            </a>
-                        </h3>
-
-                        <p class="mb-6 font-medium text-gray-700 dark:text-gray-300">
-                             @GetExcerpt(post.Content)
-                        </p>
-
-                        <div class="mt-auto flex items-center gap-2 font-black uppercase decoration-4 underline-offset-4 group-hover:underline">
-                            Read Article <i class="fa-solid fa-arrow-right"></i>
-                        </div>
-                    </article>
-                }
-            </div>
-
-            @if (!string.IsNullOrEmpty(_nextPageToken))
+    <!-- Blog Posts Grid -->
+    <section>
+        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            @foreach (var post in _posts)
             {
-                <div class="mt-12 mb-8 flex justify-center">
-                    <button class="border-4 border-black bg-white px-8 py-3 font-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:bg-yellow-400 hover:shadow-none disabled:opacity-50 dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                            @onclick="LoadMorePosts"
-                            disabled="@_isLoadingMore">
-                        @if (_isLoadingMore)
-                        {
-                            <span>Loading...</span>
-                        }
-                        else
-                        {
-                            <span>Load More</span>
-                        }
-                    </button>
-                </div>
+                <PostCard Label="@post.Label" Date="@post.Date" Title="@post.Title" Href="#"
+                          Summary="@post.Summary"/>
             }
-        </section>
-    }
+        </div>
+    </section>
 </div>
 
 @code {
-    private List<BlogPost> _posts = new();
-    private string _searchQuery = "";
-    private bool _isLoading = true;
-    private bool _isLoadingMore;
-    private string? _errorMessage;
-    private string? _nextPageToken;
-    private CancellationTokenSource? _searchCts;
 
-    private static readonly HtmlSanitizer _plainTextSanitizer = new();
+    public record Post(string Title, string Label, string Date, string Summary);
 
-    static Blog()
-    {
-        _plainTextSanitizer.AllowedTags.Clear();
-    }
+    private readonly List<Post> _posts =
+    [
+        new(
+            "The Art of Neo-Brutalism",
+            "Design",
+            "Dec 27, 2025",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
+        ),
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadPosts();
-    }
+        new(
+            "Mastering Blazor & Tailwind",
+            "Dev",
+            "Dec 20, 2025",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
+        ),
 
-    private async Task HandleInput(ChangeEventArgs e)
-    {
-        _searchQuery = e.Value?.ToString() ?? "";
+        new(
+            "Minimalist Workspace Setup",
+            "Lifestyle",
+            "Dec 15, 2025",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
+        ),
 
-        // Debounce logic
-        _searchCts?.Cancel();
-        _searchCts = new CancellationTokenSource();
-        var token = _searchCts.Token;
+        new(
+            "The Power of Clean Code",
+            "Dev",
+            "Dec 10, 2025",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
+        ),
 
-        try
-        {
-            await Task.Delay(500, token); // Debounce time
-            await SearchPosts(_searchQuery);
-        }
-        catch (TaskCanceledException)
-        {
-            // Ignore if cancelled
-        }
-    }
+        new(
+            "Building Accessible UIs",
+            "Design",
+            "Dec 05, 2025",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
+        ),
 
-    private async Task PerformFetch(Func<Task<ServiceResult<PostList>>> fetchAction)
-    {
-        _isLoading = true;
-        _errorMessage = null;
-        // Force UI update for loading state if called from background
-        StateHasChanged();
+        new(
+            "The Future of Web Development",
+            "Tech",
+            "Nov 28, 2025",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
+        ),
 
-        try
-        {
-            var result = await fetchAction();
-            if (result.Success)
-            {
-                _posts = result.Data?.Items ?? new List<BlogPost>();
-                _nextPageToken = result.Data?.NextPageToken;
-            }
-            else
-            {
-                _errorMessage = result.ErrorMessage;
-                _posts = new List<BlogPost>();
-                _nextPageToken = null;
-            }
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Unexpected error: {ex.Message}";
-        }
+        new(
+            "Optimizing Blazor Performance",
+            "Dev",
+            "Nov 20, 2025",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
+        ),
 
-        _isLoading = false;
-        StateHasChanged();
-    }
+        new(
+            "Understanding Asynchronous Programming",
+            "Tech",
+            "Nov 15, 2025",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
+        ),
 
-    private async Task LoadPosts()
-    {
-        await PerformFetch(() => BloggerService.GetPostsAsync());
-    }
-
-    private async Task SearchPosts(string query)
-    {
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            await LoadPosts();
-            return;
-        }
-
-        await PerformFetch(() => BloggerService.SearchPostsAsync(query));
-    }
-
-    private async Task LoadMorePosts()
-    {
-        if (string.IsNullOrEmpty(_nextPageToken)) return;
-
-        _isLoadingMore = true;
-        StateHasChanged();
-
-        try
-        {
-            var result = await BloggerService.GetPostsAsync(_nextPageToken);
-            if (result.Success)
-            {
-                var newPosts = result.Data?.Items ?? new List<BlogPost>();
-                _posts.AddRange(newPosts);
-                _nextPageToken = result.Data?.NextPageToken;
-            }
-            // Optionally handle error for load more specifically using a toast or small alert
-            // For now, we prefer not to disrupt the user flow too much
-        }
-        catch (Exception)
-        {
-            // Ignore for now
-        }
-
-        _isLoadingMore = false;
-        StateHasChanged();
-    }
-
-    private string GetExcerpt(string content)
-    {
-        if (string.IsNullOrEmpty(content)) return string.Empty;
-
-        // Use static HtmlSanitizer to strip tags (configured in static ctor)
-        var plainText = _plainTextSanitizer.Sanitize(content);
-
-        if (plainText.Length > 200)
-        {
-            return plainText.Substring(0, 200) + "...";
-        }
-
-        return plainText;
-    }
+        new(
+            "Exploring Minimalist Design Principles",
+            "Design",
+            "Nov 10, 2025",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
+        )
+    ];
 
 }

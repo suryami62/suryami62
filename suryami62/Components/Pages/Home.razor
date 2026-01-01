@@ -12,7 +12,7 @@
                     My Personal<br/>
                     <span class="bg-black px-4 text-white dark:bg-white dark:text-black">Blog</span>
                 </h1>
-                
+
                 <!-- Bio -->
                 <p class="mx-auto mt-6 max-w-2xl text-xl font-bold md:mx-0 md:text-2xl">
                     Hi, I'm <span class="underline decoration-4">Surya Ramadhan</span>.
@@ -44,7 +44,7 @@
         </div>
 
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            @foreach (var post in _blogPosts)
+            @foreach (var post in _posts)
             {
                 <PostCard Label="@post.Label" Date="@post.Date" Title="@post.Title" Href="#"
                           Summary="@post.Summary"/>
@@ -57,6 +57,8 @@
 
     private record Social(string Href, string IconClass);
 
+    public record Post(string Title, string Label, string Date, string Summary);
+
     private List<Social> Socials { get; } =
     [
         new("https://instagram.com/", "fa-brands fa-instagram fa-2x"),
@@ -65,28 +67,29 @@
         new("mailto:suryaramadhan62@gmail.com", "fa-regular fa-envelope fa-2x")
     ];
 
-    private readonly List<BlogPost> _blogPosts = new()
-    {
-        new BlogPost(
+    private readonly List<Post> _posts =
+    [
+        new(
             "The Art of Neo-Brutalism",
             "Design",
             "Dec 27, 2025",
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
         ),
-        new BlogPost(
+
+        new(
             "Mastering Blazor & Tailwind",
             "Dev",
             "Dec 20, 2025",
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
         ),
-        new BlogPost(
+
+        new(
             "Minimalist Workspace Setup",
             "Lifestyle",
             "Dec 15, 2025",
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
         )
-    };
+    ];
 
-    public record BlogPost(string Title, string Label, string Date, string Summary);
 
 }
