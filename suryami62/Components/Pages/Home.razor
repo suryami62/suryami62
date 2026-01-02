@@ -14,10 +14,9 @@
                 </h1>
 
                 <!-- Description -->
-                <p class="mx-auto mt-6 max-w-2xl text-xl font-bold md:mx-0 md:text-2xl">
-                    Hi, I'm <span class="underline decoration-4">Surya Ramadhan</span>.
-                    A .NET Developer and Physics Teacher sharing insights on minimal design, coding, and learning.
-                </p>
+                <p class="mx-auto mt-6 max-w-2xl text-xl font-bold md:mx-0 md:text-2xl">Hi, I'm <span
+                        class="underline decoration-4">Surya Ramadhan</span>. A .NET Developer and Physics Teacher
+                    sharing insights on minimal design, coding, and learning.</p>
 
                 <!-- Social Buttons -->
                 <div class="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
@@ -39,15 +38,13 @@
             <h2 class="text-4xl font-black tracking-tighter uppercase md:text-6xl">Latest Writings</h2>
             <a href="posts"
                class="hidden text-xl font-bold uppercase underline decoration-4 underline-offset-4 hover:text-neutral-600 md:block dark:hover:text-neutral-400">
-                View All Posts
-            </a>
+                View All Posts </a>
         </div>
 
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             @foreach (var post in _posts)
             {
-                <PostCard Label="@post.Label" Date="@post.Date" Title="@post.Title" Href="#"
-                          Summary="@post.Summary"/>
+                <PostCard Label="@post.Label" Date="@post.Date" Title="@post.Title" Href="#" Summary="@post.Summary"/>
             }
         </div>
     </section>

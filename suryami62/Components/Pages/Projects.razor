@@ -12,8 +12,8 @@
         </h1>
 
         <!-- Description -->
-        <p class="mt-6 max-w-2xl text-xl font-bold md:text-2xl">
-            A collection of tools and experiments built by a <span class="underline decoration-4">.NET Developer</span> and <span class="underline decoration-4">Physics Teacher</span>.
+        <p class="mt-6 max-w-2xl text-xl font-bold md:text-2xl">A collection of tools and experiments built by a <span
+                class="underline decoration-4">.NET Developer</span> and <span class="underline decoration-4">Physics Teacher</span>.
         </p>
     </section>
 
@@ -24,7 +24,6 @@
             {
                 <article
                     class="flex h-full flex-col border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
-
                     <!-- Title & Header -->
                     <div class="mb-4">
                         <h3 class="mb-2 text-3xl leading-none font-black uppercase">@project.Title</h3>
@@ -32,17 +31,13 @@
                             @foreach (var tag in project.Tags)
                             {
                                 <span
-                                    class="border-2 border-black px-2 py-1 text-xs font-bold uppercase dark:border-white">
-                                    @tag
-                                </span>
+                                    class="border-2 border-black px-2 py-1 text-xs font-bold uppercase dark:border-white"> @tag </span>
                             }
                         </div>
                     </div>
 
                     <!-- Description -->
-                    <p class="mb-8 font-medium text-gray-700 dark:text-gray-300">
-                        @project.Description
-                    </p>
+                    <p class="mb-8 font-medium text-gray-700 dark:text-gray-300">@project.Description</p>
 
                     <!-- Links/Actions -->
                     <div class="mt-auto flex gap-4">
@@ -50,16 +45,13 @@
                         {
                             <a href="@project.RepoUrl" target="_blank"
                                class="flex-1 translate-x-0 translate-y-0 border-2 border-white bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_#888] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-black dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_#444] dark:hover:bg-neutral-200">
-                                View Code
-                            </a>
+                                View Code </a>
                         }
-
                         @if (!string.IsNullOrEmpty(project.DemoUrl))
                         {
                             <a href="@project.DemoUrl" target="_blank"
                                class="flex-1 translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-3 text-center font-bold text-black uppercase shadow-[4px_4px_0px_0px_#000] transition-all hover:bg-neutral-300 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_#FFF] dark:hover:bg-neutral-700">
-                                Live Demo
-                            </a>
+                                Live Demo </a>
                         }
                     </div>
                 </article>
