@@ -1,4 +1,6 @@
 ﻿@page "/"
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
 
 <PageTitle>Home</PageTitle>
 
@@ -14,9 +16,14 @@
                 </h1>
 
                 <!-- Description -->
-                <p class="mx-auto mt-6 max-w-2xl text-xl font-bold md:mx-0 md:text-2xl">Hi, I'm <span
-                        class="underline decoration-4">Surya Ramadhan</span>. A .NET Developer and Physics Teacher
-                    sharing insights on minimal design, coding, and learning.</p>
+                <p class="mx-auto mt-6 max-w-2xl text-xl font-bold md:mx-0 md:text-2xl">
+                    Hi, I'm
+                    <span
+                        class="underline decoration-4">
+                        Surya Ramadhan
+                    </span>. A .NET Developer and Physics Teacher
+                    sharing insights on minimal design, coding, and learning.
+                </p>
 
                 <!-- Social Buttons -->
                 <div class="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
@@ -38,7 +45,8 @@
             <h2 class="text-4xl font-black tracking-tighter uppercase md:text-6xl">Latest Writings</h2>
             <a href="posts"
                class="hidden text-xl font-bold uppercase underline decoration-4 underline-offset-4 hover:text-neutral-600 md:block dark:hover:text-neutral-400">
-                View All Posts </a>
+                View All Posts
+            </a>
         </div>
 
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -54,15 +62,20 @@
 
     private record Social(string Href, string IconClass);
 
-    public record Post(string Title, string Label, string Date, string Summary);
+    private record Post(string Title, string Label, string Date, string Summary);
 
-    private List<Social> Socials { get; } =
-    [
-        new("https://instagram.com/", "fa-brands fa-instagram fa-2x"),
-        new("https://linkedin.com/in/", "fa-brands fa-linkedin fa-2x"),
-        new("https://github.com/", "fa-brands fa-github fa-2x"),
-        new("mailto:suryaramadhan62@gmail.com", "fa-regular fa-envelope fa-2x")
-    ];
+    private List<Social> Socials { get; set; } = [];
+
+    protected override void OnInitialized()
+    {
+        Socials =
+        [
+            new(Configuration["UserInfo:Instagram"] ?? "#", "fa-brands fa-instagram"),
+            new(Configuration["UserInfo:Linkedin"] ?? "#", "fa-brands fa-linkedin"),
+            new(Configuration["UserInfo:Github"] ?? "#", "fa-brands fa-github"),
+            new(Configuration["UserInfo:Email"] ?? "#", "fa-regular fa-envelope")
+        ];
+    }
 
     private readonly List<Post> _posts =
     [
