@@ -26,7 +26,8 @@
         <div class="grid gap-12 md:grid-cols-2">
             @foreach (var project in _projects)
             {
-                <ProjectCard Title="@project.Title" Description="@project.Description" Tags="@project.Tags" RepoUrl="@project.RepoUrl" DemoUrl="@project.DemoUrl"/>
+                <ProjectCard Title="@project.Title" Description="@project.Description" Tags="@project.Tags"
+                             RepoUrl="@project.RepoUrl" DemoUrl="@project.DemoUrl"/>
             }
         </div>
     </section>
