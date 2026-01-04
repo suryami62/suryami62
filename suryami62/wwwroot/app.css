@@ -7,10 +7,6 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
-    --color-red-100: oklch(93.6% 0.032 17.717);
-    --color-red-900: oklch(39.6% 0.141 25.723);
-    --color-blue-100: oklch(93.2% 0.032 255.585);
-    --color-blue-900: oklch(37.9% 0.146 265.522);
     --color-gray-300: oklch(87.2% 0.01 258.338);
     --color-gray-400: oklch(70.7% 0.022 261.325);
     --color-gray-500: oklch(55.1% 0.027 264.364);
@@ -55,7 +51,6 @@
     --tracking-tighter: -0.05em;
     --tracking-widest: 0.1em;
     --leading-relaxed: 1.625;
-    --animate-spin: spin 1s linear infinite;
     --default-transition-duration: 150ms;
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: var(--font-sans);
@@ -265,17 +260,11 @@
   .h-10 {
     height: calc(var(--spacing) * 10);
   }
-  .h-12 {
-    height: calc(var(--spacing) * 12);
-  }
   .h-full {
     height: 100%;
   }
   .min-h-screen {
     min-height: 100vh;
-  }
-  .w-12 {
-    width: calc(var(--spacing) * 12);
   }
   .w-auto {
     width: auto;
@@ -315,9 +304,6 @@
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
   }
-  .animate-spin {
-    animation: var(--animate-spin);
-  }
   .list-disc {
     list-style-type: disc;
   }
@@ -354,9 +340,6 @@
   .gap-12 {
     gap: calc(var(--spacing) * 12);
   }
-  .rounded-full {
-    border-radius: calc(infinity * 1px);
-  }
   .border-2 {
     border-style: var(--tw-border-style);
     border-width: 2px;
@@ -383,20 +366,11 @@
   .border-white {
     border-color: var(--color-white);
   }
-  .border-t-transparent {
-    border-top-color: transparent;
-  }
   .bg-black {
     background-color: var(--color-black);
   }
-  .bg-blue-100 {
-    background-color: var(--color-blue-100);
-  }
   .bg-neutral-100 {
     background-color: var(--color-neutral-100);
-  }
-  .bg-red-100 {
-    background-color: var(--color-red-100);
   }
   .bg-white {
     background-color: var(--color-white);
@@ -442,9 +416,6 @@
   }
   .py-8 {
     padding-block: calc(var(--spacing) * 8);
-  }
-  .py-12 {
-    padding-block: calc(var(--spacing) * 12);
   }
   .pb-4 {
     padding-bottom: calc(var(--spacing) * 4);
@@ -530,17 +501,11 @@
   .text-black {
     color: var(--color-black);
   }
-  .text-blue-900 {
-    color: var(--color-blue-900);
-  }
   .text-gray-700 {
     color: var(--color-gray-700);
   }
   .text-neutral-600 {
     color: var(--color-neutral-600);
-  }
-  .text-red-900 {
-    color: var(--color-red-900);
   }
   .text-white {
     color: var(--color-white);
@@ -813,29 +778,14 @@
       border-color: var(--color-white);
     }
   }
-  .dark\:border-t-transparent {
-    @media (prefers-color-scheme: dark) {
-      border-top-color: transparent;
-    }
-  }
   .dark\:bg-black {
     @media (prefers-color-scheme: dark) {
       background-color: var(--color-black);
     }
   }
-  .dark\:bg-blue-900 {
-    @media (prefers-color-scheme: dark) {
-      background-color: var(--color-blue-900);
-    }
-  }
   .dark\:bg-neutral-900 {
     @media (prefers-color-scheme: dark) {
       background-color: var(--color-neutral-900);
-    }
-  }
-  .dark\:bg-red-900 {
-    @media (prefers-color-scheme: dark) {
-      background-color: var(--color-red-900);
     }
   }
   .dark\:bg-white {
@@ -853,11 +803,6 @@
       color: var(--color-black);
     }
   }
-  .dark\:text-blue-100 {
-    @media (prefers-color-scheme: dark) {
-      color: var(--color-blue-100);
-    }
-  }
   .dark\:text-gray-300 {
     @media (prefers-color-scheme: dark) {
       color: var(--color-gray-300);
@@ -866,11 +811,6 @@
   .dark\:text-neutral-400 {
     @media (prefers-color-scheme: dark) {
       color: var(--color-neutral-400);
-    }
-  }
-  .dark\:text-red-100 {
-    @media (prefers-color-scheme: dark) {
-      color: var(--color-red-100);
     }
   }
   .dark\:text-white {
@@ -1115,11 +1055,6 @@ h1:focus {
   syntax: "*";
   initial-value: "";
   inherits: false;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
