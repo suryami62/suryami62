@@ -1,8 +1,6 @@
 #region
 
-using Ganss.Xss;
 using suryami62.Components;
-using suryami62.Services;
 
 #endregion
 
@@ -11,14 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<IHtmlSanitizer, HtmlSanitizer>();
-
-builder.Services.AddHttpClient<IBloggerService, BloggerService>(client =>
-{
-    client.BaseAddress = new Uri("https://blogger.googleapis.com/v3/blogs/");
-});
 
 var app = builder.Build();
 

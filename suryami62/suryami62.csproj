@@ -13,8 +13,4 @@
         <AnalysisMode>All</AnalysisMode>
     </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="HtmlSanitizer" Version="9.0.889"/>
-    </ItemGroup>
-
 </Project>
