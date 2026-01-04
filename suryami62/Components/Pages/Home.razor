@@ -1,5 +1,4 @@
 ﻿@page "/"
-@using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 
 <PageTitle>Home</PageTitle>
@@ -70,10 +69,10 @@
     {
         Socials =
         [
-            new(Configuration["UserInfo:Instagram"] ?? "#", "fa-brands fa-instagram"),
-            new(Configuration["UserInfo:Linkedin"] ?? "#", "fa-brands fa-linkedin"),
-            new(Configuration["UserInfo:Github"] ?? "#", "fa-brands fa-github"),
-            new(Configuration["UserInfo:Email"] ?? "#", "fa-regular fa-envelope")
+            new Social(Configuration["UserInfo:Instagram"] ?? "#", "fa-brands fa-instagram"),
+            new Social(Configuration["UserInfo:Linkedin"] ?? "#", "fa-brands fa-linkedin"),
+            new Social(Configuration["UserInfo:Github"] ?? "#", "fa-brands fa-github"),
+            new Social(Configuration["UserInfo:Email"] ?? "#", "fa-regular fa-envelope")
         ];
     }
 
