@@ -1,0 +1,19 @@
+<div
+    class="border-2 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#FFF]">
+    <div class="mb-4 flex items-center gap-4">
+        @if (!string.IsNullOrEmpty(IconClass))
+        {
+            <i class="@IconClass text-4xl"></i>
+        }
+        <h2 class="text-3xl font-black uppercase">@Title</h2>
+    </div>
+    <div class="text-lg leading-relaxed font-medium">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? IconClass { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

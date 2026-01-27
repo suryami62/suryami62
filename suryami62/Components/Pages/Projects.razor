@@ -4,22 +4,13 @@
 
 <div class="flex flex-col gap-12 py-8">
     <!-- Header Section -->
-    <section class="border-b-4 border-black pb-12 dark:border-white">
-        <!-- Intro -->
-        <h1 class="text-5xl leading-none font-black tracking-tighter uppercase sm:text-6xl md:text-8xl">
-            My Selected <br/>
-            <span class="bg-black px-4 text-white dark:bg-white dark:text-black">Projects</span>
-        </h1>
-
-        <!-- Description -->
-        <p class="mt-6 max-w-2xl text-xl font-bold md:text-2xl">
+    <PageHeader Title="My Selected" Highlight="Projects">
+        <ChildContent>
             A collection of tools and experiments built by a
-            <span
-                class="underline decoration-4">
-                .NET Developer
-            </span> and <span class="underline decoration-4">Physics Teacher</span>.
-        </p>
-    </section>
+            <span class="underline decoration-4">.NET Developer</span> and
+            <span class="underline decoration-4">Physics Teacher</span>.
+        </ChildContent>
+    </PageHeader>
 
     <!-- Projects Grid -->
     <section>

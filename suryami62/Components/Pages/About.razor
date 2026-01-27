@@ -4,52 +4,33 @@
 
 <div class="flex flex-col gap-12 py-8">
     <!-- Header Section -->
-    <header class="border-b-4 border-black pb-12 dark:border-white">
-        <!-- Intro -->
-        <h1 class="text-5xl leading-none font-black tracking-tighter uppercase sm:text-6xl md:text-8xl">
-            My Personal <br/>
-            <span class="bg-black px-4 text-white dark:bg-white dark:text-black">Bio</span>
-        </h1>
-        <!-- Description -->
-        <p class="mt-6 max-w-2xl text-xl font-bold md:text-2xl">
-            A
-            <span
-                class="underline decoration-4">
-                .NET Developer
-            </span> and <span class="underline decoration-4">Physics Teacher</span>
+    <PageHeader Title="My Personal" Highlight="Bio">
+        <ChildContent>
+            A <span class="underline decoration-4">.NET Developer</span> and
+            <span class="underline decoration-4">Physics Teacher</span>
             bridging the gap between theory and code.
-        </p>
-    </header>
+        </ChildContent>
+    </PageHeader>
 
     <!-- Role Section -->
     <section class="grid gap-8 md:grid-cols-2">
         <!-- Developer Role -->
-        <div
-            class="border-2 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#FFF]">
-            <div class="mb-4 flex items-center gap-4">
-                <i class="fa-solid fa-code text-4xl"></i>
-                <h2 class="text-3xl font-black uppercase">The Developer</h2>
-            </div>
+        <InfoCard Title="The Developer" IconClass="fa-solid fa-code">
             <p class="text-lg leading-relaxed font-medium">
                 Specializing in <strong>.NET</strong> and <strong>C#</strong>,
                 I build robust systems with a focus on logical precision. My approach to coding is grounded in
                 analytical thinking by breaking down complex problems into efficient, executable solutions.
             </p>
-        </div>
+        </InfoCard>
 
         <!-- Teacher Role -->
-        <div
-            class="border-2 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#FFF]">
-            <div class="mb-4 flex items-center gap-4">
-                <i class="fa-solid fa-chalkboard-user text-4xl"></i>
-                <h2 class="text-3xl font-black uppercase">The Teacher</h2>
-            </div>
+        <InfoCard Title="The Teacher" IconClass="fa-solid fa-chalkboard-user">
             <p class="text-lg leading-relaxed font-medium">
                 With a background in <strong>Physics Education</strong>, I
                 have a passion for simplifying difficult concepts. Whether teaching students about energy sources or
                 mentoring peers in code, my goal is always clarity and understanding.
             </p>
-        </div>
+        </InfoCard>
     </section>
 
     <!-- Experience & Education Section -->
@@ -60,12 +41,8 @@
 
         <div class="grid gap-8 lg:grid-cols-2">
             <!-- Experience -->
-            <div class="flex flex-col gap-6">
-                <h3 class="bg-black p-2 text-2xl font-bold text-white uppercase dark:bg-white dark:text-black">
-                    Experience
-                </h3>
-
-                <div class="border-l-4 border-black pl-6 dark:border-white">
+            <ContentBlock Title="Experience">
+                <div>
                     <h4 class="text-2xl font-bold">Class Teacher</h4>
                     <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">
                         SD Negeri 004 Tanjungpinang
@@ -78,15 +55,11 @@
                         <li>conducted daily and final assessments.</li>
                     </ul>
                 </div>
-            </div>
+            </ContentBlock>
 
             <!-- Education -->
-            <div class="flex flex-col gap-6">
-                <h3 class="bg-black p-2 text-2xl font-bold text-white uppercase dark:bg-white dark:text-black">
-                    Education
-                </h3>
-
-                <div class="border-l-4 border-black pl-6 dark:border-white">
+            <ContentBlock Title="Education">
+                <div>
                     <h4 class="text-2xl font-bold">Bachelor of Physics Ed.</h4>
                     <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">
                         Universitas Sarjanawiyata
@@ -95,7 +68,7 @@
                     <p class="mb-2 font-mono text-sm">Sep 2019 – Oct 2024</p>
                     <p class="font-medium">Focus on Physics Education with expertise in teaching and C# programming.</p>
                 </div>
-            </div>
+            </ContentBlock>
         </div>
     </section>
 </div>
