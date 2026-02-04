@@ -5,8 +5,6 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "suryami62", "suryami62\suryami62.csproj", "{BFDA3B13-F8E5-4C9D-89D6-9F2C89BF0168}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "suryami62.Admin", "suryami62.Admin\suryami62.Admin.csproj", "{1180B50F-6455-42CF-95A9-BD7624DF4775}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{BFDA3B13-F8E5-4C9D-89D6-9F2C89BF0168}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFDA3B13-F8E5-4C9D-89D6-9F2C89BF0168}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFDA3B13-F8E5-4C9D-89D6-9F2C89BF0168}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1180B50F-6455-42CF-95A9-BD7624DF4775}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1180B50F-6455-42CF-95A9-BD7624DF4775}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1180B50F-6455-42CF-95A9-BD7624DF4775}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1180B50F-6455-42CF-95A9-BD7624DF4775}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
