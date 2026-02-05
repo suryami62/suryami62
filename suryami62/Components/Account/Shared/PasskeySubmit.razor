@@ -15,7 +15,7 @@
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
-    [Parameter] [EditorRequired] public PasskeyOperation Operation { get; set; }
+    [Parameter] [EditorRequired] public string Operation { get; set; } = default!;
 
     [Parameter] [EditorRequired] public string Name { get; set; } = default!;
 

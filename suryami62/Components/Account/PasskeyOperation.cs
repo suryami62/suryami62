@@ -1,6 +1,6 @@
 namespace suryami62.Components.Account;
 
-public enum PasskeyOperation
+internal enum PasskeyOperation
 {
     Create = 0,
     Request = 1
