@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using suryami62.Components;
 using suryami62.Components.Account;
 using suryami62.Data;
-using suryami62.Migrations;
 
 #endregion
 
@@ -36,7 +35,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
                        throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlite(connectionString);
+    options.UseNpgsql(connectionString);
     _ = ApplicationDbContext.Create(new DbContextOptions<ApplicationDbContext>());
 });
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -78,7 +77,5 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
-
-if (OperatingSystem.IsFreeBSD()) _ = new CreateIdentitySchema();
 
 app.Run();
