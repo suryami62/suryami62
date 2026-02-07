@@ -32,7 +32,8 @@
                 <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber"
                            class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
                            placeholder="Enter your phone number"/>
-                <ValidationMessage For="() => Input.PhoneNumber" class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                <ValidationMessage For="() => Input.PhoneNumber"
+                                   class="text-sm font-bold text-red-600 dark:text-red-400"/>
             </div>
             <button type="submit"
                     class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">

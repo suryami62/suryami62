@@ -31,25 +31,39 @@
                 <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
                 <div class="mt-4 flex flex-col gap-4">
                     <div class="flex flex-col gap-2">
+                        <label for="Input.UserName"
+                               class="text-sm font-black uppercase tracking-widest">Username</label>
+                        <InputText @bind-Value="Input.UserName" id="Input.UserName"
+                                   class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                                   autocomplete="username" aria-required="true" placeholder="username"/>
+                        <ValidationMessage For="() => Input.UserName"
+                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                    </div>
+                    <div class="flex flex-col gap-2">
                         <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
                         <InputText @bind-Value="Input.Email" id="Input.Email"
                                    class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                                   autocomplete="username" aria-required="true" placeholder="name@example.com"/>
-                        <ValidationMessage For="() => Input.Email" class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                                   autocomplete="email" aria-required="true" placeholder="name@example.com"/>
+                        <ValidationMessage For="() => Input.Email"
+                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label for="Input.Password" class="text-sm font-black uppercase tracking-widest">Password</label>
+                        <label for="Input.Password"
+                               class="text-sm font-black uppercase tracking-widest">Password</label>
                         <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
                                    class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
                                    autocomplete="new-password" aria-required="true" placeholder="password"/>
-                        <ValidationMessage For="() => Input.Password" class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                        <ValidationMessage For="() => Input.Password"
+                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label for="Input.ConfirmPassword" class="text-sm font-black uppercase tracking-widest">Confirm Password</label>
+                        <label for="Input.ConfirmPassword" class="text-sm font-black uppercase tracking-widest">Confirm
+                            Password</label>
                         <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword"
                                    class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
                                    autocomplete="new-password" aria-required="true" placeholder="password"/>
-                        <ValidationMessage For="() => Input.ConfirmPassword" class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                        <ValidationMessage For="() => Input.ConfirmPassword"
+                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
                     </div>
                     <button type="submit"
                             class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
@@ -87,7 +101,7 @@
     {
         var user = CreateUser();
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         var result = await UserManager.CreateAsync(user, Input.Password);
@@ -147,6 +161,11 @@
 
     private sealed class InputModel
     {
+        [Required]
+        [StringLength(50, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+        [Display(Name = "Username")]
+        public string UserName { get; set; } = "";
+
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]
