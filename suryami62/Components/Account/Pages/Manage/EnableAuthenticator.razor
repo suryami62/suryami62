@@ -20,51 +20,60 @@
 else
 {
     <StatusMessage Message="@message"/>
-    <h3>Configure authenticator app</h3>
-    <div>
-        <p>To use an authenticator app go through the following steps:</p>
-        <ol class="list">
+    <div class="flex flex-col gap-6">
+        <div>
+            <h3 class="text-3xl font-black uppercase tracking-tighter">Configure authenticator app</h3>
+            <p class="mt-2 text-sm font-bold uppercase">Follow the steps below to enable 2FA.</p>
+        </div>
+        <ol class="list-decimal pl-6 font-bold space-y-6">
             <li>
                 <p>
                     Download a two-factor authenticator app like Microsoft Authenticator for
-                    <a href="https://go.microsoft.com/fwlink/?Linkid=825072">Android</a> and
-                    <a href="https://go.microsoft.com/fwlink/?Linkid=825073">iOS</a> or
+                    <a class="underline decoration-4 underline-offset-4" href="https://go.microsoft.com/fwlink/?Linkid=825072">Android</a> and
+                    <a class="underline decoration-4 underline-offset-4" href="https://go.microsoft.com/fwlink/?Linkid=825073">iOS</a> or
                     Google Authenticator for
-                    <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&amp;hl=en">Android</a>
+                    <a class="underline decoration-4 underline-offset-4" href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&amp;hl=en">Android</a>
                     and
-                    <a href="https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8">iOS</a>.
+                    <a class="underline decoration-4 underline-offset-4" href="https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8">iOS</a>.
                 </p>
             </li>
             <li>
-                <p>Scan the QR Code or enter this key <kbd>@sharedKey</kbd> into your two factor authenticator app.
-                    Spaces and casing do not matter.</p>
-                <div class="alert alert-info">Learn how to <a href="https://go.microsoft.com/fwlink/?Linkid=852423">enable
-                        QR code generation</a>.
+                <p>
+                    Scan the QR Code or enter this key
+                    <kbd class="border-2 border-black bg-white px-2 py-1 text-xs font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]">@sharedKey</kbd>
+                    into your two factor authenticator app. Spaces and casing do not matter.
+                </p>
+                <div
+                    class="mt-3 border-4 border-black bg-neutral-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+                    Learn how to
+                    <a class="underline decoration-4 underline-offset-4" href="https://go.microsoft.com/fwlink/?Linkid=852423">enable QR code generation</a>.
                 </div>
-                <div></div>
-                <div data-url="@authenticatorUri"></div>
+                <div class="mt-4 border-4 border-black bg-white p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+                    <div data-url="@authenticatorUri" class="mx-auto h-40 w-40"></div>
+                </div>
             </li>
             <li>
                 <p>
                     Once you have scanned the QR code or input the key above, your two factor authentication app will
-                    provide you
-                    with a unique code. Enter the code in the confirmation box below.
+                    provide you with a unique code. Enter the code in the confirmation box below.
                 </p>
-                <div class="row">
-                    <div class="col-xl-6">
-                        <EditForm Model="Input" FormName="send-code" OnValidSubmit="OnValidSubmitAsync" method="post">
-                            <DataAnnotationsValidator/>
-                            <div class="form-floating mb-3">
-                                <InputText @bind-Value="Input.Code" id="Input.Code" class="form-control"
-                                           autocomplete="off" placeholder="Enter the code"/>
-                                <label for="Input.Code" class="control-label form-label">Verification Code</label>
-                                <ValidationMessage For="() => Input.Code" class="text-danger"/>
-                            </div>
-                            <button type="submit" class="w-100 btn btn-lg btn-primary">Verify</button>
-                            <ValidationSummary class="text-danger" role="alert"/>
-                        </EditForm>
+                <EditForm Model="Input" FormName="send-code" OnValidSubmit="OnValidSubmitAsync" method="post">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
+                    <div class="mt-4 flex flex-col gap-4 max-w-xl">
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.Code" class="text-sm font-black uppercase tracking-widest">Verification code</label>
+                            <InputText @bind-Value="Input.Code" id="Input.Code"
+                                       class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                                       autocomplete="off" placeholder="Enter the code"/>
+                            <ValidationMessage For="() => Input.Code" class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                        </div>
+                        <button type="submit"
+                                class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                            Verify
+                        </button>
                     </div>
-                </div>
+                </EditForm>
             </li>
         </ol>
     </div>

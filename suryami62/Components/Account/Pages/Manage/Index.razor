@@ -9,28 +9,37 @@
 
 <PageTitle>Profile</PageTitle>
 
-<h3>Profile</h3>
-<StatusMessage/>
-
-<div class="row">
-    <div class="col-xl-6">
-        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
-            <DataAnnotationsValidator/>
-            <ValidationSummary class="text-danger" role="alert"/>
-            <div class="form-floating mb-3">
-                <input type="text" value="@username" id="username" class="form-control"
-                       placeholder="Choose your username." disabled/>
-                <label for="username" class="form-label">Username</label>
-            </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control"
-                           placeholder="Enter your phone number"/>
-                <label for="Input.PhoneNumber" class="form-label">Phone number</label>
-                <ValidationMessage For="() => Input.PhoneNumber" class="text-danger"/>
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
-        </EditForm>
+<div class="flex flex-col gap-6">
+    <div>
+        <h3 class="text-3xl font-black uppercase tracking-tighter">Profile</h3>
+        <p class="mt-2 text-sm font-bold uppercase">Update your profile details.</p>
     </div>
+
+    <StatusMessage/>
+
+    <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+        <DataAnnotationsValidator/>
+        <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
+        <div class="mt-4 flex flex-col gap-4 max-w-xl">
+            <div class="flex flex-col gap-2">
+                <label for="username" class="text-sm font-black uppercase tracking-widest">Username</label>
+                <input type="text" value="@username" id="username"
+                       class="w-full border-4 border-black bg-neutral-100 px-4 py-3 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                       placeholder="Choose your username." disabled/>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="Input.PhoneNumber" class="text-sm font-black uppercase tracking-widest">Phone number</label>
+                <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber"
+                           class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                           placeholder="Enter your phone number"/>
+                <ValidationMessage For="() => Input.PhoneNumber" class="text-sm font-bold text-red-600 dark:text-red-400"/>
+            </div>
+            <button type="submit"
+                    class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                Save
+            </button>
+        </div>
+    </EditForm>
 </div>
 
 @code {

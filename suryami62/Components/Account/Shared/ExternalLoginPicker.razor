@@ -6,10 +6,10 @@
 
 @if (externalLogins.Length == 0)
 {
-    <div>
-        <p>
+    <div class="border-4 border-black bg-neutral-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+        <p class="text-lg">
             There are no external authentication services configured. See this
-            <a href="https://go.microsoft.com/fwlink/?LinkID=532715">
+            <a class="underline decoration-4 underline-offset-4" href="https://go.microsoft.com/fwlink/?LinkID=532715">
                 article
                 about setting up this ASP.NET application to support logging in via external services
             </a>.
@@ -18,18 +18,16 @@
 }
 else
 {
-    <form class="form-horizontal" action="Account/PerformExternalLogin" method="post">
-        <div>
-            <AntiforgeryToken/>
-            <input type="hidden" name="ReturnUrl" value="@ReturnUrl"/>
-            <p>
-                @foreach (var provider in externalLogins)
-                {
-                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name"
-                            title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                }
-            </p>
-        </div>
+    <form action="Account/PerformExternalLogin" method="post" class="flex flex-col gap-3">
+        <AntiforgeryToken/>
+        <input type="hidden" name="ReturnUrl" value="@ReturnUrl"/>
+        @foreach (var provider in externalLogins)
+        {
+            <button type="submit"
+                    class="translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-3 text-left font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800"
+                    name="provider" value="@provider.Name"
+                    title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+        }
     </form>
 }
 

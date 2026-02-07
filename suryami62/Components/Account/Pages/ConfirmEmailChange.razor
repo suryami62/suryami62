@@ -10,9 +10,13 @@
 
 <PageTitle>Confirm email change</PageTitle>
 
-<h1>Confirm email change</h1>
+<div class="flex flex-col gap-8 py-8">
+    <header class="border-b-4 border-black pb-6 dark:border-white">
+        <h1 class="text-4xl font-black tracking-tighter uppercase md:text-5xl">Confirm email change</h1>
+    </header>
 
-<StatusMessage Message="@message"/>
+    <StatusMessage Message="@message"/>
+</div>
 
 @code {
     private string? message;

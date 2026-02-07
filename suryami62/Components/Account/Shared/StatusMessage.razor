@@ -1,7 +1,11 @@
 ﻿@if (!string.IsNullOrEmpty(DisplayMessage))
 {
-    var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
-    <div class="alert alert-@statusMessageClass" role="alert">
+    var statusMessageClass = DisplayMessage.StartsWith("Error")
+        ? "border-red-600 text-red-700 dark:border-red-400 dark:text-red-300"
+        : "border-black text-black dark:border-white dark:text-white";
+    <div
+        class="border-4 bg-white p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:bg-black dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] @statusMessageClass"
+        role="alert">
         @DisplayMessage
     </div>
 }

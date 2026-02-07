@@ -10,39 +10,46 @@
 
 <PageTitle>Two-factor authentication</PageTitle>
 
-<h1>Two-factor authentication</h1>
-<hr/>
-<StatusMessage Message="@message"/>
-<p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
-<div class="row">
-    <div class="col-md-4">
+<div class="flex flex-col gap-8 py-8">
+    <header class="border-b-4 border-black pb-6 dark:border-white">
+        <h1 class="text-4xl font-black tracking-tighter uppercase md:text-5xl">Two-factor authentication</h1>
+        <p class="mt-2 text-lg font-bold">Enter your authenticator code below.</p>
+    </header>
+
+    <section
+        class="max-w-xl border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+        <StatusMessage Message="@message"/>
         <EditForm Model="Input" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post">
             <input type="hidden" name="ReturnUrl" value="@ReturnUrl"/>
             <input type="hidden" name="RememberMe" value="@RememberMe"/>
             <DataAnnotationsValidator/>
-            <ValidationSummary class="text-danger" role="alert"/>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.TwoFactorCode" id="Input.TwoFactorCode" class="form-control"
-                           autocomplete="off"/>
-                <label for="Input.TwoFactorCode" class="form-label">Authenticator code</label>
-                <ValidationMessage For="() => Input.TwoFactorCode" class="text-danger"/>
-            </div>
-            <div class="checkbox mb-3">
-                <label for="remember-machine" class="form-label">
-                    <InputCheckbox @bind-Value="Input.RememberMachine"/>
+            <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
+            <div class="mt-4 flex flex-col gap-4">
+                <div class="flex flex-col gap-2">
+                    <label for="Input.TwoFactorCode" class="text-sm font-black uppercase tracking-widest">Authenticator code</label>
+                    <InputText @bind-Value="Input.TwoFactorCode" id="Input.TwoFactorCode"
+                               class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                               autocomplete="off"/>
+                    <ValidationMessage For="() => Input.TwoFactorCode" class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                </div>
+                <label class="flex items-center gap-3 text-sm font-bold uppercase">
+                    <InputCheckbox @bind-Value="Input.RememberMachine"
+                                   class="h-5 w-5 border-2 border-black bg-white accent-black dark:border-white dark:bg-black dark:accent-white"/>
                     Remember this machine
                 </label>
-            </div>
-            <div>
-                <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                <button type="submit"
+                        class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                    Log in
+                </button>
             </div>
         </EditForm>
-    </div>
+        <p class="mt-6 text-sm font-bold uppercase">
+            Don't have access to your authenticator device? You can
+            <a class="underline decoration-4 underline-offset-4 hover:text-neutral-600 dark:hover:text-neutral-300"
+               href="Account/LoginWithRecoveryCode?ReturnUrl=@ReturnUrl">log in with a recovery code</a>.
+        </p>
+    </section>
 </div>
-<p>
-    Don't have access to your authenticator device? You can
-    <a href="Account/LoginWithRecoveryCode?ReturnUrl=@ReturnUrl">log in with a recovery code</a>.
-</p>
 
 @code {
     private string? message;

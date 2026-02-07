@@ -11,22 +11,33 @@
 
 <PageTitle>Register confirmation</PageTitle>
 
-<h1>Register confirmation</h1>
+<div class="flex flex-col gap-8 py-8">
+    <header class="border-b-4 border-black pb-6 dark:border-white">
+        <h1 class="text-4xl font-black tracking-tighter uppercase md:text-5xl">Register confirmation</h1>
+    </header>
 
-<StatusMessage Message="@statusMessage"/>
+    <StatusMessage Message="@statusMessage"/>
 
-@if (emailConfirmationLink is not null)
-{
-    <p>
-        This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these
-            docs</a> for how to configure a real email sender.
-        Normally this would be emailed: <a href="@emailConfirmationLink">Click here to confirm your account</a>
-    </p>
-}
-else
-{
-    <p role="alert">Please check your email to confirm your account.</p>
-}
+    @if (emailConfirmationLink is not null)
+    {
+        <div
+            class="border-4 border-black bg-neutral-100 p-6 font-bold shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+            This app does not currently have a real email sender registered. See
+            <a class="underline decoration-4 underline-offset-4" href="https://aka.ms/aspaccountconf">these docs</a>
+            for how to configure a real email sender.
+            Normally this would be emailed:
+            <a class="underline decoration-4 underline-offset-4" href="@emailConfirmationLink">Click here to confirm your account</a>.
+        </div>
+    }
+    else
+    {
+        <div
+            class="border-4 border-black bg-neutral-100 p-6 font-bold shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]"
+            role="alert">
+            Please check your email to confirm your account.
+        </div>
+    }
+</div>
 
 @code {
     private string? emailConfirmationLink;

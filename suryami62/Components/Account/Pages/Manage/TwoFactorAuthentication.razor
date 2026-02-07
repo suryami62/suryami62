@@ -9,67 +9,109 @@
 
 <PageTitle>Two-factor authentication (2FA)</PageTitle>
 
-<StatusMessage/>
-<h3>Two-factor authentication (2FA)</h3>
-@if (canTrack)
-{
-    if (is2faEnabled)
+<div class="flex flex-col gap-6">
+    <div>
+        <h3 class="text-3xl font-black uppercase tracking-tighter">Two-factor authentication (2FA)</h3>
+        <p class="mt-2 text-sm font-bold uppercase">Manage your 2FA settings and recovery codes.</p>
+    </div>
+
+    <StatusMessage/>
+
+    @if (canTrack)
     {
-        if (recoveryCodesLeft == 0)
+        if (is2faEnabled)
         {
-            <div class="alert alert-danger">
-                <strong>You have no recovery codes left.</strong>
-                <p>You must <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>
-                    before you can log in with a recovery code.</p>
-            </div>
-        }
-        else if (recoveryCodesLeft == 1)
-        {
-            <div class="alert alert-danger">
-                <strong>You have 1 recovery code left.</strong>
-                <p>You can <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
-            </div>
-        }
-        else if (recoveryCodesLeft <= 3)
-        {
-            <div class="alert alert-warning">
-                <strong>You have @recoveryCodesLeft recovery codes left.</strong>
-                <p>You should <a href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.
-                </p>
+            if (recoveryCodesLeft == 0)
+            {
+                <div
+                    class="border-4 border-black bg-red-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-red-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+                    <strong>You have no recovery codes left.</strong>
+                    <p>
+                        You must
+                        <a class="underline decoration-4 underline-offset-4" href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>
+                        before you can log in with a recovery code.
+                    </p>
+                </div>
+            }
+            else if (recoveryCodesLeft == 1)
+            {
+                <div
+                    class="border-4 border-black bg-red-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-red-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+                    <strong>You have 1 recovery code left.</strong>
+                    <p>
+                        You can
+                        <a class="underline decoration-4 underline-offset-4" href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.
+                    </p>
+                </div>
+            }
+            else if (recoveryCodesLeft <= 3)
+            {
+                <div
+                    class="border-4 border-black bg-yellow-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-yellow-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+                    <strong>You have @recoveryCodesLeft recovery codes left.</strong>
+                    <p>
+                        You should
+                        <a class="underline decoration-4 underline-offset-4" href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.
+                    </p>
+                </div>
+            }
+
+            <div class="flex flex-wrap gap-3">
+                @if (isMachineRemembered)
+                {
+                    <form @formname="forget-browser" @onsubmit="OnSubmitForgetBrowserAsync" method="post">
+                        <AntiforgeryToken/>
+                        <button type="submit"
+                                class="translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800">
+                            Forget this browser
+                        </button>
+                    </form>
+                }
+
+                <a href="Account/Manage/Disable2fa"
+                   class="translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-2 text-sm font-bold uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                    Disable 2FA
+                </a>
+                <a href="Account/Manage/GenerateRecoveryCodes"
+                   class="translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800">
+                    Reset recovery codes
+                </a>
             </div>
         }
 
-        if (isMachineRemembered)
-        {
-            <form style="display: inline-block" @formname="forget-browser" @onsubmit="OnSubmitForgetBrowserAsync"
-                  method="post">
-                <AntiforgeryToken/>
-                <button type="submit" class="btn btn-primary">Forget this browser</button>
-            </form>
-        }
-
-        <a href="Account/Manage/Disable2fa" class="btn btn-primary">Disable 2FA</a>
-        <a href="Account/Manage/GenerateRecoveryCodes" class="btn btn-primary">Reset recovery codes</a>
-    }
-
-    <h4>Authenticator app</h4>
-    @if (!hasAuthenticator)
-    {
-        <a href="Account/Manage/EnableAuthenticator" class="btn btn-primary">Add authenticator app</a>
+        <div class="border-t-4 border-black pt-6 dark:border-white">
+            <h4 class="text-xl font-black uppercase tracking-tighter">Authenticator app</h4>
+            <div class="mt-3 flex flex-wrap gap-3">
+                @if (!hasAuthenticator)
+                {
+                    <a href="Account/Manage/EnableAuthenticator"
+                       class="translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-2 text-sm font-bold uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                        Add authenticator app
+                    </a>
+                }
+                else
+                {
+                    <a href="Account/Manage/EnableAuthenticator"
+                       class="translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800">
+                        Set up authenticator app
+                    </a>
+                    <a href="Account/Manage/ResetAuthenticator"
+                       class="translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800">
+                        Reset authenticator app
+                    </a>
+                }
+            </div>
+        </div>
     }
     else
     {
-        <a href="Account/Manage/EnableAuthenticator" class="btn btn-primary">Set up authenticator app</a>
-        <a href="Account/Manage/ResetAuthenticator" class="btn btn-primary">Reset authenticator app</a>
+        <div
+            class="border-4 border-black bg-red-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-red-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+            <strong>Privacy and cookie policy have not been accepted.</strong>
+            <p>You must accept the policy before you can enable two factor authentication.</p>
+        </div>
     }
-}
-else
-{
-    <div class="alert alert-danger">
-        <strong>Privacy and cookie policy have not been accepted.</strong>
-        <p>You must accept the policy before you can enable two factor authentication.</p>
-    </div>
-}
+</div>
 
 @code {
     private bool canTrack;
