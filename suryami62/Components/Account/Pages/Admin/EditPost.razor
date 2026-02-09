@@ -1,0 +1,125 @@
+@page "/Account/Admin/Posts/New"
+@page "/Account/Admin/Posts/Edit/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using suryami62.Data.Models
+@using suryami62.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IBlogPostService BlogPostService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(Id == null ? "New Post" : "Edit Post") - Surya Ramadhan</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <PageHeader Title="@(Id == null ? "New" : "Edit")" Highlight="Post"/>
+
+    <EditForm Model="@_post" OnValidSubmit="SavePost" FormName="edit-post-form" method="post"
+              class="flex flex-col gap-6 border-4 border-black bg-white p-8 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+        <DataAnnotationsValidator/>
+        <ValidationSummary class="text-red-600 font-bold mb-4"/>
+
+        <div class="grid gap-6 md:grid-cols-2">
+            <div class="flex flex-col gap-2">
+                <label class="text-xl font-black uppercase">Title</label>
+                <InputText @bind-Value="_post.Title" @oninput="OnTitleChanged"
+                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_#000] outline-none dark:border-white dark:bg-gray-900"/>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-xl font-black uppercase">Slug</label>
+                <InputText @bind-Value="_post.Slug"
+                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_#000] outline-none dark:border-white dark:bg-gray-900"/>
+            </div>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-2">
+            <div class="flex flex-col gap-2">
+                <label class="text-xl font-black uppercase">Label</label>
+                <InputText @bind-Value="_post.Label"
+                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-xl font-black uppercase">Date</label>
+                <InputDate @bind-Value="_post.Date"
+                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xl font-black uppercase">Summary</label>
+            <InputTextArea @bind-Value="_post.Summary" rows="2"
+                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xl font-black uppercase">Content (Markdown)</label>
+            <InputTextArea @bind-Value="_post.Content" rows="10"
+                           class="border-2 border-black p-3 font-mono shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <label class="text-xl font-black uppercase">Published</label>
+            <InputCheckbox @bind-Value="_post.IsPublished"
+                           class="w-6 h-6 border-2 border-black shadow-[2px_2px_0px_0px_#000]"/>
+        </div>
+
+        <div class="flex gap-4 mt-4">
+            <button type="submit"
+                    class="border-2 border-black bg-[#A3E635] px-8 py-3 text-xl font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-lime-500 dark:shadow-[4px_4px_0px_0px_#fff]">
+                SAVE POST
+            </button>
+            <a href="/Account/Admin/Posts"
+               class="border-2 border-black bg-gray-200 px-8 py-3 text-xl font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-gray-800 dark:shadow-[4px_4px_0px_0px_#fff]">
+                CANCEL
+            </a>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    [SupplyParameterFromForm] private BlogPost _post { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        _post ??= new BlogPost { Date = DateTime.UtcNow };
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id != null)
+        {
+            var post = await BlogPostService.GetPostByIdAsync(Id.Value);
+            if (post != null)
+            {
+                _post = post;
+            }
+        }
+    }
+
+    private void OnTitleChanged(ChangeEventArgs e)
+    {
+        if (Id == null) // Only auto-slug for new posts
+        {
+            var title = e.Value?.ToString() ?? "";
+            _post.Slug = title.ToLower().Replace(" ", "-").Replace("--", "-").Trim('-');
+        }
+    }
+
+    private async Task SavePost()
+    {
+        if (Id == null)
+        {
+            await BlogPostService.CreatePostAsync(_post);
+        }
+        else
+        {
+            await BlogPostService.UpdatePostAsync(_post);
+        }
+
+        NavigationManager.NavigateTo("/Account/Admin/Posts");
+    }
+
+}

@@ -1,0 +1,124 @@
+@page "/Account/Admin/Media"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IWebHostEnvironment Environment
+
+<PageTitle>Media Manager - Surya Ramadhan</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <PageHeader Title="Media" Highlight="Manager"/>
+
+    <div
+        class="border-4 border-black bg-white p-8 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+        <h3 class="text-2xl font-black uppercase mb-6">Upload New Image</h3>
+        <div class="flex flex-col gap-4">
+            <InputFile OnChange="UploadFile"
+                       class="border-2 border-black p-4 font-bold italic shadow-[4px_4px_0px_0px_#000] dark:border-white"/>
+            @if (_isUploading)
+            {
+                <p class="font-bold animate-pulse text-blue-600">Uploading...</p>
+            }
+            @if (!string.IsNullOrEmpty(_uploadMessage))
+            {
+                <p class="font-bold @(_uploadMessage.Contains("Success") ? "text-green-600" : "text-red-600")">@_uploadMessage</p>
+            }
+        </div>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        @if (_imageFiles == null)
+        {
+            <p>Loading gallery...</p>
+        }
+        else if (!_imageFiles.Any())
+        {
+            <p>No images uploaded yet.</p>
+        }
+        else
+        {
+            @foreach (var file in _imageFiles)
+            {
+                <div
+                    class="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000] group relative dark:border-white dark:bg-gray-900">
+                    <img src="img/uploads/@file" alt="@file"
+                         class="w-full h-48 object-cover border-b-2 border-black dark:border-white"/>
+                    <div class="p-2 flex flex-col gap-2">
+                        <p class="text-xs truncate font-bold">@file</p>
+                        <button @onclick="() => DeleteFile(file)"
+                                class="bg-red-400 border-2 border-black px-2 py-1 text-xs font-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000]">
+                            DELETE
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<string>? _imageFiles;
+    private bool _isUploading;
+    private string? _uploadMessage;
+
+    protected override void OnInitialized()
+    {
+        LoadImages();
+    }
+
+    private void LoadImages()
+    {
+        var path = Path.Combine(Environment.WebRootPath, "img", "uploads");
+        if (Directory.Exists(path))
+        {
+            _imageFiles = Directory.GetFiles(path)
+                .Select(Path.GetFileName)
+                .Where(f => f != null)
+                .Select(f => f!)
+                .ToList();
+        }
+        else
+        {
+            _imageFiles = new List<string>();
+        }
+    }
+
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        _isUploading = true;
+        _uploadMessage = null;
+
+        try
+        {
+            var file = e.File;
+            var path = Path.Combine(Environment.WebRootPath, "img", "uploads", file.Name);
+
+            await using var stream = file.OpenReadStream(1024 * 1024 * 5); // 5MB limit
+            await using var fs = new FileStream(path, FileMode.Create);
+            await stream.CopyToAsync(fs);
+
+            _uploadMessage = $"Success! Uploaded {file.Name}";
+            LoadImages();
+        }
+        catch (Exception ex)
+        {
+            _uploadMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _isUploading = false;
+        }
+    }
+
+    private void DeleteFile(string filename)
+    {
+        var path = Path.Combine(Environment.WebRootPath, "img", "uploads", filename);
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+            _uploadMessage = $"Deleted {filename}";
+            LoadImages();
+        }
+    }
+
+}

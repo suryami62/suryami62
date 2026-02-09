@@ -8,8 +8,11 @@ using Microsoft.Extensions.Options;
 using suryami62.Components;
 using suryami62.Components.Account;
 using suryami62.Data;
+using suryami62.Services;
 
 #endregion
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +26,9 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => new IdentityRevali
     sp.GetRequiredService<ILoggerFactory>(),
     sp.GetRequiredService<IServiceScopeFactory>(),
     sp.GetRequiredService<IOptions<IdentityOptions>>()));
+
+builder.Services.AddScoped<IBlogPostService>(sp => new BlogPostService(sp.GetRequiredService<ApplicationDbContext>()));
+builder.Services.AddScoped<IProjectService>(sp => new ProjectService(sp.GetRequiredService<ApplicationDbContext>()));
 
 builder.Services.AddAuthentication(options =>
     {

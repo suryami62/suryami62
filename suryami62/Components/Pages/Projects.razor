@@ -1,4 +1,7 @@
 @page "/projects"
+@using suryami62.Data.Models
+@using suryami62.Services
+@inject IProjectService ProjectService
 
 <PageTitle>Projects - Surya Ramadhan</PageTitle>
 
@@ -15,46 +18,37 @@
     <!-- Projects Grid -->
     <section>
         <div class="grid gap-12 md:grid-cols-2">
-            @foreach (var project in _projects)
+            @if (_projects == null)
             {
-                <ProjectCard Title="@project.Title" Description="@project.Description" Tags="@project.Tags"
-                             RepoUrl="@project.RepoUrl" DemoUrl="@project.DemoUrl"/>
+                <div class="col-span-full text-center py-12">
+                    <p class="text-2xl font-black uppercase">Loading projects...</p>
+                </div>
+            }
+            else if (!_projects.Any())
+            {
+                <div class="col-span-full text-center py-12 border-4 border-black border-dashed">
+                    <p class="text-2xl font-black uppercase">No projects found yet.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var project in _projects)
+                {
+                    <ProjectCard Title="@project.Title" Description="@project.Description"
+                                 Tags="@(project.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries))"
+                                 RepoUrl="@project.RepoUrl" DemoUrl="@project.DemoUrl"/>
+                }
             }
         </div>
     </section>
 </div>
 
 @code {
+    private List<Project>? _projects;
 
-    public record Project(string Title, string Description, string[] Tags, string? RepoUrl = null, string? DemoUrl = null);
-
-    private readonly List<Project> _projects =
-    [
-        new(
-            "Suryami62",
-            "My personal portfolio and blog built with Blazor Server and Tailwind CSS with a Neobrutalist design system.",
-            ["Blazor", "Tailwind CSS", "C#", ".NET 9"],
-            "https://github.com/suryami62/suryami62",
-            "https://suryami62.com"
-        ),
-        new(
-            "Agentic Code Assistant",
-            "An experimental AI coding assistant that integrates with local development environments to help write better code faster.",
-            ["Python", "LangChain", "LLM", "CLI"],
-            "https://github.com/suryami62/agentic-code-assistant"
-        ),
-        new(
-            "DotNet Minimal API Starter",
-            "A clean, opinionated template for building production-ready Minimal APIs in .NET 8/9 with Vertical Slice Architecture.",
-            [".NET 9", "Clean Arch", "EF Core"],
-            "https://github.com/suryami62/dotnet-minimal-starter"
-        ),
-        new(
-            "Retro Game Engine",
-            "A 2D game engine written in C# utilizing modern rendering techniques for a retro 8-bit aesthetic.",
-            ["C#", "OpenGL", "Game Dev"],
-            "https://github.com/suryami62/retro-engine"
-        )
-    ];
+    protected override async Task OnInitializedAsync()
+    {
+        _projects = await ProjectService.GetProjectsAsync();
+    }
 
 }

@@ -1,0 +1,94 @@
+@page "/Account/Admin/Projects"
+@using Microsoft.AspNetCore.Authorization
+@using suryami62.Data.Models
+@using suryami62.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IProjectService ProjectService
+@inject IJSRuntime JS
+
+<PageTitle>Manage Projects - Surya Ramadhan</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <div class="flex items-center justify-between">
+        <PageHeader Title="Manage" Highlight="Projects"/>
+        <a href="/Account/Admin/Projects/New"
+           class="border-2 border-black bg-[#FB923C] px-6 py-3 text-xl font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-orange-400 dark:shadow-[4px_4px_0px_0px_#fff]">
+            ADD NEW PROJECT
+        </a>
+    </div>
+
+    <div
+        class="overflow-x-auto border-4 border-black bg-white shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+        <table class="w-full text-left">
+            <thead class="bg-black text-white dark:bg-white dark:text-black">
+            <tr>
+                <th class="p-4 font-black uppercase">Order</th>
+                <th class="p-4 font-black uppercase">Title</th>
+                <th class="p-4 font-black uppercase">Tags</th>
+                <th class="p-4 font-black uppercase">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y-2 divide-black dark:divide-white">
+            @if (_projects == null)
+            {
+                <tr>
+                    <td colspan="4" class="p-4">Loading...</td>
+                </tr>
+            }
+            else if (!_projects.Any())
+            {
+                <tr>
+                    <td colspan="4" class="p-4">No projects found.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var project in _projects)
+                {
+                    <tr class="hover:bg-gray-100 dark:hover:bg-gray-900">
+                        <td class="p-4 font-bold">@project.DisplayOrder</td>
+                        <td class="p-4 font-bold">@project.Title</td>
+                        <td class="p-4">
+                            <div class="flex flex-wrap gap-1">
+                                @foreach (var tag in project.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <span
+                                        class="bg-gray-200 border border-black px-1 text-[10px] font-bold">@tag.Trim()</span>
+                                }
+                            </div>
+                        </td>
+                        <td class="p-4 flex gap-2">
+                            <a href="/Account/Admin/Projects/Edit/@project.Id"
+                               class="border-2 border-black bg-blue-400 px-3 py-1 font-bold shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000]">EDIT</a>
+                            <button @onclick="() => DeleteProject(project.Id)"
+                                    class="border-2 border-black bg-red-400 px-3 py-1 font-bold shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000]">
+                                DELETE
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<Project>? _projects;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _projects = await ProjectService.GetProjectsAsync();
+    }
+
+    private async Task DeleteProject(int id)
+    {
+        if (await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this project?"))
+        {
+            await ProjectService.DeleteProjectAsync(id);
+            _projects = await ProjectService.GetProjectsAsync();
+        }
+    }
+
+}

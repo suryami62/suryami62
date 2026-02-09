@@ -1,4 +1,7 @@
 @page "/posts"
+@using suryami62.Data.Models
+@using suryami62.Services
+@inject IBlogPostService BlogPostService
 
 <PageTitle>Blog - Surya Ramadhan</PageTitle>
 
@@ -20,82 +23,32 @@
     <!-- Blog Posts Grid -->
     <section>
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            @foreach (var post in _posts)
+            @if (_posts == null)
             {
-                <PostCard Label="@post.Label" Date="@post.Date" Title="@post.Title" Href="#" Summary="@post.Summary"/>
+                <div class="col-span-full text-center">Loading posts...</div>
+            }
+            else if (!_posts.Any())
+            {
+                <div class="col-span-full text-center">No posts found yet. Check back soon!</div>
+            }
+            else
+            {
+                @foreach (var post in _posts)
+                {
+                    <PostCard Label="@post.Label" Date="@post.Date.ToString("MMM dd, yyyy")" Title="@post.Title"
+                              Href="@($"/posts/{post.Slug}")" Summary="@post.Summary"/>
+                }
             }
         </div>
     </section>
 </div>
 
 @code {
+    private List<BlogPost>? _posts;
 
-    public record Post(string Title, string Label, string Date, string Summary);
-
-    private readonly List<Post> _posts =
-    [
-        new(
-            "The Art of Neo-Brutalism",
-            "Design",
-            "Dec 27, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "Mastering Blazor & Tailwind",
-            "Dev",
-            "Dec 20, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "Minimalist Workspace Setup",
-            "Lifestyle",
-            "Dec 15, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "The Power of Clean Code",
-            "Dev",
-            "Dec 10, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "Building Accessible UIs",
-            "Design",
-            "Dec 05, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "The Future of Web Development",
-            "Tech",
-            "Nov 28, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "Optimizing Blazor Performance",
-            "Dev",
-            "Nov 20, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "Understanding Asynchronous Programming",
-            "Tech",
-            "Nov 15, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "Exploring Minimalist Design Principles",
-            "Design",
-            "Nov 10, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        )
-    ];
+    protected override async Task OnInitializedAsync()
+    {
+        _posts = await BlogPostService.GetPostsAsync();
+    }
 
 }
