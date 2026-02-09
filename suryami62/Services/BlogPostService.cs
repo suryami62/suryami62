@@ -31,19 +31,21 @@ internal sealed class BlogPostService : IBlogPostService
 
     public async Task<List<BlogPost>> GetPostsAsync(bool onlyPublished = true)
     {
-        var query = _context.BlogPosts.AsQueryable();
+        var query = _context.BlogPosts.AsNoTracking();
         if (onlyPublished) query = query.Where(p => p.IsPublished);
         return await query.OrderByDescending(p => p.Date).ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<BlogPost?> GetPostBySlugAsync(string slug)
     {
-        return await _context.BlogPosts.FirstOrDefaultAsync(p => p.Slug == slug).ConfigureAwait(false);
+        return await _context.BlogPosts.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Slug == slug).ConfigureAwait(false);
     }
 
     public async Task<BlogPost?> GetPostByIdAsync(int id)
     {
-        return await _context.BlogPosts.FindAsync(id).ConfigureAwait(false);
+        return await _context.BlogPosts.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
     }
 
     public async Task<BlogPost> CreatePostAsync(BlogPost post)

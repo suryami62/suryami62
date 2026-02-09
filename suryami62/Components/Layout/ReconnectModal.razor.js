@@ -14,6 +14,7 @@ function handleReconnectStateChanged(event) {
     } else if (event.detail.state === "hide") {
         reconnectModal.close();
     } else if (event.detail.state === "failed") {
+        document.removeEventListener("visibilitychange", retryWhenDocumentBecomesVisible);
         document.addEventListener("visibilitychange", retryWhenDocumentBecomesVisible);
     } else if (event.detail.state === "rejected") {
         location.reload();
@@ -41,6 +42,7 @@ async function retry() {
         }
     } catch (err) {
         // We got an exception, server is currently unavailable
+        document.removeEventListener("visibilitychange", retryWhenDocumentBecomesVisible);
         document.addEventListener("visibilitychange", retryWhenDocumentBecomesVisible);
     }
 }

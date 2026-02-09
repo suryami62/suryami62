@@ -21,12 +21,15 @@ internal sealed class ProjectService(ApplicationDbContext context) : IProjectSer
 {
     public async Task<List<Project>> GetProjectsAsync()
     {
-        return await context.Projects.OrderBy(p => p.DisplayOrder).ToListAsync().ConfigureAwait(false);
+        return await context.Projects.AsNoTracking()
+            .OrderBy(p => p.DisplayOrder)
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<Project?> GetProjectByIdAsync(int id)
     {
-        return await context.Projects.FindAsync(id).ConfigureAwait(false);
+        return await context.Projects.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
     }
 
     public async Task<Project> CreateProjectAsync(Project project)
