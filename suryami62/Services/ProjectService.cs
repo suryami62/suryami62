@@ -31,27 +31,22 @@ internal sealed class ProjectService(ApplicationDbContext context) : IProjectSer
 
     public async Task<Project> CreateProjectAsync(Project project)
     {
-        context.Projects.Add(project);
-        await context.SaveChangesAsync().ConfigureAwait(false);
-        return project;
+        return await EntityServiceHelper
+            .CreateAsync(context.Projects, context, project)
+            .ConfigureAwait(false);
     }
 
     public async Task UpdateProjectAsync(Project project)
     {
-        var tracked = context.Projects.Local.FirstOrDefault(p => p.Id == project.Id);
-        if (tracked != null && !ReferenceEquals(tracked, project))
-            context.Entry(tracked).CurrentValues.SetValues(project);
-        else if (tracked == null) context.Entry(project).State = EntityState.Modified;
-        await context.SaveChangesAsync().ConfigureAwait(false);
+        await EntityServiceHelper
+            .UpdateAsync(context.Projects, context, project, current => current.Id)
+            .ConfigureAwait(false);
     }
 
     public async Task DeleteProjectAsync(int id)
     {
-        var project = await context.Projects.FindAsync(id).ConfigureAwait(false);
-        if (project != null)
-        {
-            context.Projects.Remove(project);
-            await context.SaveChangesAsync().ConfigureAwait(false);
-        }
+        await EntityServiceHelper
+            .DeleteAsync(context.Projects, context, id)
+            .ConfigureAwait(false);
     }
 }

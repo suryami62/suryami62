@@ -48,27 +48,22 @@ internal sealed class BlogPostService : IBlogPostService
 
     public async Task<BlogPost> CreatePostAsync(BlogPost post)
     {
-        _context.BlogPosts.Add(post);
-        await _context.SaveChangesAsync().ConfigureAwait(false);
-        return post;
+        return await EntityServiceHelper
+            .CreateAsync(_context.BlogPosts, _context, post)
+            .ConfigureAwait(false);
     }
 
     public async Task UpdatePostAsync(BlogPost post)
     {
-        var tracked = _context.BlogPosts.Local.FirstOrDefault(p => p.Id == post.Id);
-        if (tracked != null && !ReferenceEquals(tracked, post))
-            _context.Entry(tracked).CurrentValues.SetValues(post);
-        else if (tracked == null) _context.Entry(post).State = EntityState.Modified;
-        await _context.SaveChangesAsync().ConfigureAwait(false);
+        await EntityServiceHelper
+            .UpdateAsync(_context.BlogPosts, _context, post, current => current.Id)
+            .ConfigureAwait(false);
     }
 
     public async Task DeletePostAsync(int id)
     {
-        var post = await _context.BlogPosts.FindAsync(id).ConfigureAwait(false);
-        if (post != null)
-        {
-            _context.BlogPosts.Remove(post);
-            await _context.SaveChangesAsync().ConfigureAwait(false);
-        }
+        await EntityServiceHelper
+            .DeleteAsync(_context.BlogPosts, _context, id)
+            .ConfigureAwait(false);
     }
 }
