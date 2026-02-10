@@ -59,9 +59,9 @@
         </div>
 
         <div class="flex gap-4 mt-4">
-            <button type="submit"
-                    class="border-2 border-black bg-[#FB923C] px-8 py-3 text-xl font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-orange-400 dark:shadow-[4px_4px_0px_0px_#fff]">
-                SAVE PROJECT
+            <button type="submit" disabled="@_isSubmitting"
+                    class="border-2 border-black bg-[#FB923C] px-8 py-3 text-xl font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 dark:border-white dark:bg-orange-400 dark:shadow-[4px_4px_0px_0px_#fff]">
+                @(_isSubmitting ? "SAVING..." : "SAVE PROJECT")
             </button>
             <a href="/Account/Admin/Projects"
                class="border-2 border-black bg-gray-200 px-8 py-3 text-xl font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-gray-800 dark:shadow-[4px_4px_0px_0px_#fff]">
@@ -75,6 +75,7 @@
     [Parameter] public int? Id { get; set; }
 
     [SupplyParameterFromForm] private Project _project { get; set; } = default!;
+    private bool _isSubmitting;
 
     protected override void OnInitialized()
     {
@@ -95,16 +96,26 @@
 
     private async Task SaveProject()
     {
-        if (Id == null)
-        {
-            await ProjectService.CreateProjectAsync(_project);
-        }
-        else
-        {
-            await ProjectService.UpdateProjectAsync(_project);
-        }
+        if (_isSubmitting) return;
+        _isSubmitting = true;
 
-        NavigationManager.NavigateTo("/Account/Admin/Projects");
+        try
+        {
+            if (Id == null)
+            {
+                await ProjectService.CreateProjectAsync(_project);
+            }
+            else
+            {
+                await ProjectService.UpdateProjectAsync(_project);
+            }
+
+            NavigationManager.NavigateTo("/Account/Admin/Projects");
+        }
+        catch
+        {
+            _isSubmitting = false;
+        }
     }
 
 }

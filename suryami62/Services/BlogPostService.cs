@@ -1,6 +1,5 @@
 #region
 
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using suryami62.Data;
 using suryami62.Data.Models;
@@ -11,7 +10,9 @@ namespace suryami62.Services;
 
 internal interface IBlogPostService
 {
-    Task<List<BlogPost>> GetPostsAsync(bool onlyPublished = true);
+    Task<(List<BlogPost> Items, int Total)>
+        GetPostsAsync(bool onlyPublished = true, int? skip = null, int? take = null);
+
     Task<BlogPost?> GetPostBySlugAsync(string slug);
     Task<BlogPost?> GetPostByIdAsync(int id);
     Task<BlogPost> CreatePostAsync(BlogPost post);
@@ -19,56 +20,58 @@ internal interface IBlogPostService
     Task DeletePostAsync(int id);
 }
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-internal sealed class BlogPostService : IBlogPostService
+internal sealed class BlogPostService(ApplicationDbContext context) : IBlogPostService
 {
-    private readonly ApplicationDbContext _context;
-
-    public BlogPostService(ApplicationDbContext context)
+    public async Task<(List<BlogPost> Items, int Total)> GetPostsAsync(bool onlyPublished = true, int? skip = null,
+        int? take = null)
     {
-        _context = context;
-    }
-
-    public async Task<List<BlogPost>> GetPostsAsync(bool onlyPublished = true)
-    {
-        var query = _context.BlogPosts.AsQueryable();
+        var query = context.BlogPosts.AsNoTracking().AsQueryable();
         if (onlyPublished) query = query.Where(p => p.IsPublished);
-        return await query.OrderByDescending(p => p.Date).ToListAsync().ConfigureAwait(false);
+
+        var total = await query.CountAsync().ConfigureAwait(false);
+        var orderedQuery = query.OrderByDescending(p => p.Date);
+
+        IQueryable<BlogPost> itemsQuery = orderedQuery;
+        if (skip.HasValue) itemsQuery = itemsQuery.Skip(skip.Value);
+        if (take.HasValue) itemsQuery = itemsQuery.Take(take.Value);
+
+        var items = await itemsQuery.ToListAsync().ConfigureAwait(false);
+        return (items, total);
     }
 
     public async Task<BlogPost?> GetPostBySlugAsync(string slug)
     {
-        return await _context.BlogPosts.FirstOrDefaultAsync(p => p.Slug == slug).ConfigureAwait(false);
+        return await context.BlogPosts.AsNoTracking().FirstOrDefaultAsync(p => p.Slug == slug).ConfigureAwait(false);
     }
 
     public async Task<BlogPost?> GetPostByIdAsync(int id)
     {
-        return await _context.BlogPosts.FindAsync(id).ConfigureAwait(false);
+        return await context.BlogPosts.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
     }
 
     public async Task<BlogPost> CreatePostAsync(BlogPost post)
     {
-        _context.BlogPosts.Add(post);
-        await _context.SaveChangesAsync().ConfigureAwait(false);
+        context.BlogPosts.Add(post);
+        await context.SaveChangesAsync().ConfigureAwait(false);
         return post;
     }
 
     public async Task UpdatePostAsync(BlogPost post)
     {
-        var tracked = _context.BlogPosts.Local.FirstOrDefault(p => p.Id == post.Id);
+        var tracked = context.BlogPosts.Local.FirstOrDefault(p => p.Id == post.Id);
         if (tracked != null && !ReferenceEquals(tracked, post))
-            _context.Entry(tracked).CurrentValues.SetValues(post);
-        else if (tracked == null) _context.Entry(post).State = EntityState.Modified;
-        await _context.SaveChangesAsync().ConfigureAwait(false);
+            context.Entry(tracked).CurrentValues.SetValues(post);
+        else if (tracked == null) context.Entry(post).State = EntityState.Modified;
+        await context.SaveChangesAsync().ConfigureAwait(false);
     }
 
     public async Task DeletePostAsync(int id)
     {
-        var post = await _context.BlogPosts.FindAsync(id).ConfigureAwait(false);
+        var post = await context.BlogPosts.FindAsync(id).ConfigureAwait(false);
         if (post != null)
         {
-            _context.BlogPosts.Remove(post);
-            await _context.SaveChangesAsync().ConfigureAwait(false);
+            context.BlogPosts.Remove(post);
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
     }
 }

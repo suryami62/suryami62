@@ -65,8 +65,9 @@
                             <a href="/Account/Admin/Posts/Edit/@post.Id"
                                class="border-2 border-black bg-blue-400 px-3 py-1 font-bold shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000]">EDIT</a>
                             <button @onclick="() => DeletePost(post.Id)"
-                                    class="border-2 border-black bg-red-400 px-3 py-1 font-bold shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000]">
-                                DELETE
+                                    disabled="@(_isDeleting == post.Id)"
+                                    class="border-2 border-black bg-red-400 px-3 py-1 font-bold shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50">
+                                @(_isDeleting == post.Id ? "..." : "DELETE")
                             </button>
                         </td>
                     </tr>
@@ -75,25 +76,65 @@
             </tbody>
         </table>
     </div>
+
+    @if (_total > _pageSize)
+    {
+        <div class="flex justify-center gap-4">
+            <button disabled="@(_page == 1)" @onclick="() => ChangePage(_page - 1)"
+                    class="border-4 border-black bg-white px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_#fff]">
+                PREV
+            </button>
+            <div class="flex items-center text-2xl font-black">
+                @_page / @(Math.Ceiling((double)_total / _pageSize))
+            </div>
+            <button disabled="@(_page * _pageSize >= _total)" @onclick="() => ChangePage(_page + 1)"
+                    class="border-4 border-black bg-[#A3E635] px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 dark:border-white dark:bg-lime-500 dark:shadow-[4px_4px_0px_0px_#fff]">
+                NEXT
+            </button>
+        </div>
+    }
 </div>
+
+<ConfirmModal @ref="_confirmModal" Title="Delete Post"
+              Message="Are you sure you want to delete this post? This action cannot be undone."/>
 
 @code {
     private List<BlogPost>? _posts;
+    private int _page = 1;
+    private readonly int _pageSize = 10;
+    private int _total;
+    private int? _isDeleting;
+    private ConfirmModal? _confirmModal;
 
     protected override async Task OnInitializedAsync()
     {
-        _posts = await BlogPostService.GetPostsAsync(false);
+        await LoadPosts();
+    }
+
+    private async Task LoadPosts()
+    {
+        var (items, total) = await BlogPostService.GetPostsAsync(false, (_page - 1) * _pageSize, _pageSize);
+        _posts = items;
+        _total = total;
+    }
+
+    private async Task ChangePage(int newPage)
+    {
+        _page = newPage;
+        await LoadPosts();
     }
 
     private async Task DeletePost(int id)
     {
-        if (await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this post?"))
+        if (_confirmModal == null) return;
+
+        if (await _confirmModal.ShowAsync())
         {
+            _isDeleting = id;
             await BlogPostService.DeletePostAsync(id);
-            _posts = await BlogPostService.GetPostsAsync(false);
+            _posts?.RemoveAll(p => p.Id == id);
+            _isDeleting = null;
         }
     }
 
 }
-
-@inject IJSRuntime JS

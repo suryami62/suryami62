@@ -35,9 +35,9 @@
                 <ValidationMessage For="() => Input.PhoneNumber"
                                    class="text-sm font-bold text-red-600 dark:text-red-400"/>
             </div>
-            <button type="submit"
-                    class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
-                Save
+            <button type="submit" disabled="@_isSubmitting"
+                    class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                @(_isSubmitting ? "Saving..." : "Save")
             </button>
         </div>
     </EditForm>
@@ -47,6 +47,7 @@
     private ApplicationUser? user;
     private string? username;
     private string? phoneNumber;
+    private bool _isSubmitting;
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
@@ -71,24 +72,37 @@
 
     private async Task OnValidSubmitAsync()
     {
-        if (user is null)
-        {
-            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
-            return;
-        }
+        if (_isSubmitting) return;
+        _isSubmitting = true;
 
-        if (Input.PhoneNumber != phoneNumber)
+        try
         {
-            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-            if (!setPhoneResult.Succeeded)
+            if (user is null)
             {
-                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+                RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+                _isSubmitting = false;
                 return;
             }
-        }
 
-        await SignInManager.RefreshSignInAsync(user);
-        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+            if (Input.PhoneNumber != phoneNumber)
+            {
+                var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
+                if (!setPhoneResult.Succeeded)
+                {
+                    RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+                    _isSubmitting = false;
+                    return;
+                }
+            }
+
+            await SignInManager.RefreshSignInAsync(user);
+            RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+        }
+        catch
+        {
+            _isSubmitting = false;
+            throw;
+        }
     }
 
     private sealed class InputModel

@@ -62,9 +62,9 @@
                         <ValidationMessage For="() => Input.ConfirmPassword"
                                            class="text-sm font-bold text-red-600 dark:text-red-400"/>
                     </div>
-                    <button type="submit"
-                            class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
-                        Register
+                    <button type="submit" disabled="@_isSubmitting"
+                            class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                        @(_isSubmitting ? "Registering..." : "Register")
                     </button>
                 </div>
             </EditForm>
@@ -82,6 +82,7 @@
 
 @code {
     private IEnumerable<IdentityError>? identityErrors;
+    private bool _isSubmitting;
 
     [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
 
@@ -96,23 +97,35 @@
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var user = CreateUser();
+        if (_isSubmitting) return;
+        _isSubmitting = true;
 
-        await UserStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
-        var emailStore = GetEmailStore();
-        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-        var result = await UserManager.CreateAsync(user, Input.Password);
-
-        if (!result.Succeeded)
+        try
         {
-            identityErrors = result.Errors;
-            return;
+            var user = CreateUser();
+
+            await UserStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
+            var emailStore = GetEmailStore();
+            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+            var result = await UserManager.CreateAsync(user, Input.Password);
+
+            if (!result.Succeeded)
+            {
+                identityErrors = result.Errors;
+                _isSubmitting = false;
+                return;
+            }
+
+            Logger.LogInformation("User created a new account with password.");
+
+            await SignInManager.SignInAsync(user, false);
+            RedirectManager.RedirectTo(ReturnUrl);
         }
-
-        Logger.LogInformation("User created a new account with password.");
-
-        await SignInManager.SignInAsync(user, false);
-        RedirectManager.RedirectTo(ReturnUrl);
+        catch
+        {
+            _isSubmitting = false;
+            throw;
+        }
     }
 
     private ApplicationUser CreateUser()
