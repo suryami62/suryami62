@@ -4,6 +4,7 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
+@using QRCoder
 @using suryami62.Data
 
 @inject UserManager<ApplicationUser> UserManager
@@ -49,14 +50,15 @@ else
                     into your two factor authenticator app. Spaces and casing do not matter.
                 </p>
                 <div
-                    class="mt-3 border-4 border-black bg-neutral-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
-                    Learn how to
-                    <a class="underline decoration-4 underline-offset-4"
-                       href="https://go.microsoft.com/fwlink/?Linkid=852423">enable QR code generation</a>.
-                </div>
-                <div
                     class="mt-4 border-4 border-black bg-white p-4 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
-                    <div data-url="@authenticatorUri" class="mx-auto h-40 w-40"></div>
+                    @if (!string.IsNullOrEmpty(qrCodeImageAsBase64))
+                    {
+                        <img src="data:image/png;base64,@qrCodeImageAsBase64" class="mx-auto h-40 w-40" alt="QR Code"/>
+                    }
+                    else
+                    {
+                        <div data-url="@authenticatorUri" class="mx-auto h-40 w-40"></div>
+                    }
                 </div>
             </li>
             <li>
@@ -95,6 +97,7 @@ else
     private ApplicationUser? user;
     private string? sharedKey;
     private string? authenticatorUri;
+    private string? qrCodeImageAsBase64;
     private IEnumerable<string>? recoveryCodes;
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
@@ -165,6 +168,12 @@ else
 
         var email = await UserManager.GetEmailAsync(user);
         authenticatorUri = GenerateQrCodeUri(email!, unformattedKey!);
+
+        using var qrGenerator = new QRCodeGenerator();
+        using var qrCodeData = qrGenerator.CreateQrCode(authenticatorUri, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(qrCodeData);
+        var qrCodeBytes = qrCode.GetGraphic(10);
+        qrCodeImageAsBase64 = Convert.ToBase64String(qrCodeBytes);
     }
 
     private string FormatKey(string unformattedKey)
@@ -190,7 +199,7 @@ else
         return string.Format(
             CultureInfo.InvariantCulture,
             AuthenticatorUriFormat,
-            UrlEncoder.Encode("Microsoft.AspNetCore.Identity.UI"),
+            UrlEncoder.Encode("suryami62"),
             UrlEncoder.Encode(email),
             unformattedKey);
     }
