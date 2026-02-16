@@ -2,25 +2,25 @@
 @using suryami62.Data
 @inject SignInManager<ApplicationUser> SignInManager
 
-<ul class="flex flex-col gap-2 text-sm font-black uppercase">
+<ul class="flex flex-row flex-wrap justify-center gap-2 text-sm font-black uppercase lg:flex-col">
     <li>
         <NavLink
             class="block border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800"
-            ActiveClass="bg-black text-white dark:bg-white dark:text-black"
+            ActiveClass="@ActiveNavClass"
             href="Account/Manage" Match="NavLinkMatch.All">Profile
         </NavLink>
     </li>
     <li>
         <NavLink
             class="block border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800"
-            ActiveClass="bg-black text-white dark:bg-white dark:text-black"
+            ActiveClass="@ActiveNavClass"
             href="Account/Manage/Email">Email
         </NavLink>
     </li>
     <li>
         <NavLink
             class="block border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800"
-            ActiveClass="bg-black text-white dark:bg-white dark:text-black"
+            ActiveClass="@ActiveNavClass"
             href="Account/Manage/ChangePassword">Password
         </NavLink>
     </li>
@@ -29,7 +29,7 @@
         <li>
             <NavLink
                 class="block border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800"
-                ActiveClass="bg-black text-white dark:bg-white dark:text-black"
+                ActiveClass="@ActiveNavClass"
                 href="Account/Manage/ExternalLogins">External logins
             </NavLink>
         </li>
@@ -37,21 +37,21 @@
     <li>
         <NavLink
             class="block border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800"
-            ActiveClass="bg-black text-white dark:bg-white dark:text-black"
+            ActiveClass="@ActiveNavClass"
             href="Account/Manage/TwoFactorAuthentication">Two-factor authentication
         </NavLink>
     </li>
     <li>
         <NavLink
             class="block border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800"
-            ActiveClass="bg-black text-white dark:bg-white dark:text-black"
+            ActiveClass="@ActiveNavClass"
             href="Account/Manage/Passkeys">Passkeys
         </NavLink>
     </li>
     <li>
         <NavLink
             class="block border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800"
-            ActiveClass="bg-black text-white dark:bg-white dark:text-black"
+            ActiveClass="@ActiveNavClass"
             href="Account/Manage/PersonalData">Personal data
         </NavLink>
     </li>
@@ -59,6 +59,7 @@
 
 @code {
     private bool hasExternalLogins;
+    private const string ActiveNavClass = "!bg-black !text-white !shadow-none translate-x-1 translate-y-1 dark:!bg-white dark:!text-black dark:!shadow-none";
 
     protected override async Task OnInitializedAsync()
     {
