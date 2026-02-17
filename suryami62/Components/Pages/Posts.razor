@@ -3,8 +3,17 @@
 @using suryami62.Services
 @inject IBlogPostService BlogPostService
 @rendermode InteractiveServer
+@inject NavigationManager NavigationManager
 
-<PageTitle>Blog - Surya Ramadhan</PageTitle>
+<PageTitle>My Tech Writings | suryami62</PageTitle>
+
+<!-- Meta Section -->
+<HeadContent>
+    <MetaOpenGraphCard Title="My Tech Writings | suryami62"
+                       Description="In-depth tutorials and insights from a .NET Developer and Physics Teacher."
+                       Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
+                       Url="@NavigationManager.Uri"/>
+</HeadContent>
 
 <div class="flex flex-col gap-12 py-8">
     <!-- Header Section -->
