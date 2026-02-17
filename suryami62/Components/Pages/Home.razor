@@ -1,5 +1,8 @@
 ﻿@page "/"
+@using suryami62.Data.Models
+@using suryami62.Services
 @inject IConfiguration Configuration
+@inject IBlogPostService BlogPostService
 
 <PageTitle>Home</PageTitle>
 
@@ -35,9 +38,21 @@
         </div>
 
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            @foreach (var post in _posts)
+            @if (_posts == null)
             {
-                <PostCard Label="@post.Label" Date="@post.Date" Title="@post.Title" Href="#" Summary="@post.Summary"/>
+                <div class="col-span-full text-center">Loading posts...</div>
+            }
+            else if (!_posts.Any())
+            {
+                <div class="col-span-full text-center">No posts found yet. Check back soon!</div>
+            }
+            else
+            {
+                @foreach (var post in _posts)
+                {
+                    <PostCard Label="@post.Label" Date="@post.Date.ToString("MMM dd, yyyy")" Title="@post.Title"
+                              Href="@($"/posts/{post.Slug}")" Summary="@post.Summary"/>
+                }
             }
         </div>
     </section>
@@ -47,11 +62,11 @@
 
     private record Social(string Href, string IconClass);
 
-    private record Post(string Title, string Label, string Date, string Summary);
-
     private List<Social> Socials { get; set; } = [];
 
-    protected override void OnInitialized()
+    private List<BlogPost>? _posts;
+
+    protected override async Task OnInitializedAsync()
     {
         Socials =
         [
@@ -60,31 +75,9 @@
             new Social(Configuration["UserInfo:Github"] ?? "#", "fa-brands fa-github"),
             new Social(Configuration["UserInfo:Email"] ?? "#", "fa-regular fa-envelope")
         ];
+
+        var (items, _) = await BlogPostService.GetPostsAsync(true, 0, 3);
+        _posts = items;
     }
-
-    private readonly List<Post> _posts =
-    [
-        new(
-            "The Art of Neo-Brutalism",
-            "Design",
-            "Dec 27, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "Mastering Blazor & Tailwind",
-            "Dev",
-            "Dec 20, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        ),
-
-        new(
-            "Minimalist Workspace Setup",
-            "Lifestyle",
-            "Dec 15, 2025",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mattis odio et magna suscipit, sed fermentum sapien viverra."
-        )
-    ];
-
 
 }
