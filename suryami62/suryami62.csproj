@@ -14,6 +14,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Markdig" Version="0.45.0"/>
         <PackageReference Include="Microsoft.AspNetCore.App.Internal.Assets" Version="10.0.2"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.2"/>
         <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.2"/>

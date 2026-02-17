@@ -1,5 +1,7 @@
 @import "tailwindcss" source("../Components");
 
+@plugin "@tailwindcss/typography";
+
 html,
 body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
