@@ -26,20 +26,4 @@
         <PackageReference Include="QRCoder" Version="1.7.0"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <Compile Remove="wwwroot\img\uploads\**"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Remove="wwwroot\img\uploads\**"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Content Remove="wwwroot\img\uploads\**"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Remove="wwwroot\img\uploads\**"/>
-    </ItemGroup>
-
 </Project>

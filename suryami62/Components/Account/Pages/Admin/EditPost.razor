@@ -1,19 +1,35 @@
 @page "/Account/Admin/Posts/New"
 @page "/Account/Admin/Posts/Edit/{Id:int}"
+@attribute [Authorize]
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
 @using suryami62.Data.Models
 @using suryami62.Services
-@attribute [Authorize]
-@rendermode InteractiveServer
+@implements IAsyncDisposable
 @inject IBlogPostService BlogPostService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 <PageTitle>@(Id == null ? "New Post" : "Edit Post") - Surya Ramadhan</PageTitle>
+
+<HeadContent>
+    <link rel="stylesheet" href="@Assets["ckeditor5/ckeditor5/ckeditor5.css"]"/>
+    <link rel="stylesheet" href="@Assets["ckeditor5/style.css"]"/>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "ckeditor5": "/ckeditor5/ckeditor5/ckeditor5.js",
+                "ckeditor5/": "/ckeditor5/ckeditor5/"
+            }
+        }
+    </script>
+</HeadContent>
 
 <div class="flex flex-col gap-12 py-8">
     <PageHeader Title="@(Id == null ? "New" : "Edit")" Highlight="Post"/>
 
-    <EditForm Model="@_post" OnValidSubmit="SavePost" FormName="edit-post-form" method="post"
+    <EditForm Model="@_post" OnValidSubmit="SavePost" FormName="edit-post-form"
               class="flex flex-col gap-6 border-4 border-black bg-white p-8 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
         <DataAnnotationsValidator/>
         <ValidationSummary class="text-red-600 font-bold mb-4"/>
@@ -53,9 +69,11 @@
         </div>
 
         <div class="flex flex-col gap-2">
-            <label class="text-xl font-black uppercase">Content (Markdown)</label>
-            <InputTextArea @bind-Value="_post.Content" rows="10"
-                           class="border-2 border-black p-3 font-mono shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
+            <label class="text-xl font-black uppercase">Content</label>
+            <div @ref="_editorElement" id="post-content-editor"
+                 class="min-h-100 border-2 border-black shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900">
+            </div>
+            <InputTextArea @bind-Value="_post.Content" class="hidden"/>
         </div>
 
         <div class="flex items-center gap-4">
@@ -80,8 +98,11 @@
 @code {
     [Parameter] public int? Id { get; set; }
 
-    [SupplyParameterFromForm] private BlogPost _post { get; set; } = default!;
+    private BlogPost _post { get; set; } = default!;
     private bool _isSubmitting;
+    private ElementReference _editorElement;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<EditPost>? _dotNetHelper;
 
     protected override void OnInitialized()
     {
@@ -100,9 +121,26 @@
         }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/ckeditor5/blazor-ckeditor.js");
+            _dotNetHelper = DotNetObjectReference.Create(this);
+            await _module.InvokeVoidAsync("init", _editorElement, _dotNetHelper, _post.Content);
+        }
+    }
+
+    [JSInvokable]
+    public void OnEditorChanged(string data)
+    {
+        _post.Content = data;
+        StateHasChanged();
+    }
+
     private void OnTitleChanged(ChangeEventArgs e)
     {
-        if (Id == null) // Only auto-slug for new posts
+        if (Id == null)
         {
             var title = e.Value?.ToString() ?? "";
             _post.Slug = title.ToLower().Replace(" ", "-").Replace("--", "-").Trim('-');
@@ -112,6 +150,16 @@
     private async Task SavePost()
     {
         if (_isSubmitting) return;
+
+        if (_module != null)
+        {
+            var data = await _module.InvokeAsync<string>("getData", "post-content-editor");
+            if (data != null)
+            {
+                _post.Content = data;
+            }
+        }
+
         _isSubmitting = true;
 
         try
@@ -130,6 +178,23 @@
         catch
         {
             _isSubmitting = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_module != null)
+            {
+                await _module.InvokeVoidAsync("destroy", "post-content-editor");
+                await _module.DisposeAsync();
+            }
+
+            _dotNetHelper?.Dispose();
+        }
+        catch (JSDisconnectedException)
+        {
         }
     }
 
