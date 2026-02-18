@@ -1,5 +1,7 @@
 #region
 
+using System.Text;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -29,6 +31,7 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => new IdentityRevali
 
 builder.Services.AddScoped<IBlogPostService>(sp => new BlogPostService(sp.GetRequiredService<ApplicationDbContext>()));
 builder.Services.AddScoped<IProjectService>(sp => new ProjectService(sp.GetRequiredService<ApplicationDbContext>()));
+builder.Services.AddScoped<SeoFilesSettingsStore>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -77,6 +80,73 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
+app.MapGet("/sitemap.xml", async (HttpContext httpContext, IBlogPostService blogPostService,
+        SeoFilesSettingsStore seoFilesSettingsStore, CancellationToken cancellationToken) =>
+    {
+        var settings = await seoFilesSettingsStore.GetAsync(cancellationToken).ConfigureAwait(false);
+        if (!settings.SitemapEnabled) return Results.NotFound();
+
+        var baseUrl = GetBaseUrl(httpContext, settings);
+        var urls = new List<(string Loc, DateTime? LastMod)>
+        {
+            (Combine(baseUrl, "/"), null),
+            (Combine(baseUrl, "/about"), null),
+            (Combine(baseUrl, "/posts"), null),
+            (Combine(baseUrl, "/projects"), null)
+        };
+
+        var (posts, _) = await blogPostService.GetPostsAsync().ConfigureAwait(false);
+        foreach (var post in posts)
+        {
+            var slug = Uri.EscapeDataString(post.Slug ?? string.Empty);
+            urls.Add((Combine(baseUrl, $"/posts/{slug}"), post.Date));
+        }
+
+        XNamespace ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+        var doc = new XDocument(
+            new XDeclaration("1.0", "utf-8", "yes"),
+            new XElement(ns + "urlset",
+                urls.Select(u =>
+                {
+                    var url = new XElement(ns + "url", new XElement(ns + "loc", u.Loc));
+                    if (u.LastMod.HasValue)
+                        url.Add(new XElement(ns + "lastmod", u.LastMod.Value.ToUniversalTime().ToString("yyyy-MM-dd")));
+                    return url;
+                })));
+
+        return Results.Text(doc.ToString(SaveOptions.DisableFormatting), "application/xml; charset=utf-8",
+            Encoding.UTF8);
+    })
+    .AllowAnonymous();
+
+app.MapGet("/robots.txt", async (HttpContext httpContext, SeoFilesSettingsStore seoFilesSettingsStore,
+        CancellationToken cancellationToken) =>
+    {
+        var settings = await seoFilesSettingsStore.GetAsync(cancellationToken).ConfigureAwait(false);
+        if (!settings.RobotsEnabled) return Results.NotFound();
+
+        var baseUrl = GetBaseUrl(httpContext, settings);
+
+        var sb = new StringBuilder();
+        sb.AppendLine("User-agent: *");
+        sb.AppendLine("Allow: /");
+
+        if (settings.DisallowAccount) sb.AppendLine("Disallow: /Account");
+
+        foreach (var line in (settings.AdditionalDisallow ?? string.Empty)
+                 .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            var path = line.StartsWith('/') ? line : $"/{line}";
+            sb.AppendLine($"Disallow: {path}");
+        }
+
+        sb.AppendLine($"Sitemap: {Combine(baseUrl, "/sitemap.xml")}");
+
+        return Results.Text(sb.ToString(), "text/plain; charset=utf-8", Encoding.UTF8);
+    })
+    .AllowAnonymous();
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
@@ -85,3 +155,17 @@ app.MapRazorComponents<App>()
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
+
+static string GetBaseUrl(HttpContext httpContext, SeoFilesSettings settings)
+{
+    if (settings.AutoBaseUrl || string.IsNullOrWhiteSpace(settings.BaseUrl))
+        return $"{httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.PathBase}".TrimEnd('/');
+
+    return settings.BaseUrl.Trim().TrimEnd('/');
+}
+
+static string Combine(string baseUrl, string path)
+{
+    if (string.IsNullOrWhiteSpace(path) || path == "/") return baseUrl + "/";
+    return path.StartsWith('/') ? baseUrl + path : baseUrl + "/" + path;
+}
