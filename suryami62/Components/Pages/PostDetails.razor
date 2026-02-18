@@ -4,8 +4,17 @@
 @using suryami62.Services
 @inject IBlogPostService BlogPostService
 @rendermode InteractiveServer
+@inject NavigationManager NavigationManager
 
-<PageTitle>@(_post?.Title is { Length: > 0 } title ? $"{title} - Surya Ramadhan" : "Post - Surya Ramadhan")</PageTitle>
+<PageTitle>@(_post?.Title is { Length: > 0 } title ? $"{title} | suryami62" : "Post | suryami62")</PageTitle>
+
+<!-- Meta Section -->
+<HeadContent>
+    <MetaOpenGraphCard Title="@(_post?.Title is { Length: > 0 } title ? $"{title} | suryami62" : "Post | suryami62")"
+                       Description="@(_post?.Summary ?? string.Empty)"
+                       Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
+                       Url="@NavigationManager.Uri"/>
+</HeadContent>
 
 <div class="flex flex-col gap-8 py-8">
     <div>
