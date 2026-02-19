@@ -97,13 +97,13 @@ internal sealed class SeoFilesSettingsStore(ApplicationDbContext context)
         existing[key] = created;
     }
 
-    private static bool GetBool(IReadOnlyDictionary<string, string> items, string key, bool defaultValue)
+    private static bool GetBool(Dictionary<string, string> items, string key, bool defaultValue)
     {
         if (!items.TryGetValue(key, out var value)) return defaultValue;
         return bool.TryParse(value, out var result) ? result : defaultValue;
     }
 
-    private static string GetString(IReadOnlyDictionary<string, string> items, string key, string defaultValue)
+    private static string GetString(Dictionary<string, string> items, string key, string defaultValue)
     {
         return items.TryGetValue(key, out var value) ? value : defaultValue;
     }

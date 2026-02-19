@@ -12,8 +12,8 @@ using suryami62.Data;
 namespace suryami62.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260208143921_AddSettingsTable")]
-    partial class AddSettingsTable
+    [Migration("20260219161711_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -256,7 +256,7 @@ namespace suryami62.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");

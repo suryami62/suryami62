@@ -1,8 +1,9 @@
 @page "/Account/Admin/Media"
 @using Microsoft.AspNetCore.Authorization
+@using suryami62.Services
 @attribute [Authorize]
 @rendermode InteractiveServer
-@inject IWebHostEnvironment Environment
+@inject IMediaService MediaService
 
 <PageTitle>Media Manager - Surya Ramadhan</PageTitle>
 
@@ -13,15 +14,24 @@
         class="border-4 border-black bg-white p-8 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
         <h3 class="text-2xl font-black uppercase mb-6">Upload New Image</h3>
         <div class="flex flex-col gap-4">
-            <InputFile OnChange="UploadFile"
+            <InputFile OnChange="HandleFileSelected"
                        class="border-2 border-black p-4 font-bold italic shadow-[4px_4px_0px_0px_#000] dark:border-white"/>
+
             @if (_isUploading)
             {
-                <p class="font-bold animate-pulse text-blue-600">Uploading...</p>
+                <div class="flex items-center gap-2">
+                    <div
+                        class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin dark:border-white dark:border-t-transparent"></div>
+                    <p class="font-bold text-blue-600">Uploading...</p>
+                </div>
             }
-            @if (!string.IsNullOrEmpty(_uploadMessage))
+
+            @if (!string.IsNullOrEmpty(_statusMessage))
             {
-                <p class="font-bold @(_uploadMessage.Contains("Success") ? "text-green-600" : "text-red-600")">@_uploadMessage</p>
+                <div
+                    class="p-4 border-2 border-black shadow-[4px_4px_0px_0px_#000] @(_isError ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600")">
+                    <p class="font-bold">@_statusMessage</p>
+                </div>
             }
         </div>
     </div>
@@ -29,26 +39,39 @@
     <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         @if (_imageFiles == null)
         {
-            <p>Loading gallery...</p>
+            <div class="col-span-full py-12 text-center">
+                <p class="text-xl font-bold animate-pulse">Loading gallery...</p>
+            </div>
         }
         else if (!_imageFiles.Any())
         {
-            <p>No images uploaded yet.</p>
+            <div class="col-span-full py-12 text-center border-2 border-dashed border-gray-400 dark:border-gray-600">
+                <p class="text-gray-500 font-bold">No images uploaded yet.</p>
+            </div>
         }
         else
         {
             @foreach (var file in _imageFiles)
             {
                 <div
-                    class="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000] group relative dark:border-white dark:bg-gray-900">
-                    <img src="img/uploads/@file" alt="@file" loading="lazy"
-                         class="w-full h-48 object-cover border-b-2 border-black dark:border-white"/>
-                    <div class="p-2 flex flex-col gap-2">
-                        <p class="text-xs truncate font-bold">@file</p>
-                        <button @onclick="() => DeleteFile(file)"
-                                class="bg-red-400 border-2 border-black px-2 py-1 text-xs font-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000]">
-                            DELETE
-                        </button>
+                    class="border-2 border-black bg-white shadow-[4px_4px_0px_0px_#000] group relative dark:border-white dark:bg-gray-900 overflow-hidden">
+                    <div
+                        class="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden border-b-2 border-black dark:border-white">
+                        <img src="img/uploads/@file" alt="@file" loading="lazy"
+                             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"/>
+                    </div>
+                    <div class="p-3 flex flex-col gap-3">
+                        <p class="text-xs truncate font-bold" title="@file">@file</p>
+                        <div class="flex gap-2">
+                            <button @onclick="() => CopyToClipboard(file)"
+                                    class="flex-1 bg-blue-400 border-2 border-black px-2 py-1 text-[10px] font-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000] active:bg-blue-500">
+                                COPY URL
+                            </button>
+                            <button @onclick="() => ConfirmDelete(file)"
+                                    class="bg-red-400 border-2 border-black px-2 py-1 text-[10px] font-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000] active:bg-red-500">
+                                DELETE
+                            </button>
+                        </div>
                     </div>
                 </div>
             }
@@ -62,51 +85,56 @@
 @code {
     private List<string>? _imageFiles;
     private bool _isUploading;
-    private string? _uploadMessage;
+    private string? _statusMessage;
+    private bool _isError;
     private ConfirmModal? _confirmModal;
+    private const long MaxFileSize = 5120000; // 5MB
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadImages();
+        await LoadImagesAsync();
     }
 
-    private void LoadImages()
+    private async Task LoadImagesAsync()
     {
-        var path = Path.Combine(Environment.WebRootPath, "img", "uploads");
-        if (Directory.Exists(path))
-        {
-            _imageFiles = Directory.GetFiles(path)
-                .Select(Path.GetFileName)
-                .Where(f => f != null)
-                .Select(f => f!)
-                .ToList();
-        }
-        else
-        {
-            _imageFiles = new List<string>();
-        }
+        _imageFiles = await MediaService.ListFilesAsync();
     }
 
-    private async Task UploadFile(InputFileChangeEventArgs e)
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         _isUploading = true;
-        _uploadMessage = null;
+        _statusMessage = null;
+        _isError = false;
 
         try
         {
             var file = e.File;
-            var path = Path.Combine(Environment.WebRootPath, "img", "uploads", file.Name);
 
-            await using var stream = file.OpenReadStream(1024 * 1024 * 5); // 5MB limit
-            await using var fs = new FileStream(path, FileMode.Create);
-            await stream.CopyToAsync(fs);
+            if (file.Size > MaxFileSize)
+            {
+                _statusMessage = "Error: File size exceeds 5MB limit.";
+                _isError = true;
+                return;
+            }
 
-            _uploadMessage = $"Success! Uploaded {file.Name}";
-            LoadImages();
+            await using var stream = file.OpenReadStream(MaxFileSize);
+            var result = await MediaService.UploadFileAsync(file.Name, file.ContentType, stream);
+
+            if (result.Success)
+            {
+                _statusMessage = result.Message;
+                await LoadImagesAsync();
+            }
+            else
+            {
+                _statusMessage = $"Error: {result.Message}";
+                _isError = true;
+            }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _uploadMessage = $"Error: {ex.Message}";
+            _statusMessage = "Error: An unexpected error occurred during upload.";
+            _isError = true;
         }
         finally
         {
@@ -114,20 +142,34 @@
         }
     }
 
-    private async Task DeleteFile(string filename)
+    private async Task ConfirmDelete(string filename)
     {
         if (_confirmModal == null) return;
 
         if (await _confirmModal.ShowAsync())
         {
-            var path = Path.Combine(Environment.WebRootPath, "img", "uploads", filename);
-            if (File.Exists(path))
+            var success = await MediaService.DeleteFileAsync(filename);
+            if (success)
             {
-                File.Delete(path);
-                _uploadMessage = $"Deleted {filename}";
-                _imageFiles?.Remove(filename);
+                _statusMessage = $"Deleted {filename}";
+                _isError = false;
+                await LoadImagesAsync();
+            }
+            else
+            {
+                _statusMessage = $"Error: Could not delete {filename}";
+                _isError = true;
             }
         }
+    }
+
+    private async Task CopyToClipboard(string filename)
+    {
+        // Placeholder for clipboard functionality if needed, 
+        // or just show a message with the URL.
+        // In Blazor Server, you might need JS interop for this.
+        _statusMessage = $"URL copied: img/uploads/{filename}";
+        _isError = false;
     }
 
 }

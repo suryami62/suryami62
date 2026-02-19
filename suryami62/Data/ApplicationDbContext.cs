@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using suryami62.Data.Migrations;
 using suryami62.Data.Models;
+using suryami62.Services;
 
 #endregion
 
@@ -23,8 +24,7 @@ internal sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext
         _ = new BlogPost();
         _ = new Project();
         _ = new InitialCreate();
-        _ = new AddCmsTables();
-        _ = new AddSettingsTable();
+        _ = new SeoFilesSettingsStore(null!);
 
         return new ApplicationDbContext(options);
     }

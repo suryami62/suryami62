@@ -1,5 +1,6 @@
 #region
 
+using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Components;
@@ -31,6 +32,7 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => new IdentityRevali
 
 builder.Services.AddScoped<IBlogPostService>(sp => new BlogPostService(sp.GetRequiredService<ApplicationDbContext>()));
 builder.Services.AddScoped<IProjectService>(sp => new ProjectService(sp.GetRequiredService<ApplicationDbContext>()));
+builder.Services.AddScoped<IMediaService>(sp => new MediaService(sp.GetRequiredService<IWebHostEnvironment>()));
 builder.Services.AddScoped<SeoFilesSettingsStore>();
 
 builder.Services.AddAuthentication(options =>
@@ -110,7 +112,8 @@ app.MapGet("/sitemap.xml", async (HttpContext httpContext, IBlogPostService blog
                 {
                     var url = new XElement(ns + "url", new XElement(ns + "loc", u.Loc));
                     if (u.LastMod.HasValue)
-                        url.Add(new XElement(ns + "lastmod", u.LastMod.Value.ToUniversalTime().ToString("yyyy-MM-dd")));
+                        url.Add(new XElement(ns + "lastmod",
+                            u.LastMod.Value.ToUniversalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
                     return url;
                 })));
 
@@ -138,10 +141,10 @@ app.MapGet("/robots.txt", async (HttpContext httpContext, SeoFilesSettingsStore 
         {
             if (string.IsNullOrWhiteSpace(line)) continue;
             var path = line.StartsWith('/') ? line : $"/{line}";
-            sb.AppendLine($"Disallow: {path}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"Disallow: {path}");
         }
 
-        sb.AppendLine($"Sitemap: {Combine(baseUrl, "/sitemap.xml")}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Sitemap: {Combine(baseUrl, "/sitemap.xml")}");
 
         return Results.Text(sb.ToString(), "text/plain; charset=utf-8", Encoding.UTF8);
     })
