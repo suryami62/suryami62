@@ -4,6 +4,8 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inject IMediaService MediaService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 <PageTitle>Media Manager - Surya Ramadhan</PageTitle>
 
@@ -81,6 +83,8 @@
 
 <ConfirmModal @ref="_confirmModal" Title="Delete Media"
               Message="Are you sure you want to delete this image? This action cannot be undone."/>
+
+<script src="@Assets["js/utils.js"]"></script>
 
 @code {
     private List<string>? _imageFiles;
@@ -165,11 +169,28 @@
 
     private async Task CopyToClipboard(string filename)
     {
-        // Placeholder for clipboard functionality if needed, 
-        // or just show a message with the URL.
-        // In Blazor Server, you might need JS interop for this.
-        _statusMessage = $"URL copied: img/uploads/{filename}";
-        _isError = false;
+        var relativeUrl = $"img/uploads/{filename}";
+        var absoluteUrl = NavigationManager.ToAbsoluteUri(relativeUrl).ToString();
+
+        try
+        {
+            var result = await JSRuntime.InvokeAsync<bool>("utils.copyTextToClipboard", absoluteUrl);
+            if (result)
+            {
+                _statusMessage = $"URL copied: {absoluteUrl}";
+                _isError = false;
+            }
+            else
+            {
+                _statusMessage = "Error: Failed to copy URL.";
+                _isError = true;
+            }
+        }
+        catch (Exception)
+        {
+            _statusMessage = "Error: JavaScript interop failed.";
+            _isError = true;
+        }
     }
 
 }
