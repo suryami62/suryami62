@@ -1,9 +1,8 @@
 ﻿<link rel="canonical" href="@Url"/>
 
-<meta name="author" content="Surya Ramadhan"/>
+<meta name="author" content="@Author"/>
 <meta name="description" content="@Description"/>
-<meta name="keywords"
-      content="Curriculum Vitae, Portfolio, Blog, Physics Teacher, .NET Developer, Personal Website, Surya Ramadhan, suryami62"/>
+<meta name="keywords" content="@Keywords"/>
 
 <meta property="og:title" content="@Title"/>
 <meta property="og:type" content="website"/>
@@ -18,10 +17,13 @@
 <meta name="twitter:url" content="@Url"/>
 
 @code {
+    [Parameter] public string? Author { get; set; } = "suryami62";
 
     [Parameter] public string? Title { get; set; }
 
     [Parameter] public string? Description { get; set; }
+
+    [Parameter] public string? Keywords { get; set; } = "Curriculum Vitae, Portfolio, Blog, Physics Teacher, .NET Developer, Personal Website, Surya Ramadhan, suryami62";
 
     [Parameter] public string? Image { get; set; }
 
