@@ -60,7 +60,7 @@
                 @foreach (var post in _posts)
                 {
                     <PostCard Label="@post.Label" Date="@post.Date.ToString("MMM dd, yyyy")" Title="@post.Title"
-                              Href="@($"/posts/{post.Slug}")" Summary="@post.Summary"/>
+                              Href="@($"/posts/{post.Slug}")" Summary="@post.Summary" ImageUrl="@post.ImageUrl"/>
                 }
             }
         </div>

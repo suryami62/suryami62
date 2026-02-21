@@ -1,5 +1,13 @@
 <article
     class="flex h-full flex-col border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+
+    @if (!string.IsNullOrEmpty(ImageUrl))
+    {
+        <div class="mb-6 overflow-hidden border-4 border-black bg-gray-100 dark:border-white">
+            <img src="@ImageUrl" alt="@Title" class="aspect-video w-full object-cover"/>
+        </div>
+    }
+
     <!-- Title & Header -->
     <div class="mb-4">
         <h3 class="mb-2 text-3xl leading-none font-black uppercase">@Title</h3>
@@ -46,4 +54,6 @@
     [Parameter] public string? RepoUrl { get; set; }
 
     [Parameter] public string? DemoUrl { get; set; }
+
+    [Parameter] public string? ImageUrl { get; set; }
 }

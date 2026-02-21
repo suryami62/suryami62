@@ -52,6 +52,12 @@
             </div>
         </div>
 
+        <div class="flex flex-col gap-2">
+            <label class="text-xl font-black uppercase">Image URL</label>
+            <InputText @bind-Value="_project.ImageUrl" placeholder="https://.../project-screenshot.png"
+                       class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_#000] outline-none dark:border-white dark:bg-gray-900"/>
+        </div>
+
         <div class="flex flex-col gap-2 w-32">
             <label class="text-xl font-black uppercase">Order</label>
             <InputNumber @bind-Value="_project.DisplayOrder"
