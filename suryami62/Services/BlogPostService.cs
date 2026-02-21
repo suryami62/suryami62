@@ -11,7 +11,7 @@ namespace suryami62.Services;
 internal interface IBlogPostService
 {
     Task<(List<BlogPost> Items, int Total)>
-        GetPostsAsync(bool onlyPublished = true, int? skip = null, int? take = null);
+        GetPostsAsync(bool onlyPublished = true, int? skip = null, int? take = null, string? searchTerm = null);
 
     Task<BlogPost?> GetPostBySlugAsync(string slug);
     Task<BlogPost?> GetPostByIdAsync(int id);
@@ -23,10 +23,14 @@ internal interface IBlogPostService
 internal sealed class BlogPostService(ApplicationDbContext context) : IBlogPostService
 {
     public async Task<(List<BlogPost> Items, int Total)> GetPostsAsync(bool onlyPublished = true, int? skip = null,
-        int? take = null)
+        int? take = null, string? searchTerm = null)
     {
         var query = context.BlogPosts.AsNoTracking().AsQueryable();
         if (onlyPublished) query = query.Where(p => p.IsPublished);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+            query = query.Where(p =>
+                p.Title.Contains(searchTerm) || (p.Summary != null && p.Summary.Contains(searchTerm)));
 
         var total = await query.CountAsync().ConfigureAwait(false);
         var orderedQuery = query.OrderByDescending(p => p.Date);
