@@ -1,7 +1,7 @@
 ﻿@page "/"
 @using suryami62.Data.Models
 @using suryami62.Services
-@inject IConfiguration Configuration
+@inject UserInfoSettingsStore UserInfoSettingsStore
 @inject IBlogPostService BlogPostService
 @inject NavigationManager NavigationManager
 
@@ -77,16 +77,23 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var userInfo = await UserInfoSettingsStore.GetAsync();
+
         Socials =
         [
-            new Social(Configuration["UserInfo:Instagram"] ?? "#", "fa-brands fa-instagram"),
-            new Social(Configuration["UserInfo:Linkedin"] ?? "#", "fa-brands fa-linkedin"),
-            new Social(Configuration["UserInfo:Github"] ?? "#", "fa-brands fa-github"),
-            new Social(Configuration["UserInfo:Email"] ?? "#", "fa-regular fa-envelope")
+            new Social(NormalizeHref(userInfo.Instagram), "fa-brands fa-instagram"),
+            new Social(NormalizeHref(userInfo.Linkedin), "fa-brands fa-linkedin"),
+            new Social(NormalizeHref(userInfo.Github), "fa-brands fa-github"),
+            new Social(NormalizeHref(userInfo.Email), "fa-regular fa-envelope")
         ];
 
         var (items, _) = await BlogPostService.GetPostsAsync(true, 0, 3);
         _posts = items;
+    }
+
+    private static string NormalizeHref(string? href)
+    {
+        return string.IsNullOrWhiteSpace(href) ? "#" : href.Trim();
     }
 
 }

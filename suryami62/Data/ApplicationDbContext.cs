@@ -24,7 +24,9 @@ internal sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext
         _ = new BlogPost();
         _ = new Project();
         _ = new InitialCreate();
+        _ = new ClearPhoneNumberData();
         _ = new SeoFilesSettingsStore(null!);
+        _ = new UserInfoSettingsStore(null!);
 
         return new ApplicationDbContext(options);
     }

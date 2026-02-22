@@ -34,6 +34,7 @@ builder.Services.AddScoped<IBlogPostService>(sp => new BlogPostService(sp.GetReq
 builder.Services.AddScoped<IProjectService>(sp => new ProjectService(sp.GetRequiredService<ApplicationDbContext>()));
 builder.Services.AddScoped<IMediaService>(sp => new MediaService(sp.GetRequiredService<IWebHostEnvironment>()));
 builder.Services.AddScoped<SeoFilesSettingsStore>();
+builder.Services.AddScoped<UserInfoSettingsStore>();
 
 builder.Services.AddAuthentication(options =>
     {
