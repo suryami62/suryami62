@@ -53,7 +53,6 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
         options.SignIn.RequireConfirmedAccount = false;
-        options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
         _ = ApplicationUser.Create();
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -99,7 +98,7 @@ app.MapGet("/sitemap.xml", async (ApplicationDbContext db, IBlogPostService blog
     if (string.IsNullOrWhiteSpace(baseUrl)) baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
     baseUrl = baseUrl.TrimEnd('/');
 
-    var (posts, _) = await blogPostService.GetPostsAsync(true, null, null, null).ConfigureAwait(false);
+    var (posts, _) = await blogPostService.GetPostsAsync().ConfigureAwait(false);
 
     var sb = new StringBuilder();
     sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");

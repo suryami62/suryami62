@@ -31,7 +31,7 @@
                         <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
                         <InputText @bind-Value="Input.Email" id="Input.Email"
                                    class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                                   autocomplete="username webauthn" aria-required="true"
+                                   autocomplete="username" aria-required="true"
                                    placeholder="name@example.com"/>
                         <ValidationMessage For="() => Input.Email"
                                            class="text-sm font-bold text-red-600 dark:text-red-400"/>
@@ -54,16 +54,6 @@
                             class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
                         @(_isSubmitting ? "Logging in..." : "Log in")
                     </button>
-                </div>
-
-                <div class="mt-6 border-t-4 border-black pt-6 dark:border-white">
-                    <div class="flex flex-col items-center gap-3">
-                        <span class="text-xs font-black uppercase tracking-widest">Or</span>
-                        <PasskeySubmit Operation="Request" Name="Input.Passkey" EmailName="Input.Email"
-                                       class="translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-2 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800">
-                            Log in with a passkey
-                        </PasskeySubmit>
-                    </div>
                 </div>
 
                 <div class="mt-6 border-t-4 border-black pt-6 dark:border-white">
@@ -121,41 +111,26 @@
 
         try
         {
-            if (!string.IsNullOrEmpty(Input.Passkey?.Error))
+            SignInResult result;
+            // If doing a password sign-in, validate the form.
+            if (!editContext.Validate())
             {
-                errorMessage = $"Error: {Input.Passkey.Error}";
                 _isSubmitting = false;
                 return;
             }
 
-            SignInResult result;
-            if (!string.IsNullOrEmpty(Input.Passkey?.CredentialJson))
+            // To support logging in with email when it's different from the username,
+            // we first find the user by their email address.
+            var user = await UserManager.FindByEmailAsync(Input.Email);
+            if (user != null)
             {
-                // When performing passkey sign-in, don't perform form validation.
-                result = await SignInManager.PasskeySignInAsync(Input.Passkey.CredentialJson);
+                // This doesn't count login failures towards account lockout
+                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+                result = await SignInManager.PasswordSignInAsync(user.UserName!, Input.Password, Input.RememberMe, false);
             }
             else
             {
-                // If doing a password sign-in, validate the form.
-                if (!editContext.Validate())
-                {
-                    _isSubmitting = false;
-                    return;
-                }
-
-                // To support logging in with email when it's different from the username,
-                // we first find the user by their email address.
-                var user = await UserManager.FindByEmailAsync(Input.Email);
-                if (user != null)
-                {
-                    // This doesn't count login failures towards account lockout
-                    // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                    result = await SignInManager.PasswordSignInAsync(user.UserName!, Input.Password, Input.RememberMe, false);
-                }
-                else
-                {
-                    result = SignInResult.Failed;
-                }
+                result = SignInResult.Failed;
             }
 
             if (result.Succeeded)
@@ -196,8 +171,6 @@
         public string Password { get; set; } = "";
 
         [Display(Name = "Remember me?")] public bool RememberMe { get; set; }
-
-        public PasskeyInputModel? Passkey { get; set; }
     }
 
 }

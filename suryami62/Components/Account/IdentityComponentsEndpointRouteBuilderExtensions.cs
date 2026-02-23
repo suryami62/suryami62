@@ -2,7 +2,6 @@
 
 using System.Security.Claims;
 using System.Text.Json;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -54,45 +53,6 @@ internal static partial class IdentityComponentsEndpointRouteBuilderExtensions
         {
             await signInManager.SignOutAsync().ConfigureAwait(false);
             return TypedResults.LocalRedirect($"~/{returnUrl}");
-        });
-
-        accountGroup.MapPost("/PasskeyCreationOptions", async (
-            HttpContext context,
-            [FromServices] UserManager<ApplicationUser> userManager,
-            [FromServices] SignInManager<ApplicationUser> signInManager,
-            [FromServices] IAntiforgery antiforgery) =>
-        {
-            await antiforgery.ValidateRequestAsync(context).ConfigureAwait(false);
-
-            var user = await userManager.GetUserAsync(context.User).ConfigureAwait(false);
-            if (user is null)
-                return Results.NotFound($"Unable to load user with ID '{userManager.GetUserId(context.User)}'.");
-
-            var userId = await userManager.GetUserIdAsync(user).ConfigureAwait(false);
-            var userName = await userManager.GetUserNameAsync(user).ConfigureAwait(false) ?? "User";
-            var optionsJson = await signInManager.MakePasskeyCreationOptionsAsync(new PasskeyUserEntity
-            {
-                Id = userId,
-                Name = userName,
-                DisplayName = userName
-            }).ConfigureAwait(false);
-            return TypedResults.Content(optionsJson, "application/json");
-        });
-
-        accountGroup.MapPost("/PasskeyRequestOptions", async (
-            HttpContext context,
-            [FromServices] UserManager<ApplicationUser> userManager,
-            [FromServices] SignInManager<ApplicationUser> signInManager,
-            [FromServices] IAntiforgery antiforgery,
-            [FromQuery] string? username) =>
-        {
-            await antiforgery.ValidateRequestAsync(context).ConfigureAwait(false);
-
-            var user = string.IsNullOrEmpty(username)
-                ? null
-                : await userManager.FindByNameAsync(username).ConfigureAwait(false);
-            var optionsJson = await signInManager.MakePasskeyRequestOptionsAsync(user).ConfigureAwait(false);
-            return TypedResults.Content(optionsJson, "application/json");
         });
 
         var manageGroup = accountGroup.MapGroup("/Manage").RequireAuthorization();
