@@ -1,107 +1,70 @@
 @page "/Account/Manage/SeoFiles"
-@using suryami62.Services
+@using Microsoft.EntityFrameworkCore
+@using suryami62.Data
+@using suryami62.Data.Models
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
 
-@inject SeoFilesSettingsStore SeoFilesSettingsStore
-@inject IdentityRedirectManager RedirectManager
-
-<PageTitle>SEO Files</PageTitle>
+<PageTitle>SEO Files Configuration</PageTitle>
 
 <div class="flex flex-col gap-6">
     <div>
         <h3 class="text-3xl font-black uppercase tracking-tighter">SEO Files</h3>
-        <p class="mt-2 text-sm font-bold uppercase">Configure sitemap.xml and robots.txt output.</p>
+        <p class="mt-2 text-sm font-bold uppercase">Configure sitemap.xml and robots.txt.</p>
     </div>
 
-    <StatusMessage/>
+    @if (showSuccessMessage)
+    {
+        <div
+            class="mb-4 border-4 border-black bg-green-400 px-4 py-3 font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+            Settings saved successfully.
+        </div>
+    }
 
-    <EditForm Model="Input" FormName="seo-files" OnValidSubmit="OnValidSubmitAsync" method="post">
+    <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="seo-files-form" method="post">
         <DataAnnotationsValidator/>
         <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
 
-        <div class="mt-4 flex flex-col gap-6 max-w-2xl">
+        <div class="mt-4 flex max-w-xl flex-col gap-4">
             <div class="flex flex-col gap-2">
-                <label class="text-sm font-black uppercase tracking-widest" for="Input.AutoBaseUrl">Base URL
-                    mode</label>
-                <div class="flex items-center gap-3">
-                    <InputCheckbox @bind-Value="Input.AutoBaseUrl" id="Input.AutoBaseUrl"
-                                   class="h-5 w-5 border-4 border-black bg-white dark:border-white dark:bg-black"/>
-                    <label for="Input.AutoBaseUrl" class="text-sm font-bold uppercase select-none">Auto from current
-                        request</label>
-                </div>
-                <p class="text-sm font-bold text-neutral-700 dark:text-neutral-300">If enabled, Base URL is derived from
-                    scheme + host of the current request.</p>
-
-                @if (Input.AutoBaseUrl)
-                {
-                    <div class="flex flex-col gap-2">
-                        <label for="DetectedBaseUrl" class="text-sm font-black uppercase tracking-widest">Detected Base
-                            URL</label>
-                        <input id="DetectedBaseUrl" value="@DetectedBaseUrl" readonly
-                               class="w-full border-4 border-black bg-neutral-100 px-4 py-3 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"/>
-                    </div>
-                }
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <label for="Input.BaseUrl" class="text-sm font-black uppercase tracking-widest">Base URL
-                    (manual)</label>
-                <InputText @bind-Value="Input.BaseUrl" id="Input.BaseUrl" disabled="@Input.AutoBaseUrl"
-                           class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none disabled:opacity-50 dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                <label for="baseUrl" class="text-sm font-black uppercase tracking-widest">Base URL (leave empty for
+                    auto)</label>
+                <InputText id="baseUrl" @bind-Value="Input.BaseUrl"
+                           class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
                            placeholder="https://example.com"/>
-                <p class="text-sm font-bold text-neutral-700 dark:text-neutral-300">Used when auto mode is disabled.
-                    Must be an absolute URL.</p>
             </div>
 
-            <div class="flex flex-col gap-3">
-                <label class="text-sm font-black uppercase tracking-widest">Enable outputs</label>
-                <div class="flex items-center gap-3">
-                    <InputCheckbox @bind-Value="Input.SitemapEnabled" id="Input.SitemapEnabled"
-                                   class="h-5 w-5 border-4 border-black bg-white dark:border-white dark:bg-black"/>
-                    <label for="Input.SitemapEnabled" class="text-sm font-bold uppercase">Enable sitemap.xml</label>
-                </div>
-                <div class="flex items-center gap-3">
-                    <InputCheckbox @bind-Value="Input.RobotsEnabled" id="Input.RobotsEnabled"
-                                   class="h-5 w-5 border-4 border-black bg-white dark:border-white dark:bg-black"/>
-                    <label for="Input.RobotsEnabled" class="text-sm font-bold uppercase">Enable robots.txt</label>
-                </div>
+            <div class="flex items-center gap-2">
+                <InputCheckbox id="enableSitemap" @bind-Value="Input.EnableSitemap"
+                               class="h-5 w-5 border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"/>
+                <label for="enableSitemap" class="text-sm font-black uppercase tracking-widest">Enable
+                    sitemap.xml</label>
             </div>
 
-            <div class="flex flex-col gap-3">
-                <label class="text-sm font-black uppercase tracking-widest">robots.txt rules</label>
-                <div class="flex items-center gap-3">
-                    <InputCheckbox @bind-Value="Input.DisallowAccount" id="Input.DisallowAccount"
-                                   class="h-5 w-5 border-4 border-black bg-white dark:border-white dark:bg-black"/>
-                    <label for="Input.DisallowAccount" class="text-sm font-bold uppercase">Disallow /Account</label>
-                </div>
+            <div class="flex items-center gap-2">
+                <InputCheckbox id="enableRobots" @bind-Value="Input.EnableRobots"
+                               class="h-5 w-5 border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"/>
+                <label for="enableRobots" class="text-sm font-black uppercase tracking-widest">Enable robots.txt</label>
             </div>
 
             <div class="flex flex-col gap-2">
-                <label for="Input.AdditionalDisallow" class="text-sm font-black uppercase tracking-widest">Additional
-                    Disallow (one per line)</label>
-                <InputTextArea @bind-Value="Input.AdditionalDisallow" id="Input.AdditionalDisallow" rows="6"
+                <label for="robotsDisallow" class="text-sm font-black uppercase tracking-widest">Robots Disallow (one
+                    per line)</label>
+                <InputTextArea id="robotsDisallow" @bind-Value="Input.RobotsDisallow"
                                class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                               placeholder="/admin\n/private"/>
+                               rows="5" placeholder="/Account"/>
             </div>
 
-            <button type="submit" disabled="@_isSubmitting"
-                    class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
-                @(_isSubmitting ? "Saving..." : "Save")
+            <button type="submit"
+                    class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                Save
             </button>
         </div>
     </EditForm>
 </div>
 
 @code {
-    private bool _isSubmitting;
-
-    private string DetectedBaseUrl
-    {
-        get
-        {
-            if (HttpContext is null) return string.Empty;
-            return $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.PathBase}".TrimEnd('/');
-        }
-    }
+    private bool showSuccessMessage;
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
@@ -111,67 +74,51 @@
     {
         Input ??= new InputModel();
 
-        var settings = await SeoFilesSettingsStore.GetAsync();
-        Input.AutoBaseUrl = settings.AutoBaseUrl;
-        Input.BaseUrl = settings.BaseUrl;
-        Input.SitemapEnabled = settings.SitemapEnabled;
-        Input.RobotsEnabled = settings.RobotsEnabled;
-        Input.DisallowAccount = settings.DisallowAccount;
-        Input.AdditionalDisallow = settings.AdditionalDisallow;
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            var baseUrlSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:BaseUrl");
+            var enableSitemapSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableSitemap");
+            var enableRobotsSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableRobots");
+            var robotsDisallowSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:RobotsDisallow");
+
+            Input.BaseUrl = baseUrlSetting?.Value ?? "";
+            Input.EnableSitemap = enableSitemapSetting?.Value != "false";
+            Input.EnableRobots = enableRobotsSetting?.Value != "false";
+            Input.RobotsDisallow = robotsDisallowSetting?.Value ?? "/Account";
+        }
     }
 
     private async Task OnValidSubmitAsync()
     {
-        if (_isSubmitting) return;
-        _isSubmitting = true;
+        await SaveSettingAsync("Seo:BaseUrl", Input.BaseUrl ?? "");
+        await SaveSettingAsync("Seo:EnableSitemap", Input.EnableSitemap ? "true" : "false");
+        await SaveSettingAsync("Seo:EnableRobots", Input.EnableRobots ? "true" : "false");
+        await SaveSettingAsync("Seo:RobotsDisallow", Input.RobotsDisallow ?? "");
 
-        try
+        await DbContext.SaveChangesAsync();
+        showSuccessMessage = true;
+    }
+
+    private async Task SaveSettingAsync(string key, string value)
+    {
+        var setting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == key);
+        if (setting == null)
         {
-            var baseUrl = (Input.BaseUrl ?? string.Empty).Trim();
-            if (!Input.AutoBaseUrl)
-            {
-                if (string.IsNullOrWhiteSpace(baseUrl))
-                {
-                    RedirectManager.RedirectToCurrentPageWithStatus("Error: Base URL is required when auto mode is disabled.", HttpContext);
-                    _isSubmitting = false;
-                    return;
-                }
-
-                if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var parsed) || string.IsNullOrWhiteSpace(parsed.Scheme) || string.IsNullOrWhiteSpace(parsed.Host))
-                {
-                    RedirectManager.RedirectToCurrentPageWithStatus("Error: Base URL must be a valid absolute URL (e.g. https://example.com).", HttpContext);
-                    _isSubmitting = false;
-                    return;
-                }
-
-                baseUrl = baseUrl.TrimEnd('/');
-            }
-
-            await SeoFilesSettingsStore.SaveAsync(new SeoFilesSettings(
-                Input.AutoBaseUrl,
-                baseUrl,
-                Input.SitemapEnabled,
-                Input.RobotsEnabled,
-                Input.DisallowAccount,
-                Input.AdditionalDisallow ?? string.Empty));
-
-            RedirectManager.RedirectToCurrentPageWithStatus("SEO files settings saved.", HttpContext);
+            setting = new Setting { Key = key, Value = value };
+            DbContext.Settings.Add(setting);
         }
-        catch
+        else
         {
-            _isSubmitting = false;
-            throw;
+            setting.Value = value;
         }
     }
 
     private sealed class InputModel
     {
-        public bool AutoBaseUrl { get; set; } = true;
         public string? BaseUrl { get; set; }
-        public bool SitemapEnabled { get; set; } = true;
-        public bool RobotsEnabled { get; set; } = true;
-        public bool DisallowAccount { get; set; } = true;
-        public string? AdditionalDisallow { get; set; }
+        public bool EnableSitemap { get; set; } = true;
+        public bool EnableRobots { get; set; } = true;
+        public string? RobotsDisallow { get; set; } = "/Account";
     }
 
 }
