@@ -19,7 +19,7 @@
         <p class="mt-2 text-lg font-bold">Create a new account.</p>
     </header>
 
-    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
+    <div class="grid gap-8">
         <section
             class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
             <StatusMessage Message="@Message"/>
@@ -68,14 +68,6 @@
                     </button>
                 </div>
             </EditForm>
-        </section>
-
-        <section
-            class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
-            <h3 class="text-2xl font-black uppercase tracking-tighter">Use another service to register</h3>
-            <div class="mt-4">
-                <ExternalLoginPicker/>
-            </div>
         </section>
     </div>
 </div>

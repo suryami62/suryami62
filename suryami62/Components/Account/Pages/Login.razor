@@ -1,6 +1,5 @@
 ﻿@page "/Account/Login"
 @using System.ComponentModel.DataAnnotations
-@using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using suryami62.Data
 
@@ -18,7 +17,7 @@
         <p class="mt-2 text-lg font-bold">Use a local account to log in.</p>
     </header>
 
-    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
+    <div class="grid gap-8">
         <section
             class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
             <StatusMessage Message="@errorMessage"/>
@@ -69,14 +68,6 @@
                 </div>
             </EditForm>
         </section>
-
-        <section
-            class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
-            <h3 class="text-2xl font-black uppercase tracking-tighter">Use another service to log in</h3>
-            <div class="mt-4">
-                <ExternalLoginPicker/>
-            </div>
-        </section>
     </div>
 </div>
 
@@ -91,17 +82,13 @@
 
     [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
         Input ??= new InputModel();
 
         editContext = new EditContext(Input);
 
-        if (HttpMethods.IsGet(HttpContext.Request.Method))
-        {
-            // Clear the existing external cookie to ensure a clean login process
-            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-        }
+        return Task.CompletedTask;
     }
 
     public async Task LoginUser()

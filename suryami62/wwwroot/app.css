@@ -2508,12 +2508,6 @@
         }
     }
 
-    .lg\:grid-cols-\[minmax\(0\,1fr\)_minmax\(0\,360px\)\] {
-        @media (width >= 64rem) {
-            grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
-        }
-    }
-
     .lg\:flex-col {
         @media (width >= 64rem) {
             flex-direction: column;
