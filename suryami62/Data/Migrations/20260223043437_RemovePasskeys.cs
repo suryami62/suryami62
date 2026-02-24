@@ -5,11 +5,13 @@
 namespace suryami62.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class RemovePasskeys : Migration
+    internal sealed partial class RemovePasskeys : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            global::System.ArgumentNullException.ThrowIfNull(migrationBuilder);
+
             migrationBuilder.DropTable(
                 name: "AspNetUserPasskeys");
 
@@ -63,6 +65,8 @@ namespace suryami62.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            global::System.ArgumentNullException.ThrowIfNull(migrationBuilder);
+
             migrationBuilder.AlterColumn<string>(
                 name: "Name",
                 table: "AspNetUserTokens",

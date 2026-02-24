@@ -62,6 +62,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    _ = new suryami62.Data.Migrations.RemovePasskeys();
     app.UseMigrationsEndPoint();
 }
 else
