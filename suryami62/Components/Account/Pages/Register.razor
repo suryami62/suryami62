@@ -2,6 +2,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using suryami62.Data
+@using suryami62.Services
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -10,6 +11,7 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject ApplicationSettingsStore SettingsStore
 
 <PageTitle>Register</PageTitle>
 
@@ -23,51 +25,54 @@
         <section
             class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
             <StatusMessage Message="@Message"/>
-            <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="register">
-                <DataAnnotationsValidator/>
-                <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
-                <div class="mt-4 flex flex-col gap-4">
-                    <div class="flex flex-col gap-2">
-                        <label for="Input.UserName"
-                               class="text-sm font-black uppercase tracking-widest">Username</label>
-                        <InputText @bind-Value="Input.UserName" id="Input.UserName"
-                                   class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                                   autocomplete="username" aria-required="true" placeholder="username"/>
-                        <ValidationMessage For="() => Input.UserName"
-                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
+            @if (Input is not null)
+            {
+                <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="register">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
+                    <div class="mt-4 flex flex-col gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.UserName"
+                                   class="text-sm font-black uppercase tracking-widest">Username</label>
+                            <InputText @bind-Value="Input.UserName" id="Input.UserName"
+                                       class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                                       autocomplete="username" aria-required="true" placeholder="username"/>
+                            <ValidationMessage For="() => Input.UserName"
+                                               class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
+                            <InputText @bind-Value="Input.Email" id="Input.Email"
+                                       class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                                       autocomplete="email" aria-required="true" placeholder="name@example.com"/>
+                            <ValidationMessage For="() => Input.Email"
+                                               class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.Password"
+                                   class="text-sm font-black uppercase tracking-widest">Password</label>
+                            <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
+                                       class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                                       autocomplete="new-password" aria-required="true" placeholder="password"/>
+                            <ValidationMessage For="() => Input.Password"
+                                               class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.ConfirmPassword" class="text-sm font-black uppercase tracking-widest">Confirm
+                                Password</label>
+                            <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword"
+                                       class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                                       autocomplete="new-password" aria-required="true" placeholder="password"/>
+                            <ValidationMessage For="() => Input.ConfirmPassword"
+                                               class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                        </div>
+                        <button type="submit" disabled="@_isSubmitting"
+                                class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                            @(_isSubmitting ? "Registering..." : "Register")
+                        </button>
                     </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
-                        <InputText @bind-Value="Input.Email" id="Input.Email"
-                                   class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                                   autocomplete="email" aria-required="true" placeholder="name@example.com"/>
-                        <ValidationMessage For="() => Input.Email"
-                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="Input.Password"
-                               class="text-sm font-black uppercase tracking-widest">Password</label>
-                        <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
-                                   class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                                   autocomplete="new-password" aria-required="true" placeholder="password"/>
-                        <ValidationMessage For="() => Input.Password"
-                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="Input.ConfirmPassword" class="text-sm font-black uppercase tracking-widest">Confirm
-                            Password</label>
-                        <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword"
-                                   class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                                   autocomplete="new-password" aria-required="true" placeholder="password"/>
-                        <ValidationMessage For="() => Input.ConfirmPassword"
-                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
-                    </div>
-                    <button type="submit" disabled="@_isSubmitting"
-                            class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
-                        @(_isSubmitting ? "Registering..." : "Register")
-                    </button>
-                </div>
-            </EditForm>
+                </EditForm>
+            }
         </section>
     </div>
 </div>
@@ -82,14 +87,29 @@
 
     private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        var settings = await SettingsStore.GetAsync();
+        if (!settings.RegistrationEnabled)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
         Input ??= new InputModel();
     }
 
     public async Task RegisterUser(EditContext editContext)
     {
         if (_isSubmitting) return;
+
+        var settings = await SettingsStore.GetAsync();
+        if (!settings.RegistrationEnabled)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
         _isSubmitting = true;
 
         try

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using suryami62.Components;
 using suryami62.Components.Account;
 using suryami62.Data;
+using suryami62.Data.Migrations;
 using suryami62.Services;
 
 #endregion
@@ -33,6 +34,7 @@ builder.Services.AddScoped<IBlogPostService>(sp => new BlogPostService(sp.GetReq
 builder.Services.AddScoped<IProjectService>(sp => new ProjectService(sp.GetRequiredService<ApplicationDbContext>()));
 builder.Services.AddScoped<IMediaService>(sp => new MediaService(sp.GetRequiredService<IWebHostEnvironment>()));
 builder.Services.AddScoped<UserInfoSettingsStore>();
+builder.Services.AddScoped<ApplicationSettingsStore>();
 
 builder.Services.AddAuthentication(options => { options.DefaultScheme = IdentityConstants.ApplicationScheme; })
     .AddIdentityCookies();
@@ -41,7 +43,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
                        throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseNpgsql(connectionString);
+    options.UseNpgsql(connectionString, npgsqlOptions => { npgsqlOptions.EnableRetryOnFailure(); });
     _ = ApplicationDbContext.Create(new DbContextOptions<ApplicationDbContext>());
 });
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -62,7 +64,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    _ = new suryami62.Data.Migrations.RemovePasskeys();
+    _ = new RemovePasskeys();
     app.UseMigrationsEndPoint();
 }
 else

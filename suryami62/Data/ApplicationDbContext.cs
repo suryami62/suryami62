@@ -26,6 +26,7 @@ internal sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext
         _ = new InitialCreate();
         _ = new ClearPhoneNumberData();
         _ = new UserInfoSettingsStore(null!);
+        _ = new ApplicationSettingsStore(null!);
 
         return new ApplicationDbContext(options);
     }

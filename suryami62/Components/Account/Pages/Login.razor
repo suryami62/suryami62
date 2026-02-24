@@ -2,12 +2,14 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using suryami62.Data
+@using suryami62.Services
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject ApplicationSettingsStore ApplicationSettingsStore
 
 <PageTitle>Log in</PageTitle>
 
@@ -21,52 +23,58 @@
         <section
             class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
             <StatusMessage Message="@errorMessage"/>
-            <EditForm EditContext="editContext" method="post" OnSubmit="LoginUser" FormName="login">
-                <DataAnnotationsValidator/>
-                <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
+            @if (editContext is not null)
+            {
+                <EditForm EditContext="editContext" method="post" OnSubmit="LoginUser" FormName="login">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
 
-                <div class="mt-4 flex flex-col gap-4">
-                    <div class="flex flex-col gap-2">
-                        <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
-                        <InputText @bind-Value="Input.Email" id="Input.Email"
-                                   class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                                   autocomplete="username" aria-required="true"
-                                   placeholder="name@example.com"/>
-                        <ValidationMessage For="() => Input.Email"
-                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                    <div class="mt-4 flex flex-col gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
+                            <InputText @bind-Value="Input.Email" id="Input.Email"
+                                       class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                                       autocomplete="username" aria-required="true"
+                                       placeholder="name@example.com"/>
+                            <ValidationMessage For="() => Input.Email"
+                                               class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.Password"
+                                   class="text-sm font-black uppercase tracking-widest">Password</label>
+                            <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
+                                       class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                                       autocomplete="current-password" aria-required="true" placeholder="password"/>
+                            <ValidationMessage For="() => Input.Password"
+                                               class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                        </div>
+                        <label class="flex items-center gap-3 text-sm font-bold uppercase">
+                            <InputCheckbox @bind-Value="Input.RememberMe"
+                                           class="h-5 w-5 border-2 border-black bg-white accent-black dark:border-white dark:bg-black dark:accent-white"/>
+                            Remember me
+                        </label>
+                        <button type="submit" disabled="@_isSubmitting"
+                                class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                            @(_isSubmitting ? "Logging in..." : "Log in")
+                        </button>
                     </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="Input.Password"
-                               class="text-sm font-black uppercase tracking-widest">Password</label>
-                        <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
-                                   class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-                                   autocomplete="current-password" aria-required="true" placeholder="password"/>
-                        <ValidationMessage For="() => Input.Password"
-                                           class="text-sm font-bold text-red-600 dark:text-red-400"/>
-                    </div>
-                    <label class="flex items-center gap-3 text-sm font-bold uppercase">
-                        <InputCheckbox @bind-Value="Input.RememberMe"
-                                       class="h-5 w-5 border-2 border-black bg-white accent-black dark:border-white dark:bg-black dark:accent-white"/>
-                        Remember me
-                    </label>
-                    <button type="submit" disabled="@_isSubmitting"
-                            class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
-                        @(_isSubmitting ? "Logging in..." : "Log in")
-                    </button>
-                </div>
 
-                <div class="mt-6 border-t-4 border-black pt-6 dark:border-white">
-                    <div class="flex flex-col gap-2 text-sm font-bold uppercase">
-                        <a class="underline decoration-4 underline-offset-4 hover:text-neutral-600 dark:hover:text-neutral-300"
-                           href="Account/ForgotPassword">Forgot your password?</a>
-                        <a class="underline decoration-4 underline-offset-4 hover:text-neutral-600 dark:hover:text-neutral-300"
-                           href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register
-                            as a new user</a>
-                        <a class="underline decoration-4 underline-offset-4 hover:text-neutral-600 dark:hover:text-neutral-300"
-                           href="Account/ResendEmailConfirmation">Resend email confirmation</a>
+                    <div class="mt-6 border-t-4 border-black pt-6 dark:border-white">
+                        <div class="flex flex-col gap-2 text-sm font-bold uppercase">
+                            <a class="underline decoration-4 underline-offset-4 hover:text-neutral-600 dark:hover:text-neutral-300"
+                               href="Account/ForgotPassword">Forgot your password?</a>
+                            @if (_registrationEnabled)
+                            {
+                                <a class="underline decoration-4 underline-offset-4 hover:text-neutral-600 dark:hover:text-neutral-300"
+                                   href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register
+                                    as a new user</a>
+                            }
+                            <a class="underline decoration-4 underline-offset-4 hover:text-neutral-600 dark:hover:text-neutral-300"
+                               href="Account/ResendEmailConfirmation">Resend email confirmation</a>
+                        </div>
                     </div>
-                </div>
-            </EditForm>
+                </EditForm>
+            }
         </section>
     </div>
 </div>
@@ -75,6 +83,7 @@
     private string? errorMessage;
     private bool _isSubmitting;
     private EditContext editContext = default!;
+    private bool _registrationEnabled;
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
@@ -82,13 +91,14 @@
 
     [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         Input ??= new InputModel();
 
         editContext = new EditContext(Input);
 
-        return Task.CompletedTask;
+        var settings = await ApplicationSettingsStore.GetAsync();
+        _registrationEnabled = settings.RegistrationEnabled;
     }
 
     public async Task LoginUser()

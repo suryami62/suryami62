@@ -5,6 +5,7 @@
 @rendermode InteractiveServer
 @inject IBlogPostService BlogPostService
 @inject IProjectService ProjectService
+@inject ApplicationSettingsStore ApplicationSettingsStore
 
 <PageTitle>Admin Dashboard - Surya Ramadhan</PageTitle>
 
@@ -16,6 +17,19 @@
     </PageHeader>
 
     <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <InfoCard Title="System" IconClass="fas fa-server">
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <span>Registration:</span>
+                    <button @onclick="ToggleRegistration"
+                            class="inline-block border-2 border-black @(_registrationEnabled ? "bg-green-400" : "bg-red-400") px-3 py-1 text-sm font-bold shadow-[2px_2px_0px_0px_#000] transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none dark:border-white dark:shadow-[2px_2px_0px_0px_#fff]">
+                        @(_registrationEnabled ? "ENABLED" : "DISABLED")
+                    </button>
+                </div>
+                <p class="text-xs text-neutral-500">Enable or disable new user registration.</p>
+            </div>
+        </InfoCard>
+
         <InfoCard Title="Posts" IconClass="fas fa-newspaper">
             <div class="flex flex-col gap-4">
                 <p>Total posts: @(_postCount)</p>
@@ -75,6 +89,7 @@
 @code {
     private int _postCount;
     private int _projectCount;
+    private bool _registrationEnabled;
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,6 +98,15 @@
 
         var (projectItems, projectTotal) = await ProjectService.GetProjectsAsync(take: 0);
         _projectCount = projectTotal;
+
+        var settings = await ApplicationSettingsStore.GetAsync();
+        _registrationEnabled = settings.RegistrationEnabled;
+    }
+
+    private async Task ToggleRegistration()
+    {
+        _registrationEnabled = !_registrationEnabled;
+        await ApplicationSettingsStore.SetRegistrationEnabledAsync(_registrationEnabled);
     }
 
 }
