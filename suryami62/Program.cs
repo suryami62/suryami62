@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 using suryami62.Components;
 using suryami62.Components.Account;
 using suryami62.Data;
-using suryami62.Data.Migrations;
 using suryami62.Services;
 
 #endregion
@@ -44,15 +43,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseNpgsql(connectionString, npgsqlOptions => { npgsqlOptions.EnableRetryOnFailure(); });
-    _ = ApplicationDbContext.Create(new DbContextOptions<ApplicationDbContext>());
 });
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddIdentityCore<ApplicationUser>(options =>
-    {
-        options.SignIn.RequireConfirmedAccount = false;
-        _ = ApplicationUser.Create();
-    })
+builder.Services.AddIdentityCore<ApplicationUser>(options => { options.SignIn.RequireConfirmedAccount = false; })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
@@ -64,7 +58,6 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    _ = new RemovePasskeys();
     app.UseMigrationsEndPoint();
 }
 else

@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace suryami62.Data.Migrations
 {
     /// <inheritdoc />
-    internal sealed partial class RemovePasskeys : Migration
+    public sealed partial class RemovePasskeys : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

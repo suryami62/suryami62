@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace suryami62.Data.Migrations
 {
     /// <inheritdoc />
-    internal sealed partial class ClearPhoneNumberData : Migration
+    public sealed partial class ClearPhoneNumberData : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -13,11 +13,11 @@ namespace suryami62.Data.Migrations
             System.ArgumentNullException.ThrowIfNull(migrationBuilder);
 
             migrationBuilder.Sql("""
-                UPDATE "AspNetUsers"
-                SET "PhoneNumber" = NULL,
-                    "PhoneNumberConfirmed" = FALSE
-                WHERE "PhoneNumber" IS NOT NULL
-                   OR "PhoneNumberConfirmed" = TRUE;
+                UPDATE \"AspNetUsers\"
+                SET \"PhoneNumber\" = NULL,
+                    \"PhoneNumberConfirmed\" = FALSE
+                WHERE \"PhoneNumber\" IS NOT NULL
+                   OR \"PhoneNumberConfirmed\" = TRUE;
                 """);
         }
 

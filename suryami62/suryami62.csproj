@@ -29,6 +29,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\suryami62.Domain\suryami62.Domain.csproj"/>
+        <ProjectReference Include="..\suryami62.Infrastructure\suryami62.Infrastructure.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
