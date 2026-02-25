@@ -28,6 +28,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\suryami62.Domain\suryami62.Domain.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <Content Include="..\.dockerignore">
             <Link>.dockerignore</Link>
         </Content>

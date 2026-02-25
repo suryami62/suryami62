@@ -2,7 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using suryami62.Data;
-using suryami62.Data.Models;
+using suryami62.Domain.Models;
 
 #endregion
 

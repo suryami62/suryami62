@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations;
 
 #endregion
 
-namespace suryami62.Data.Models;
+namespace suryami62.Domain.Models;
 
-internal sealed class Project
+public sealed class Project
 {
     public int Id { get; set; }
 

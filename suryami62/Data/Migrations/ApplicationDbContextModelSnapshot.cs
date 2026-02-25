@@ -218,7 +218,7 @@ namespace suryami62.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("suryami62.Data.Models.BlogPost", b =>
+            modelBuilder.Entity("suryami62.Domain.Models.BlogPost", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -262,7 +262,7 @@ namespace suryami62.Data.Migrations
                     b.ToTable("BlogPosts");
                 });
 
-            modelBuilder.Entity("suryami62.Data.Models.Project", b =>
+            modelBuilder.Entity("suryami62.Domain.Models.Project", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -300,7 +300,7 @@ namespace suryami62.Data.Migrations
                     b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("suryami62.Data.Models.Setting", b =>
+            modelBuilder.Entity("suryami62.Domain.Models.Setting", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

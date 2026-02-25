@@ -3,7 +3,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using suryami62.Data.Migrations;
-using suryami62.Data.Models;
+using suryami62.Domain.Models;
 using suryami62.Services;
 
 #endregion
