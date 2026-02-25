@@ -93,10 +93,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var (postItems, postTotal) = await BlogPostService.GetPostsAsync(false, take: 0);
+        var (_, postTotal) = await BlogPostService.GetPostsAsync(false, take: 0);
         _postCount = postTotal;
 
-        var (projectItems, projectTotal) = await ProjectService.GetProjectsAsync(take: 0);
+        var (_, projectTotal) = await ProjectService.GetProjectsAsync(take: 0);
         _projectCount = projectTotal;
 
         var settings = await ApplicationSettingsStore.GetAsync();

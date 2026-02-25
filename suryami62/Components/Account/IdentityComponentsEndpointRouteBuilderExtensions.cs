@@ -21,7 +21,7 @@ internal static partial class IdentityComponentsEndpointRouteBuilderExtensions
         var accountGroup = endpoints.MapGroup("/Account");
 
         accountGroup.MapPost("/Logout", async (
-            ClaimsPrincipal user,
+            ClaimsPrincipal _,
             [FromServices] SignInManager<ApplicationUser> signInManager,
             [FromForm] string returnUrl) =>
         {
