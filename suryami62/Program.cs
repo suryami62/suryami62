@@ -7,9 +7,12 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using suryami62.Application;
+using suryami62.Application.Persistence;
 using suryami62.Components;
 using suryami62.Components.Account;
 using suryami62.Data;
+using suryami62.Infrastructure;
 using suryami62.Services;
 
 #endregion
@@ -29,11 +32,8 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => new IdentityRevali
     sp.GetRequiredService<IServiceScopeFactory>(),
     sp.GetRequiredService<IOptions<IdentityOptions>>()));
 
-builder.Services.AddScoped<IBlogPostService>(sp => new BlogPostService(sp.GetRequiredService<ApplicationDbContext>()));
-builder.Services.AddScoped<IProjectService>(sp => new ProjectService(sp.GetRequiredService<ApplicationDbContext>()));
+builder.Services.AddApplicationServices();
 builder.Services.AddScoped<IMediaService>(sp => new MediaService(sp.GetRequiredService<IWebHostEnvironment>()));
-builder.Services.AddScoped<UserInfoSettingsStore>();
-builder.Services.AddScoped<ApplicationSettingsStore>();
 
 builder.Services.AddAuthentication(options => { options.DefaultScheme = IdentityConstants.ApplicationScheme; })
     .AddIdentityCookies();
@@ -44,6 +44,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseNpgsql(connectionString, npgsqlOptions => { npgsqlOptions.EnableRetryOnFailure(); });
 });
+builder.Services.AddInfrastructureServices();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => { options.SignIn.RequireConfirmedAccount = false; })
@@ -79,58 +80,56 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
-app.MapGet("/sitemap.xml", async (ApplicationDbContext db, IBlogPostService blogPostService, HttpContext context) =>
-{
-    var enableSitemapSetting =
-        await db.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableSitemap").ConfigureAwait(false);
-    if (enableSitemapSetting?.Value == "false") return Results.NotFound();
+app.MapGet("/sitemap.xml",
+    async (ISettingsRepository settingsRepository, IBlogPostService blogPostService, HttpContext context) =>
+    {
+        var enableSitemap =
+            await settingsRepository.GetValueAsync("Seo:EnableSitemap").ConfigureAwait(false);
+        if (enableSitemap == "false") return Results.NotFound();
 
-    var baseUrlSetting = await db.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:BaseUrl").ConfigureAwait(false);
-    var baseUrl = baseUrlSetting?.Value;
+        var baseUrl = await settingsRepository.GetValueAsync("Seo:BaseUrl").ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(baseUrl)) baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+        baseUrl = baseUrl.TrimEnd('/');
+
+        var (posts, _) = await blogPostService.GetPostsAsync().ConfigureAwait(false);
+
+        var sb = new StringBuilder();
+        sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        sb.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+
+        ReadOnlySpan<string> staticPages = ["/", "/about", "/posts", "/projects"];
+        foreach (var page in staticPages)
+        {
+            sb.AppendLine("  <url>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    <loc>{baseUrl}{page}</loc>");
+            sb.AppendLine("  </url>");
+        }
+
+        foreach (var post in posts)
+        {
+            sb.AppendLine("  <url>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    <loc>{baseUrl}/posts/{post.Slug}</loc>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    <lastmod>{post.Date:yyyy-MM-dd}</lastmod>");
+            sb.AppendLine("  </url>");
+        }
+
+        sb.AppendLine("</urlset>");
+
+        return Results.Text(sb.ToString(), "application/xml; charset=utf-8");
+    });
+
+app.MapGet("/robots.txt", async (ISettingsRepository settingsRepository, HttpContext context) =>
+{
+    var enableRobots =
+        await settingsRepository.GetValueAsync("Seo:EnableRobots").ConfigureAwait(false);
+    if (enableRobots == "false") return Results.NotFound();
+
+    var baseUrl = await settingsRepository.GetValueAsync("Seo:BaseUrl").ConfigureAwait(false);
     if (string.IsNullOrWhiteSpace(baseUrl)) baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
     baseUrl = baseUrl.TrimEnd('/');
 
-    var (posts, _) = await blogPostService.GetPostsAsync().ConfigureAwait(false);
-
-    var sb = new StringBuilder();
-    sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-    sb.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
-
-    ReadOnlySpan<string> staticPages = ["/", "/about", "/posts", "/projects"];
-    foreach (var page in staticPages)
-    {
-        sb.AppendLine("  <url>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    <loc>{baseUrl}{page}</loc>");
-        sb.AppendLine("  </url>");
-    }
-
-    foreach (var post in posts)
-    {
-        sb.AppendLine("  <url>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    <loc>{baseUrl}/posts/{post.Slug}</loc>");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"    <lastmod>{post.Date:yyyy-MM-dd}</lastmod>");
-        sb.AppendLine("  </url>");
-    }
-
-    sb.AppendLine("</urlset>");
-
-    return Results.Text(sb.ToString(), "application/xml; charset=utf-8");
-});
-
-app.MapGet("/robots.txt", async (ApplicationDbContext db, HttpContext context) =>
-{
-    var enableRobotsSetting =
-        await db.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableRobots").ConfigureAwait(false);
-    if (enableRobotsSetting?.Value == "false") return Results.NotFound();
-
-    var baseUrlSetting = await db.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:BaseUrl").ConfigureAwait(false);
-    var baseUrl = baseUrlSetting?.Value;
-    if (string.IsNullOrWhiteSpace(baseUrl)) baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
-    baseUrl = baseUrl.TrimEnd('/');
-
-    var disallowSetting =
-        await db.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:RobotsDisallow").ConfigureAwait(false);
-    var disallowList = disallowSetting?.Value ?? "/Account";
+    var disallowList =
+        await settingsRepository.GetValueAsync("Seo:RobotsDisallow").ConfigureAwait(false) ?? "/Account";
 
     var sb = new StringBuilder();
     sb.AppendLine("User-agent: *");

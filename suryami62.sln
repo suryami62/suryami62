@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "suryami62.Domain", "suryami
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "suryami62.Infrastructure", "suryami62.Infrastructure\suryami62.Infrastructure.csproj", "{E66F3606-1782-4E57-87ED-8B77043CDD5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "suryami62.Application", "suryami62.Application\suryami62.Application.csproj", "{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,6 +62,18 @@ Global
 		{E66F3606-1782-4E57-87ED-8B77043CDD5E}.Release|x64.Build.0 = Release|Any CPU
 		{E66F3606-1782-4E57-87ED-8B77043CDD5E}.Release|x86.ActiveCfg = Release|Any CPU
 		{E66F3606-1782-4E57-87ED-8B77043CDD5E}.Release|x86.Build.0 = Release|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Debug|x64.Build.0 = Debug|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Debug|x86.Build.0 = Debug|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Release|x64.ActiveCfg = Release|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Release|x64.Build.0 = Release|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Release|x86.ActiveCfg = Release|Any CPU
+		{CAAD63FF-F4AB-449A-A8AC-D9C137A8E53C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
