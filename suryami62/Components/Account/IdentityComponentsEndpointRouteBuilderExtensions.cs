@@ -9,7 +9,7 @@ using suryami62.Data;
 
 #endregion
 
-namespace Microsoft.AspNetCore.Routing;
+namespace suryami62.Components.Account;
 
 internal static partial class IdentityComponentsEndpointRouteBuilderExtensions
 {
