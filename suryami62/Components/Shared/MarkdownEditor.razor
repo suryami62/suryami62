@@ -4,13 +4,13 @@
 
 <div
     class="flex flex-col border-4 border-black bg-white shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
-    <div class="flex flex-wrap gap-2 border-b-4 border-black p-2 dark:border-white bg-gray-50 dark:bg-gray-900/50">
+    <div class="flex flex-wrap gap-2 border-b-4 border-black bg-gray-50 p-2 dark:border-white dark:bg-gray-900/50">
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             @foreach (var i in Enumerable.Range(1, 6))
             {
                 <button type="button" @onclick='() => WrapSelection(new string((char)35, i) + " ", "")'
                         title="@($"Heading {i}")"
-                        class="h-10 w-10 border-2 border-black font-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                        class="h-10 w-10 border-2 border-black font-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                     H@(i)
                 </button>
             }
@@ -18,69 +18,69 @@
 
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             <button type="button" @onclick='() => WrapSelection("**", "**")' title="Bold"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-bold"></i>
             </button>
             <button type="button" @onclick='() => WrapSelection("*", "*")' title="Italic"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-italic"></i>
             </button>
         </div>
 
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             <button type="button" @onclick='() => WrapSelection("- ", "")' title="Unordered List"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-list"></i>
             </button>
             <button type="button" @onclick='() => WrapSelection("1. ", "")' title="Ordered List"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-list-ol"></i>
             </button>
             <button type="button" @onclick='() => WrapSelection("> ", "")' title="Blockquote"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-quote-left"></i>
             </button>
             <button type="button" @onclick='() => WrapSelection("\n---\n", "")' title="Horizontal Rule"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-minus"></i>
             </button>
         </div>
 
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             <button type="button" @onclick='() => WrapSelection("`", "`")' title="Inline Code"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-terminal"></i>
             </button>
             <button type="button" @onclick='() => WrapSelection("```\n", "\n```")' title="Code Block"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-code"></i>
             </button>
         </div>
 
         <div class="flex gap-1">
             <button type="button" @onclick='() => WrapSelection("[", "](url)")' title="Link"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-link"></i>
             </button>
             <button type="button" @onclick='() => WrapSelection("![](", ")")' title="Image"
-                    class="h-10 w-10 border-2 border-black hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500 transition-colors">
+                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
                 <i class="fa-solid fa-image"></i>
             </button>
         </div>
 
         <div class="grow"></div>
 
-        <div class="flex border-2 border-black dark:border-white h-10">
+        <div class="flex h-10 border-2 border-black dark:border-white">
             <button type="button" @onclick="() => SetMode(EditorMode.Edit)"
-                    class='px-4 font-bold @(Mode == EditorMode.Edit ? "bg-black text-white dark:bg-white dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800")'>
+                    class='@(Mode == EditorMode.Edit ? "bg-black dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800") px-4 font-bold text-white dark:bg-white'>
                 EDIT
             </button>
             <button type="button" @onclick="() => SetMode(EditorMode.Split)"
-                    class='px-4 font-bold border-l-2 border-black dark:border-white @(Mode == EditorMode.Split ? "bg-black text-white dark:bg-white dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800")'>
+                    class='@(Mode == EditorMode.Split ? "bg-black dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800") border-l-2 border-black px-4 font-bold text-white dark:border-white dark:bg-white'>
                 SPLIT
             </button>
             <button type="button" @onclick="() => SetMode(EditorMode.Preview)"
-                    class='px-4 font-bold border-l-2 border-black dark:border-white @(Mode == EditorMode.Preview ? "bg-black text-white dark:bg-white dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800")'>
+                    class='@(Mode == EditorMode.Preview ? "bg-black dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800") border-l-2 border-black px-4 font-bold text-white dark:border-white dark:bg-white'>
                 PREVIEW
             </button>
         </div>
@@ -91,12 +91,12 @@
         {
             <textarea @ref="_textArea" value="@Value" @oninput="OnInput"
                       placeholder="Write your story in Markdown..."
-                      class="h-full min-h-[400px] w-full resize-none p-4 font-mono text-lg outline-none dark:bg-gray-900 @(Mode == EditorMode.Split ? "border-r-4 border-black dark:border-white" : "")"></textarea>
+                      class="h-full min-h-100 w-full resize-none p-4 font-mono text-lg outline-none dark:bg-gray-900 @(Mode == EditorMode.Split ? "border-r-4 border-black dark:border-white" : "")"></textarea>
         }
 
         @if (Mode != EditorMode.Edit)
         {
-            <div class="prose prose-lg max-w-none p-4 dark:prose-invert overflow-auto h-full min-h-[400px]">
+            <div class="prose prose-lg h-full min-h-100 max-w-none overflow-auto p-4 dark:prose-invert">
                 @((MarkupString)Markdown.ToHtml(Value ?? "", _pipeline))
             </div>
         }

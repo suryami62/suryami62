@@ -12,7 +12,7 @@
         </ChildContent>
         <AsideContent>
             <div
-                class="flex h-32 w-32 items-center justify-center border-4 border-black bg-yellow-400 text-6xl font-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-yellow-600 dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] md:h-48 md:w-48 md:text-8xl">
+                class="flex h-32 w-32 items-center justify-center border-4 border-black bg-yellow-400 text-6xl font-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:h-48 md:w-48 md:text-8xl dark:border-white dark:bg-yellow-600 dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
                 !
             </div>
         </AsideContent>
@@ -20,19 +20,19 @@
 
     <div class="grid gap-12 lg:grid-cols-[1fr_2fr]">
         <div class="flex flex-col gap-6">
-            <h3 class="text-2xl font-black uppercase tracking-tighter underline decoration-4 underline-offset-4">
+            <h3 class="text-2xl font-black tracking-tighter uppercase underline decoration-4 underline-offset-4">
                 Core Exception
             </h3>
-            <p class="text-lg font-medium leading-relaxed">
+            <p class="text-lg leading-relaxed font-medium">
                 The server encountered an internal error or misconfiguration and was unable to complete your request.
                 This is likely a temporary anomaly in the digital fabric.
             </p>
 
             @if (ShowRequestId)
             {
-                <div class="border-2 border-black p-4 bg-neutral-100 dark:bg-neutral-900 dark:border-white">
-                    <span class="block text-xs font-black uppercase mb-1 opacity-60 italic">Tracking Identifier</span>
-                    <code class="font-mono font-bold break-all text-sm">@RequestId</code>
+                <div class="border-2 border-black bg-neutral-100 p-4 dark:border-white dark:bg-neutral-900">
+                    <span class="mb-1 block text-xs font-black uppercase italic opacity-60">Tracking Identifier</span>
+                    <code class="font-mono text-sm font-bold break-all">@RequestId</code>
                 </div>
             }
 
@@ -43,11 +43,11 @@
 
         <div class="space-y-8">
             <div
-                class="border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] md:p-10">
-                <h3 class="mb-6 text-2xl font-black uppercase tracking-tighter">
+                class="border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:p-10 dark:border-white dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+                <h3 class="mb-6 text-2xl font-black tracking-tighter uppercase">
                     Status Report
                 </h3>
-                <ul class="space-y-4 font-bold text-neutral-600 dark:text-neutral-400 uppercase text-sm">
+                <ul class="space-y-4 text-sm font-bold text-neutral-600 uppercase dark:text-neutral-400">
                     <li>→ Primary logic gate: [FAILED]</li>
                     <li>→ Resource allocation: [INTERRUPTED]</li>
                     <li>→ User patience level: [CRITICAL]</li>
@@ -60,9 +60,9 @@
 
             @if (Env.IsDevelopment())
             {
-                <div class="border-4 border-red-500 p-6 bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100">
-                    <h4 class="text-xl font-black uppercase mb-2 italic">DEBUG_MODE_ENABLED</h4>
-                    <p class="font-bold text-sm leading-snug">
+                <div class="border-4 border-red-500 bg-red-100 p-6 text-red-900 dark:bg-red-900 dark:text-red-100">
+                    <h4 class="mb-2 text-xl font-black uppercase italic">DEBUG_MODE_ENABLED</h4>
+                    <p class="text-sm leading-snug font-bold">
                         Sensitive exception details are visible because you are in the <strong>Development</strong>
                         environment.
                         Check the server console or logs for the full stack trace.

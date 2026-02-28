@@ -1,18 +1,18 @@
 @if (_isOpen)
 {
-    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
         <div
             class="w-full max-w-md border-4 border-black bg-white p-8 shadow-[12px_12px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[12px_12px_0px_0px_#fff]">
-            <h2 class="mb-4 text-3xl font-black uppercase tracking-tighter">@Title</h2>
+            <h2 class="mb-4 text-3xl font-black tracking-tighter uppercase">@Title</h2>
             <p class="mb-8 text-lg font-bold">@Message</p>
 
             <div class="flex justify-end gap-4">
                 <button @onclick="Cancel"
-                        class="border-2 border-black bg-gray-200 px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000]">
+                        class="border-2 border-black bg-gray-200 px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#000]">
                     CANCEL
                 </button>
                 <button @onclick="Confirm"
-                        class="border-2 border-black bg-red-400 px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000]">
+                        class="border-2 border-black bg-red-400 px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#000]">
                     CONFIRM
                 </button>
             </div>
