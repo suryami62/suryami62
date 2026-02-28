@@ -20,13 +20,11 @@ public sealed class ApplicationSettingsStore(ISettingsRepository repository)
 {
     public async Task<ApplicationSettings> GetAsync(CancellationToken cancellationToken = default)
     {
-        var registrationEnabledValue = await repository
+        var value = await repository
             .GetValueAsync(ApplicationSettingKeys.RegistrationEnabled, cancellationToken)
             .ConfigureAwait(false);
 
-        var registrationEnabled = string.IsNullOrWhiteSpace(registrationEnabledValue) ||
-                                  !bool.TryParse(registrationEnabledValue, out var enabled) ||
-                                  enabled;
+        var registrationEnabled = ParseBoolOrDefault(value, true);
 
         return new ApplicationSettings(registrationEnabled);
     }
@@ -37,5 +35,12 @@ public sealed class ApplicationSettingsStore(ISettingsRepository repository)
             .UpsertAsync(ApplicationSettingKeys.RegistrationEnabled, enabled.ToString().ToUpperInvariant(),
                 cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    private static bool ParseBoolOrDefault(string? value, bool defaultValue)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return defaultValue;
+
+        return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
     }
 }

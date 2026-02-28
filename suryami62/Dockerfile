@@ -8,6 +8,9 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["suryami62/suryami62.csproj", "suryami62/"]
+COPY ["suryami62.Domain/suryami62.Domain.csproj", "suryami62.Domain/"]
+COPY ["suryami62.Infrastructure/suryami62.Infrastructure.csproj", "suryami62.Infrastructure/"]
+COPY ["suryami62.Application/suryami62.Application.csproj", "suryami62.Application/"]
 RUN dotnet restore "suryami62/suryami62.csproj"
 COPY . .
 WORKDIR "/src/suryami62"

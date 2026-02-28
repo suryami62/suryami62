@@ -16,11 +16,11 @@ public sealed class Project
 
     public string Tags { get; set; } = string.Empty; // Comma separated tags
 
-    public string? RepoUrl { get; set; }
+    public Uri? RepoUrl { get; set; }
 
-    public string? DemoUrl { get; set; }
+    public Uri? DemoUrl { get; set; }
 
-    public string? ImageUrl { get; set; }
+    public Uri? ImageUrl { get; set; }
 
     public int DisplayOrder { get; set; }
 }

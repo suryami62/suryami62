@@ -9,7 +9,7 @@ using suryami62.Domain.Models;
 
 namespace suryami62.Infrastructure.Persistence;
 
-internal sealed class ProjectRepository(ApplicationDbContext context) : IProjectRepository
+public sealed class ProjectRepository(ApplicationDbContext context) : IProjectRepository
 {
     public async Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null)
     {

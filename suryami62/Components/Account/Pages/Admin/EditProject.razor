@@ -41,20 +41,20 @@
         <div class="grid gap-6 md:grid-cols-2">
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Repo URL</label>
-                <InputText @bind-Value="_project.RepoUrl"
+                <InputText @bind-Value="_repoUrlText"
                            class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Demo URL</label>
-                <InputText @bind-Value="_project.DemoUrl"
+                <InputText @bind-Value="_demoUrlText"
                            class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
             </div>
         </div>
 
         <div class="flex flex-col gap-2">
             <label class="text-xl font-black uppercase">Image URL</label>
-            <InputText @bind-Value="_project.ImageUrl" placeholder="https://.../project-screenshot.png"
+            <InputText @bind-Value="_imageUrlText" placeholder="https://.../project-screenshot.png"
                        class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_#000] outline-none dark:border-white dark:bg-gray-900"/>
         </div>
 
@@ -81,11 +81,15 @@
     [Parameter] public int? Id { get; set; }
 
     [SupplyParameterFromForm] private Project _project { get; set; } = default!;
+    private string? _repoUrlText;
+    private string? _demoUrlText;
+    private string? _imageUrlText;
     private bool _isSubmitting;
 
     protected override void OnInitialized()
     {
         _project ??= new Project();
+        SyncUrlTextFromModel();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -98,6 +102,25 @@
                 _project = project;
             }
         }
+
+        SyncUrlTextFromModel();
+    }
+
+    private void SyncUrlTextFromModel()
+    {
+        _repoUrlText = _project.RepoUrl?.ToString();
+        _demoUrlText = _project.DemoUrl?.ToString();
+        _imageUrlText = _project.ImageUrl?.ToString();
+    }
+
+    private static Uri? TryParseAbsoluteUri(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
     }
 
     private async Task SaveProject()
@@ -107,6 +130,10 @@
 
         try
         {
+            _project.RepoUrl = TryParseAbsoluteUri(_repoUrlText);
+            _project.DemoUrl = TryParseAbsoluteUri(_demoUrlText);
+            _project.ImageUrl = TryParseAbsoluteUri(_imageUrlText);
+
             if (Id == null)
             {
                 await ProjectService.CreateProjectAsync(_project);

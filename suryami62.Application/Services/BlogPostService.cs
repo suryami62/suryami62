@@ -21,34 +21,37 @@ public interface IBlogPostService
 
 public sealed class BlogPostService(IBlogPostRepository repository) : IBlogPostService
 {
-    public async Task<(List<BlogPost> Items, int Total)> GetPostsAsync(bool onlyPublished = true, int? skip = null,
-        int? take = null, string? searchTerm = null)
+    public Task<(List<BlogPost> Items, int Total)> GetPostsAsync(
+        bool onlyPublished = true,
+        int? skip = null,
+        int? take = null,
+        string? searchTerm = null)
     {
-        return await repository.GetPostsAsync(onlyPublished, skip, take, searchTerm).ConfigureAwait(false);
+        return repository.GetPostsAsync(onlyPublished, skip, take, searchTerm);
     }
 
-    public async Task<BlogPost?> GetPostBySlugAsync(string slug)
+    public Task<BlogPost?> GetPostBySlugAsync(string slug)
     {
-        return await repository.GetBySlugAsync(slug).ConfigureAwait(false);
+        return repository.GetBySlugAsync(slug);
     }
 
-    public async Task<BlogPost?> GetPostByIdAsync(int id)
+    public Task<BlogPost?> GetPostByIdAsync(int id)
     {
-        return await repository.GetByIdAsync(id).ConfigureAwait(false);
+        return repository.GetByIdAsync(id);
     }
 
-    public async Task<BlogPost> CreatePostAsync(BlogPost post)
+    public Task<BlogPost> CreatePostAsync(BlogPost post)
     {
-        return await repository.CreateAsync(post).ConfigureAwait(false);
+        return repository.CreateAsync(post);
     }
 
-    public async Task UpdatePostAsync(BlogPost post)
+    public Task UpdatePostAsync(BlogPost post)
     {
-        await repository.UpdateAsync(post).ConfigureAwait(false);
+        return repository.UpdateAsync(post);
     }
 
-    public async Task DeletePostAsync(int id)
+    public Task DeletePostAsync(int id)
     {
-        await repository.DeleteAsync(id).ConfigureAwait(false);
+        return repository.DeleteAsync(id);
     }
 }

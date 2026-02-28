@@ -42,11 +42,17 @@ public sealed class UserInfoSettingsStore(ISettingsRepository repository)
         var items = await repository.GetValuesAsync(Keys, cancellationToken).ConfigureAwait(false);
 
         var defaults = UserInfoSettings.Defaults;
+
+        string Get(string key, string defaultValue)
+        {
+            return items.TryGetValue(key, out var value) ? value : defaultValue;
+        }
+
         return new UserInfoSettings(
-            GetString(items, UserInfoSettingKeys.Instagram, defaults.Instagram),
-            GetString(items, UserInfoSettingKeys.Linkedin, defaults.Linkedin),
-            GetString(items, UserInfoSettingKeys.Github, defaults.Github),
-            GetString(items, UserInfoSettingKeys.Email, defaults.Email));
+            Get(UserInfoSettingKeys.Instagram, defaults.Instagram),
+            Get(UserInfoSettingKeys.Linkedin, defaults.Linkedin),
+            Get(UserInfoSettingKeys.Github, defaults.Github),
+            Get(UserInfoSettingKeys.Email, defaults.Email));
     }
 
     public async Task SaveAsync(UserInfoSettings settings, CancellationToken cancellationToken = default)
@@ -55,17 +61,12 @@ public sealed class UserInfoSettingsStore(ISettingsRepository repository)
 
         var values = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [UserInfoSettingKeys.Instagram] = settings.Instagram ?? string.Empty,
-            [UserInfoSettingKeys.Linkedin] = settings.Linkedin ?? string.Empty,
-            [UserInfoSettingKeys.Github] = settings.Github ?? string.Empty,
-            [UserInfoSettingKeys.Email] = settings.Email ?? string.Empty
+            [UserInfoSettingKeys.Instagram] = settings.Instagram,
+            [UserInfoSettingKeys.Linkedin] = settings.Linkedin,
+            [UserInfoSettingKeys.Github] = settings.Github,
+            [UserInfoSettingKeys.Email] = settings.Email
         };
 
         await repository.UpsertManyAsync(values, cancellationToken).ConfigureAwait(false);
-    }
-
-    private static string GetString(IReadOnlyDictionary<string, string> items, string key, string defaultValue)
-    {
-        return items.TryGetValue(key, out var value) ? value : defaultValue;
     }
 }

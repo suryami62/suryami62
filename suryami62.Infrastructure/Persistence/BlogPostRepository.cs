@@ -9,7 +9,7 @@ using suryami62.Domain.Models;
 
 namespace suryami62.Infrastructure.Persistence;
 
-internal sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPostRepository
+public sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPostRepository
 {
     public async Task<(List<BlogPost> Items, int Total)> GetPostsAsync(
         bool onlyPublished = true,
@@ -17,22 +17,22 @@ internal sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPo
         int? take = null,
         string? searchTerm = null)
     {
-        var query = context.BlogPosts.AsNoTracking().AsQueryable();
-        if (onlyPublished) query = query.Where(p => p.IsPublished);
+        var postsQuery = context.BlogPosts.AsNoTracking();
+
+        if (onlyPublished) postsQuery = postsQuery.Where(post => post.IsPublished);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
-            query = query.Where(p =>
-                p.Title.Contains(searchTerm) || (p.Summary != null && p.Summary.Contains(searchTerm)));
+            postsQuery = postsQuery.Where(post =>
+                post.Title.Contains(searchTerm) || (post.Summary != null && post.Summary.Contains(searchTerm)));
 
-        var total = await query.CountAsync().ConfigureAwait(false);
-        var orderedQuery = query.OrderByDescending(p => p.Date);
+        var total = await postsQuery.CountAsync().ConfigureAwait(false);
 
-        IQueryable<BlogPost> itemsQuery = orderedQuery;
-        if (skip.HasValue) itemsQuery = itemsQuery.Skip(skip.Value);
+        postsQuery = postsQuery.OrderByDescending(post => post.Date);
+        if (skip is > 0) postsQuery = postsQuery.Skip(skip.Value);
 
-        if (take.HasValue) itemsQuery = itemsQuery.Take(take.Value);
+        if (take is > 0) postsQuery = postsQuery.Take(take.Value);
 
-        var items = await itemsQuery.ToListAsync().ConfigureAwait(false);
+        var items = await postsQuery.ToListAsync().ConfigureAwait(false);
         return (items, total);
     }
 
@@ -62,10 +62,10 @@ internal sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPo
     {
         ArgumentNullException.ThrowIfNull(post);
 
-        var tracked = context.BlogPosts.Local.FirstOrDefault(p => p.Id == post.Id);
-        if (tracked != null && !ReferenceEquals(tracked, post))
-            context.Entry(tracked).CurrentValues.SetValues(post);
-        else if (tracked == null) context.Entry(post).State = EntityState.Modified;
+        var trackedPost = context.BlogPosts.Local.FirstOrDefault(p => p.Id == post.Id);
+        if (trackedPost is not null && !ReferenceEquals(trackedPost, post))
+            context.Entry(trackedPost).CurrentValues.SetValues(post);
+        else if (trackedPost is null) context.Entry(post).State = EntityState.Modified;
 
         await context.SaveChangesAsync().ConfigureAwait(false);
     }

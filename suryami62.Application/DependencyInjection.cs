@@ -7,7 +7,7 @@ using suryami62.Services;
 
 namespace suryami62.Application;
 
-public static class DependencyInjection
+public static class ApplicationServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {

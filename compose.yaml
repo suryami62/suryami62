@@ -4,4 +4,22 @@
         build:
             context: .
             dockerfile: suryami62/Dockerfile
+    
+    suryami62.application:
+        image: suryami62.application
+        build:
+            context: .
+            dockerfile: suryami62.Application/Dockerfile
+    
+    suryami62.domain:
+        image: suryami62.domain
+        build:
+            context: .
+            dockerfile: suryami62.Domain/Dockerfile
+    
+    suryami62.infrastructure:
+        image: suryami62.infrastructure
+        build:
+            context: .
+            dockerfile: suryami62.Infrastructure/Dockerfile
 

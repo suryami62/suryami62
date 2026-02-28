@@ -57,7 +57,7 @@
                 }
             </header>
 
-            @if (!string.IsNullOrWhiteSpace(_post.ImageUrl))
+            @if (_post.ImageUrl is not null)
             {
                 <div
                     class="mb-8 border-4 border-black bg-white p-2 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">

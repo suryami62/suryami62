@@ -9,7 +9,7 @@ using suryami62.Domain.Models;
 
 namespace suryami62.Infrastructure.Persistence;
 
-internal sealed class SettingsRepository(ApplicationDbContext context) : ISettingsRepository
+public sealed class SettingsRepository(ApplicationDbContext context) : ISettingsRepository
 {
     public async Task<string?> GetValueAsync(string key, CancellationToken cancellationToken = default)
     {

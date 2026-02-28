@@ -24,5 +24,5 @@ public sealed class BlogPost
 
     public bool IsPublished { get; set; }
 
-    public string? ImageUrl { get; set; }
+    public Uri? ImageUrl { get; set; }
 }

@@ -18,28 +18,28 @@ public interface IProjectService
 
 public sealed class ProjectService(IProjectRepository repository) : IProjectService
 {
-    public async Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null)
+    public Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null)
     {
-        return await repository.GetProjectsAsync(skip, take).ConfigureAwait(false);
+        return repository.GetProjectsAsync(skip, take);
     }
 
-    public async Task<Project?> GetProjectByIdAsync(int id)
+    public Task<Project?> GetProjectByIdAsync(int id)
     {
-        return await repository.GetByIdAsync(id).ConfigureAwait(false);
+        return repository.GetByIdAsync(id);
     }
 
-    public async Task<Project> CreateProjectAsync(Project project)
+    public Task<Project> CreateProjectAsync(Project project)
     {
-        return await repository.CreateAsync(project).ConfigureAwait(false);
+        return repository.CreateAsync(project);
     }
 
-    public async Task UpdateProjectAsync(Project project)
+    public Task UpdateProjectAsync(Project project)
     {
-        await repository.UpdateAsync(project).ConfigureAwait(false);
+        return repository.UpdateAsync(project);
     }
 
-    public async Task DeleteProjectAsync(int id)
+    public Task DeleteProjectAsync(int id)
     {
-        await repository.DeleteAsync(id).ConfigureAwait(false);
+        return repository.DeleteAsync(id);
     }
 }

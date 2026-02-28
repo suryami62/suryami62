@@ -1,5 +1,6 @@
 @page "/Account/Admin/Posts/New"
 @page "/Account/Admin/Posts/Edit/{Id:int}"
+@using System.Text
 @using Microsoft.AspNetCore.Authorization
 @using suryami62.Domain.Models
 @using suryami62.Services
@@ -13,7 +14,7 @@
 <div class="flex flex-col gap-12 py-8">
     <PageHeader Title="@(Id == null ? "New" : "Edit")" Highlight="Post"/>
 
-    <EditForm Model="@_post" OnValidSubmit="SavePost" FormName="edit-post-form"
+    <EditForm Model="@_post" OnValidSubmit="SavePostAsync" FormName="edit-post-form"
               class="flex flex-col gap-6 border-4 border-black bg-white p-8 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
         <DataAnnotationsValidator/>
         <ValidationSummary class="text-red-600 font-bold mb-4"/>
@@ -48,7 +49,7 @@
 
         <div class="flex flex-col gap-2">
             <label class="text-xl font-black uppercase">Image URL</label>
-            <InputText @bind-Value="_post.ImageUrl" placeholder="https://.../thumbnail.jpg"
+            <InputText @bind-Value="_imageUrlText" placeholder="https://.../thumbnail.jpg"
                        class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_#000] outline-none dark:border-white dark:bg-gray-900"/>
         </div>
 
@@ -85,44 +86,64 @@
 @code {
     [Parameter] public int? Id { get; set; }
 
-    private BlogPost _post { get; set; } = default!;
+    private BlogPost _post = CreateNewPost();
+    private string? _imageUrlText;
     private bool _isSubmitting;
 
-    protected override void OnInitialized()
-    {
-        _post ??= new BlogPost { Date = DateTime.UtcNow };
-    }
+    private bool IsNewPost => Id is null;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Id != null)
+        if (Id is null)
         {
-            var post = await BlogPostService.GetPostByIdAsync(Id.Value);
-            if (post != null)
-            {
-                _post = post;
-            }
+            _imageUrlText = _post.ImageUrl?.ToString();
+            return;
         }
+
+        var post = await BlogPostService.GetPostByIdAsync(Id.Value);
+        if (post is not null)
+        {
+            _post = post;
+        }
+
+        _imageUrlText = _post.ImageUrl?.ToString();
+    }
+
+    private static Uri? TryParseAbsoluteUri(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
     }
 
     private void OnTitleChanged(ChangeEventArgs e)
     {
-        if (Id == null)
+        if (!IsNewPost)
         {
-            var title = e.Value?.ToString() ?? "";
-            _post.Slug = title.ToLower().Replace(" ", "-").Replace("--", "-").Trim('-');
+            return;
         }
+
+        var title = e.Value?.ToString();
+        _post.Slug = CreateSlug(title);
     }
 
-    private async Task SavePost()
+    private async Task SavePostAsync()
     {
-        if (_isSubmitting) return;
+        if (_isSubmitting)
+        {
+            return;
+        }
 
         _isSubmitting = true;
 
         try
         {
-            if (Id == null)
+            _post.ImageUrl = TryParseAbsoluteUri(_imageUrlText);
+
+            if (IsNewPost)
             {
                 await BlogPostService.CreatePostAsync(_post);
             }
@@ -135,8 +156,49 @@
         }
         catch
         {
+            // Intentionally swallow to keep UX simple (button re-enabled in finally).
+        }
+        finally
+        {
             _isSubmitting = false;
         }
+    }
+
+    private static BlogPost CreateNewPost()
+    {
+        return new BlogPost { Date = DateTime.UtcNow };
+    }
+
+    private static string CreateSlug(string? title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder(title.Length);
+        var previousWasDash = false;
+
+        foreach (var c in title.Trim().ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(c))
+            {
+                builder.Append(c);
+                previousWasDash = false;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(c) || c is '-' or '_')
+            {
+                if (builder.Length > 0 && !previousWasDash)
+                {
+                    builder.Append('-');
+                    previousWasDash = true;
+                }
+            }
+        }
+
+        return builder.ToString().Trim('-');
     }
 
 }
