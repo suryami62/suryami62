@@ -1,5 +1,9 @@
 @page "/about"
+@using Markdig
+@using suryami62.Domain.Models
+@using suryami62.Services
 @inject NavigationManager NavigationManager
+@inject IJourneyHistoryService JourneyHistoryService
 
 <PageTitle>My Personal Bio | suryami62</PageTitle>
 
@@ -51,31 +55,41 @@
         <div class="grid gap-8 lg:grid-cols-2">
             <!-- Experience -->
             <ContentBlock Title="Experience">
-                <div>
-                    <h4 class="text-2xl font-bold">Class Teacher</h4>
-                    <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">
-                        SD Negeri 004 Tanjungpinang
-                        Kota
-                    </p>
-                    <p class="mb-2 font-mono text-sm">Sep 2025 – Dec 2025</p>
-                    <ul class="list-disc pl-5 font-medium marker:text-black dark:marker:text-white">
-                        <li>Managed teaching activities aligned with the national curriculum.</li>
-                        <li>Delivered interactive, student centered learning.</li>
-                        <li>conducted daily and final assessments.</li>
-                    </ul>
+                <div class="flex flex-col gap-6">
+                    @foreach (var experience in _journey.Experiences)
+                    {
+                        <div>
+                            <h4 class="text-2xl font-bold">@experience.Title</h4>
+                            <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">@experience.Organization</p>
+                            <p class="mb-2 font-mono text-sm">@experience.Period</p>
+                            @if (!string.IsNullOrWhiteSpace(experience.Summary))
+                            {
+                                <div class="prose prose-sm max-w-none font-medium dark:prose-invert">
+                                    @((MarkupString)Markdown.ToHtml(experience.Summary, _pipeline))
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
             </ContentBlock>
 
             <!-- Education -->
             <ContentBlock Title="Education">
-                <div>
-                    <h4 class="text-2xl font-bold">Bachelor of Physics Ed.</h4>
-                    <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">
-                        Universitas Sarjanawiyata
-                        Tamansiswa
-                    </p>
-                    <p class="mb-2 font-mono text-sm">Sep 2019 – Oct 2024</p>
-                    <p class="font-medium">Focus on Physics Education with expertise in teaching and C# programming.</p>
+                <div class="flex flex-col gap-6">
+                    @foreach (var education in _journey.Educations)
+                    {
+                        <div>
+                            <h4 class="text-2xl font-bold">@education.Title</h4>
+                            <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">@education.Organization</p>
+                            <p class="mb-2 font-mono text-sm">@education.Period</p>
+                            @if (!string.IsNullOrWhiteSpace(education.Summary))
+                            {
+                                <div class="prose prose-sm max-w-none font-medium dark:prose-invert">
+                                    @((MarkupString)Markdown.ToHtml(education.Summary, _pipeline))
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
             </ContentBlock>
         </div>
@@ -83,6 +97,21 @@
 </div>
 
 @code {
+    private JourneyViewModel _journey = new([], []);
 
+    private readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var experiences = await JourneyHistoryService.GetBySectionAsync(JourneySection.Experience);
+        var educations = await JourneyHistoryService.GetBySectionAsync(JourneySection.Education);
+        _journey = new JourneyViewModel(experiences, educations);
+    }
+
+    private sealed record JourneyViewModel(
+        IReadOnlyList<JourneyHistory> Experiences,
+        IReadOnlyList<JourneyHistory> Educations);
 
 }

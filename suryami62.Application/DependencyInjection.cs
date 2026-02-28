@@ -15,6 +15,7 @@ public static class ApplicationServiceCollectionExtensions
 
         services.AddScoped<IBlogPostService, BlogPostService>();
         services.AddScoped<IProjectService, ProjectService>();
+        services.AddScoped<IJourneyHistoryService, JourneyHistoryService>();
         services.AddScoped<UserInfoSettingsStore>();
         services.AddScoped<ApplicationSettingsStore>();
 

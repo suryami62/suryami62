@@ -14,6 +14,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 {
     public DbSet<BlogPost> BlogPosts { get; set; }
     public DbSet<Project> Projects { get; set; }
+    public DbSet<JourneyHistory> JourneyHistories { get; set; }
     public DbSet<Setting> Settings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -34,6 +35,12 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         });
 
         builder.Entity<BlogPost>(entity => { entity.Property(p => p.ImageUrl).HasConversion(uriConverter); });
+
+        builder.Entity<JourneyHistory>(entity =>
+        {
+            entity.Property(item => item.Summary).HasDefaultValue(string.Empty);
+            entity.HasIndex(item => new { item.Section, item.DisplayOrder });
+        });
     }
 
     private static Uri? ParseAbsoluteUri(string? value)

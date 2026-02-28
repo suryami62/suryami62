@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IBlogPostRepository, BlogPostRepository>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddScoped<IJourneyHistoryRepository, JourneyHistoryRepository>();
         services.AddScoped<ISettingsRepository, SettingsRepository>();
 
         return services;
