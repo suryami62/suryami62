@@ -1,0 +1,10 @@
+<div
+    class="@($"flex h-32 w-32 items-center justify-center border-4 border-black text-6xl font-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:h-48 md:w-48 md:text-8xl dark:border-white dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] {BackgroundClass}")">
+    @Symbol
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public string Symbol { get; set; } = "";
+
+    [Parameter] public string BackgroundClass { get; set; } = "bg-white dark:bg-black";
+}

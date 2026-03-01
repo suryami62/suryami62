@@ -11,42 +11,28 @@
             re-establish order.
         </ChildContent>
         <AsideContent>
-            <div
-                class="flex h-32 w-32 items-center justify-center border-4 border-black bg-yellow-400 text-6xl font-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:h-48 md:w-48 md:text-8xl dark:border-white dark:bg-yellow-600 dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
-                !
-            </div>
+            <ErrorGlyph Symbol="!" BackgroundClass="bg-yellow-400 dark:bg-yellow-600"/>
         </AsideContent>
     </PageHeader>
 
     <div class="grid gap-12 lg:grid-cols-[1fr_2fr]">
-        <div class="flex flex-col gap-6">
-            <h3 class="text-2xl font-black tracking-tighter uppercase underline decoration-4 underline-offset-4">
-                Core Exception
-            </h3>
-            <p class="text-lg leading-relaxed font-medium">
-                The server encountered an internal error or misconfiguration and was unable to complete your request.
-                This is likely a temporary anomaly in the digital fabric.
-            </p>
-
-            @if (ShowRequestId)
-            {
-                <div class="border-2 border-black bg-neutral-100 p-4 dark:border-white dark:bg-neutral-900">
-                    <span class="mb-1 block text-xs font-black uppercase italic opacity-60">Tracking Identifier</span>
-                    <code class="font-mono text-sm font-bold break-all">@RequestId</code>
-                </div>
-            }
-
-            <div class="mt-4">
-                <NavButton Href="/" Text="Back to Reality"/>
-            </div>
-        </div>
+        <ErrorSummarySection
+            Title="Core Exception"
+            Description="The server encountered an internal error or misconfiguration and was unable to complete your request. This is likely a temporary anomaly in the digital fabric.">
+            <BodyContent>
+                @if (ShowRequestId)
+                {
+                    <div class="border-2 border-black bg-neutral-100 p-4 dark:border-white dark:bg-neutral-900">
+                        <span
+                            class="mb-1 block text-xs font-black uppercase italic opacity-60">Tracking Identifier</span>
+                        <code class="font-mono text-sm font-bold break-all">@RequestId</code>
+                    </div>
+                }
+            </BodyContent>
+        </ErrorSummarySection>
 
         <div class="space-y-8">
-            <div
-                class="border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:p-10 dark:border-white dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
-                <h3 class="mb-6 text-2xl font-black tracking-tighter uppercase">
-                    Status Report
-                </h3>
+            <ErrorPanel Title="Status Report">
                 <ul class="space-y-4 text-sm font-bold text-neutral-600 uppercase dark:text-neutral-400">
                     <li>→ Primary logic gate: [FAILED]</li>
                     <li>→ Resource allocation: [INTERRUPTED]</li>
@@ -56,7 +42,7 @@
                     <p class="italic">Please try refreshing the page or come back later when the monkeys have finished
                         their coffee.</p>
                 </div>
-            </div>
+            </ErrorPanel>
 
             @if (Env.IsDevelopment())
             {
