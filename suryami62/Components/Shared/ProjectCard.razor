@@ -1,5 +1,5 @@
 <article
-    class="flex h-full flex-col border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+    class="neo-card flex h-full flex-col p-6">
 
     @if (!string.IsNullOrEmpty(ImageUrl))
     {
@@ -29,15 +29,15 @@
     <div class="mt-auto flex gap-4">
         @if (!string.IsNullOrEmpty(RepoUrl))
         {
-            <a href="@RepoUrl" target="_blank"
-               class="flex-1 translate-x-0 translate-y-0 border-2 border-white bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_#888] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-black dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_#444] dark:hover:bg-neutral-200">
+            <a href="@RepoUrl" target="_blank" rel="noopener noreferrer"
+               class="neo-button-inverse flex-1">
                 View Code
             </a>
         }
         @if (!string.IsNullOrEmpty(DemoUrl))
         {
-            <a href="@DemoUrl" target="_blank"
-               class="flex-1 translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-3 text-center font-bold text-black uppercase shadow-[4px_4px_0px_0px_#000] transition-all hover:bg-neutral-300 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_#FFF] dark:hover:bg-neutral-700">
+            <a href="@DemoUrl" target="_blank" rel="noopener noreferrer"
+               class="neo-button flex-1 px-4 py-3 text-center">
                 Live Demo
             </a>
         }

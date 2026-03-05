@@ -19,7 +19,7 @@
 <div class="flex flex-col gap-8 py-8">
     <div>
         <a href="/posts"
-           class="inline-flex items-center gap-2 text-xl font-bold uppercase underline decoration-4 underline-offset-4 hover:text-neutral-600 dark:hover:text-neutral-400">
+           class="neo-inline-link">
             <i class="fa-solid fa-arrow-left"></i>
             Back
         </a>
@@ -31,8 +31,7 @@
     }
     else if (_post is null)
     {
-        <div
-            class="border-4 border-black bg-white p-6 font-bold shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+        <div class="neo-card p-6 font-bold">
             <h1 class="mb-2 text-3xl font-black uppercase">Post not found</h1>
             <p class="text-lg">Post not found or not yet published.</p>
         </div>
@@ -42,8 +41,7 @@
         <article class="mx-auto w-full max-w-4xl">
             <header class="mb-8 border-b-4 border-black pb-6 dark:border-white">
                 <div class="mb-4 flex flex-wrap items-center gap-4">
-					<span
-                        class="bg-black px-3 py-1 text-sm font-bold text-white uppercase dark:bg-white dark:text-black">
+					<span class="neo-pill">
 						@_post.Label
 					</span>
                     <span class="font-mono font-bold">@_post.Date.ToString("MMM dd, yyyy")</span>
@@ -59,8 +57,7 @@
 
             @if (_post.ImageUrl is not null)
             {
-                <div
-                    class="mb-8 border-4 border-black bg-white p-2 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+                <div class="neo-card mb-8 p-2">
                     <img src="@_post.ImageUrl" alt="@_post.Title" class="h-auto w-full" loading="lazy"/>
                 </div>
             }

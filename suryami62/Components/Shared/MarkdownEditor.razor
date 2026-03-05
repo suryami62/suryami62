@@ -1,69 +1,81 @@
+@using Ganss.Xss
 @using Markdig
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 
 <div
-    class="flex flex-col border-4 border-black bg-white shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+    class="neo-card flex flex-col">
     <div class="flex flex-wrap gap-2 border-b-4 border-black bg-gray-50 p-2 dark:border-white dark:bg-gray-900/50">
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             @foreach (var i in Enumerable.Range(1, 6))
             {
                 <button type="button" @onclick='() => WrapSelection(new string((char)35, i) + " ", "")'
+                        disabled="@IsFormattingDisabled"
                         title="@($"Heading {i}")"
-                        class="h-10 w-10 border-2 border-black font-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+                        class="md-toolbar-btn font-black">
                     H@(i)
                 </button>
             }
         </div>
 
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
-            <button type="button" @onclick='() => WrapSelection("**", "**")' title="Bold"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("**", "**")' disabled="@IsFormattingDisabled"
+                    title="Bold"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-bold"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("*", "*")' title="Italic"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("*", "*")' disabled="@IsFormattingDisabled"
+                    title="Italic"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-italic"></i>
             </button>
         </div>
 
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
-            <button type="button" @onclick='() => WrapSelection("- ", "")' title="Unordered List"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("- ", "")' disabled="@IsFormattingDisabled"
+                    title="Unordered List"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-list"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("1. ", "")' title="Ordered List"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("1. ", "")' disabled="@IsFormattingDisabled"
+                    title="Ordered List"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-list-ol"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("> ", "")' title="Blockquote"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("> ", "")' disabled="@IsFormattingDisabled"
+                    title="Blockquote"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-quote-left"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("\n---\n", "")' title="Horizontal Rule"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("\n---\n", "")' disabled="@IsFormattingDisabled"
+                    title="Horizontal Rule"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-minus"></i>
             </button>
         </div>
 
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
-            <button type="button" @onclick='() => WrapSelection("`", "`")' title="Inline Code"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("`", "`")' disabled="@IsFormattingDisabled"
+                    title="Inline Code"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-terminal"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("```\n", "\n```")' title="Code Block"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("```\n", "\n```")' disabled="@IsFormattingDisabled"
+                    title="Code Block"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-code"></i>
             </button>
         </div>
 
         <div class="flex gap-1">
-            <button type="button" @onclick='() => WrapSelection("[", "](url)")' title="Link"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("[", "](url)")' disabled="@IsFormattingDisabled"
+                    title="Link"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-link"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("![](", ")")' title="Image"
-                    class="h-10 w-10 border-2 border-black transition-colors hover:bg-[#A3E635] dark:border-white dark:hover:bg-lime-500">
+            <button type="button" @onclick='() => WrapSelection("![](", ")")' disabled="@IsFormattingDisabled"
+                    title="Image"
+                    class="md-toolbar-btn">
                 <i class="fa-solid fa-image"></i>
             </button>
         </div>
@@ -72,15 +84,15 @@
 
         <div class="flex h-10 border-2 border-black dark:border-white">
             <button type="button" @onclick="() => SetMode(EditorMode.Edit)"
-                    class='@(Mode == EditorMode.Edit ? "bg-black dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800") px-4 font-bold text-white dark:bg-white'>
+                    class='@(Mode == EditorMode.Edit ? "bg-black dark:bg-white" : "hover:bg-gray-100 dark:hover:bg-gray-800") md-mode-btn'>
                 EDIT
             </button>
             <button type="button" @onclick="() => SetMode(EditorMode.Split)"
-                    class='@(Mode == EditorMode.Split ? "bg-black dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800") border-l-2 border-black px-4 font-bold text-white dark:border-white dark:bg-white'>
+                    class='@(Mode == EditorMode.Split ? "bg-black dark:bg-white" : "hover:bg-gray-100 dark:hover:bg-gray-800") md-mode-btn border-l-2 border-black dark:border-white'>
                 SPLIT
             </button>
             <button type="button" @onclick="() => SetMode(EditorMode.Preview)"
-                    class='@(Mode == EditorMode.Preview ? "bg-black dark:text-black" : "hover:bg-gray-100 dark:hover:bg-gray-800") border-l-2 border-black px-4 font-bold text-white dark:border-white dark:bg-white'>
+                    class='@(Mode == EditorMode.Preview ? "bg-black dark:bg-white" : "hover:bg-gray-100 dark:hover:bg-gray-800") md-mode-btn border-l-2 border-black dark:border-white'>
                 PREVIEW
             </button>
         </div>
@@ -97,7 +109,7 @@
         @if (Mode != EditorMode.Edit)
         {
             <div class="prose prose-lg h-full min-h-100 max-w-none overflow-auto p-4 dark:prose-invert">
-                @((MarkupString)Markdown.ToHtml(Value ?? "", _pipeline))
+                @PreviewMarkup
             </div>
         }
     </div>
@@ -110,10 +122,23 @@
     private ElementReference _textArea;
     private IJSObjectReference? _module;
     private EditorMode Mode { get; set; } = EditorMode.Edit;
+    private bool IsFormattingDisabled => Mode == EditorMode.Preview || _module is null;
 
     private readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
         .UseAdvancedExtensions()
         .Build();
+
+    private readonly HtmlSanitizer _htmlSanitizer = new();
+
+    private MarkupString PreviewMarkup
+    {
+        get
+        {
+            var html = Markdown.ToHtml(Value ?? string.Empty, _pipeline);
+            var sanitizedHtml = _htmlSanitizer.Sanitize(html);
+            return new MarkupString(sanitizedHtml);
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -123,15 +148,14 @@
         }
     }
 
-    private async Task SetMode(EditorMode mode)
+    private void SetMode(EditorMode mode)
     {
         Mode = mode;
-        StateHasChanged();
     }
 
     private async Task WrapSelection(string prefix, string suffix)
     {
-        if (_module == null) return;
+        if (IsFormattingDisabled || _module is null) return;
 
         var newValue = await _module.InvokeAsync<string>("insertText", _textArea, prefix, suffix);
         Value = newValue;
@@ -153,9 +177,15 @@
 
     public async ValueTask DisposeAsync()
     {
-        if (_module != null)
+        if (_module is not null)
         {
-            await _module.DisposeAsync();
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
         }
     }
 

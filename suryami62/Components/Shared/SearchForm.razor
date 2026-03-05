@@ -1,14 +1,18 @@
 <form @onsubmit="InvokeSearch" @onsubmit:preventDefault
       class="mb-4 flex w-full max-w-xl flex-col items-stretch gap-4 sm:flex-row sm:items-center">
+
+    <!-- Search Input -->
     <input type="text"
            @bind:get="Value"
            @bind:set="UpdateValue"
            @bind:event="oninput"
-           class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-gray-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all outline-none focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-gray-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+           class="neo-input"
            placeholder="Search posts..."/>
+
+    <!-- Search Button -->
     <button
         type="submit"
-        class="border-4 border-black bg-white px-6 py-3 font-bold text-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-100 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-900">
+        class="neo-button border-4 px-6 py-3">
         Search
     </button>
 </form>

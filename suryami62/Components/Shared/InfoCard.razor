@@ -1,5 +1,7 @@
 <div
-    class="border-2 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#FFF]">
+    class="neo-card border-2 p-6">
+
+    <!-- Header -->
     <div class="mb-4 flex items-center gap-4">
         @if (!string.IsNullOrEmpty(IconClass))
         {
@@ -7,6 +9,8 @@
         }
         <h2 class="text-3xl font-black uppercase">@Title</h2>
     </div>
+
+    <!-- Content -->
     <div class="text-lg leading-relaxed font-medium">
         @ChildContent
     </div>

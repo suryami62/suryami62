@@ -56,14 +56,14 @@
         {
             <div class="mt-12 flex justify-center gap-4">
                 <button disabled="@(_page == 1)" @onclick="() => ChangePage(_page - 1)"
-                        class="border-4 border-black bg-white px-6 py-2 font-black transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-none dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_#fff]">
+                        class="neo-pagination-btn bg-white dark:bg-black">
                     PREV
                 </button>
                 <div class="flex items-center text-2xl font-black">
                     @_page / @(Math.Ceiling((double)_total / _pageSize))
                 </div>
                 <button disabled="@(_page * _pageSize >= _total)" @onclick="() => ChangePage(_page + 1)"
-                        class="border-4 border-black bg-[#FB923C] px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-none dark:border-white dark:bg-orange-400 dark:shadow-[4px_4px_0px_0px_#fff]">
+                        class="neo-pagination-btn bg-orange-400 dark:bg-orange-400">
                     NEXT
                 </button>
             </div>
