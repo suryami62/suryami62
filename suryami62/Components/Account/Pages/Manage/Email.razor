@@ -28,7 +28,7 @@
 
     <EditForm Model="Input" FormName="change-email" OnValidSubmit="OnValidSubmitAsync" method="post">
         <DataAnnotationsValidator/>
-        <ValidationSummary class="text-sm font-bold text-red-600 dark:text-red-400" role="alert"/>
+        <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
         <div class="mt-4 flex flex-col gap-4 max-w-xl">
             @if (isEmailConfirmed)
             {
@@ -36,7 +36,7 @@
                     <label for="email" class="text-sm font-black uppercase tracking-widest">Email</label>
                     <div class="flex items-center gap-3">
                         <input type="text" value="@email" id="email"
-                               class="w-full border-4 border-black bg-neutral-100 px-4 py-3 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                               class="@DisabledInputClass"
                                placeholder="Enter your email" disabled/>
                         <span
                             class="border-2 border-black bg-black px-3 py-2 text-xs font-black uppercase text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-white dark:text-black dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]">Verified</span>
@@ -48,10 +48,10 @@
                 <div class="flex flex-col gap-2">
                     <label for="email" class="text-sm font-black uppercase tracking-widest">Email</label>
                     <input type="text" value="@email" id="email"
-                           class="w-full border-4 border-black bg-neutral-100 px-4 py-3 font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                           class="@DisabledInputClass"
                            placeholder="Enter your email" disabled/>
                     <button type="submit" form="send-verification-form"
-                            class="w-full translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-2 text-center text-sm font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800">
+                            class="neo-button w-full text-center text-sm">
                         Send verification email
                     </button>
                 </div>
@@ -59,12 +59,12 @@
             <div class="flex flex-col gap-2">
                 <label for="Input.NewEmail" class="text-sm font-black uppercase tracking-widest">New email</label>
                 <InputText @bind-Value="Input.NewEmail" id="Input.NewEmail"
-                           class="w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-neutral-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all focus:translate-x-1 focus:translate-y-1 focus:shadow-none dark:border-white dark:bg-black dark:text-white dark:placeholder-neutral-400 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+                           class="@InputClass"
                            autocomplete="email" aria-required="true" placeholder="Enter a new email"/>
-                <ValidationMessage For="() => Input.NewEmail" class="text-sm font-bold text-red-600 dark:text-red-400"/>
+                <ValidationMessage For="() => Input.NewEmail" class="@ValidationMessageClass"/>
             </div>
             <button type="submit"
-                    class="w-full translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                    class="neo-button w-full text-center">
                 Change email
             </button>
         </div>
@@ -72,6 +72,11 @@
 </div>
 
 @code {
+    private const string InputClass = "neo-input";
+    private const string DisabledInputClass = "neo-input cursor-not-allowed bg-neutral-100 dark:bg-neutral-900";
+    private const string ValidationSummaryClass = "text-sm font-bold text-red-600 dark:text-red-400";
+    private const string ValidationMessageClass = "text-sm font-bold text-red-600 dark:text-red-400";
+
     private string? message;
     private ApplicationUser? user;
     private string? email;
