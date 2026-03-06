@@ -37,11 +37,11 @@ jobs:
         run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@sha256:cea2e4506f17b59fee474d4e3d8018d5f830aefc66c876c101966220bb31dc30
 
       - name: Log in to GitHub Container Registry
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
+        uses: docker/login-action@sha256:4520991ea8f3ee670fc2c28f83b3364fbe42c2772b4f79ee7d6ac9458d34ff15
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -49,7 +49,7 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@sha256:3eae7b1d4e1ead069857b35498bbd0f163ce47cf1b52690e3719a350498ddf95
         with:
           images: ${{ steps.prep.outputs.image }}
           tags: |
@@ -59,7 +59,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and (optionally) push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@sha256:38ca1f396b03e3cded541136c23816a0e76fefb95aa9c3de09405a3e485b1865
         with:
           context: .
           file: suryami62/Dockerfile
