@@ -1,0 +1,83 @@
+﻿@page "/Account/ResendEmailConfirmation"
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using suryami62.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject NavigationManager NavigationManager
+
+<PageTitle>Resend email confirmation</PageTitle>
+
+<div class="flex flex-col gap-8 py-8">
+    <header class="border-b-4 border-black pb-6 dark:border-white">
+        <h1 class="text-4xl font-black tracking-tighter uppercase md:text-5xl">Resend email confirmation</h1>
+        <p class="mt-2 text-lg font-bold">Enter your email.</p>
+    </header>
+
+    <section class="neo-card max-w-xl p-6">
+        <StatusMessage Message="@message"/>
+        <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post">
+            <DataAnnotationsValidator/>
+            <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
+            <div class="mt-4 flex flex-col gap-4">
+                <div class="flex flex-col gap-2">
+                    <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
+                    <InputText @bind-Value="Input.Email" id="Input.Email"
+                               class="@InputClass"
+                               aria-required="true" placeholder="name@example.com"/>
+                    <ValidationMessage For="() => Input.Email"
+                                       class="@ValidationMessageClass"/>
+                </div>
+                <button type="submit"
+                        class="neo-button w-full text-center">
+                    Resend
+                </button>
+            </div>
+        </EditForm>
+    </section>
+</div>
+
+@code {
+    private const string InputClass = "neo-input";
+    private const string ValidationSummaryClass = "text-sm font-bold text-red-600 dark:text-red-400";
+    private const string ValidationMessageClass = "text-sm font-bold text-red-600 dark:text-red-400";
+
+    private string? message;
+
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        Input ??= new InputModel();
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        var user = await UserManager.FindByEmailAsync(Input.Email!);
+        if (user is null)
+        {
+            message = "Verification email sent. Please check your email.";
+            return;
+        }
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        message = "Verification email sent. Please check your email.";
+    }
+
+    private sealed class InputModel
+    {
+        [Required] [EmailAddress] public string Email { get; set; } = "";
+    }
+
+}

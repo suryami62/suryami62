@@ -1,0 +1,23 @@
+<div
+    class="neo-card border-2 p-6">
+
+    <!-- Header -->
+    <div class="mb-4 flex items-center gap-4">
+        @if (!string.IsNullOrEmpty(IconClass))
+        {
+            <i class="@IconClass text-4xl"></i>
+        }
+        <h2 class="text-3xl font-black uppercase">@Title</h2>
+    </div>
+
+    <!-- Content -->
+    <div class="text-lg leading-relaxed font-medium">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? IconClass { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

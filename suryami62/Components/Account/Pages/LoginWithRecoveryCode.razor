@@ -1,0 +1,100 @@
+﻿@page "/Account/LoginWithRecoveryCode"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using suryami62.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<LoginWithRecoveryCode> Logger
+
+<PageTitle>Recovery code verification</PageTitle>
+
+<div class="flex flex-col gap-8 py-8">
+    <header class="border-b-4 border-black pb-6 dark:border-white">
+        <h1 class="text-4xl font-black tracking-tighter uppercase md:text-5xl">Recovery code verification</h1>
+        <p class="mt-2 text-lg font-bold">
+            This login will not be remembered until you provide an authenticator app code at log in or disable 2FA and
+            log in again.
+        </p>
+    </header>
+
+    <section class="neo-card max-w-xl p-6">
+        <StatusMessage Message="@message"/>
+        <EditForm Model="Input" FormName="login-with-recovery-code" OnValidSubmit="OnValidSubmitAsync" method="post">
+            <DataAnnotationsValidator/>
+            <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
+            <div class="mt-4 flex flex-col gap-4">
+                <div class="flex flex-col gap-2">
+                    <label for="Input.RecoveryCode" class="text-sm font-black uppercase tracking-widest">Recovery
+                        code</label>
+                    <InputText @bind-Value="Input.RecoveryCode" id="Input.RecoveryCode"
+                               class="@InputClass"
+                               autocomplete="off" placeholder="Recovery code"/>
+                    <ValidationMessage For="() => Input.RecoveryCode"
+                                       class="@ValidationMessageClass"/>
+                </div>
+                <button type="submit" class="@SubmitButtonClass">
+                    Log in
+                </button>
+            </div>
+        </EditForm>
+    </section>
+</div>
+
+@code {
+    private const string InputClass = "neo-input";
+    private const string ValidationSummaryClass = "text-sm font-bold text-red-600 dark:text-red-400";
+    private const string ValidationMessageClass = "text-sm font-bold text-red-600 dark:text-red-400";
+    private const string SubmitButtonClass = "neo-button w-full text-center";
+
+    private string? message;
+    private ApplicationUser user = default!;
+
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
+
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new InputModel();
+
+        // Ensure the user has gone through the username & password screen first
+        user = await SignInManager.GetTwoFactorAuthenticationUserAsync() ??
+               throw new InvalidOperationException("Unable to load two-factor authentication user.");
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        var recoveryCode = Input.RecoveryCode.Replace(" ", string.Empty);
+
+        var result = await SignInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
+
+        var userId = await UserManager.GetUserIdAsync(user);
+
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User with ID '{UserId}' logged in with a recovery code.", userId);
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
+        else
+        {
+            Logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}' ", userId);
+            message = "Error: Invalid recovery code entered.";
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Recovery Code")]
+        public string RecoveryCode { get; set; } = "";
+    }
+
+}

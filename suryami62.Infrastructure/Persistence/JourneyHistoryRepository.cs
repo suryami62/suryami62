@@ -1,0 +1,50 @@
+#region
+
+using Microsoft.EntityFrameworkCore;
+using suryami62.Application.Persistence;
+using suryami62.Data;
+using suryami62.Domain.Models;
+
+#endregion
+
+namespace suryami62.Infrastructure.Persistence;
+
+public sealed class JourneyHistoryRepository(ApplicationDbContext context) : IJourneyHistoryRepository
+{
+    public Task<List<JourneyHistory>> GetBySectionAsync(JourneySection section)
+    {
+        return context.JourneyHistories
+            .AsNoTracking()
+            .Where(item => item.Section == section)
+            .OrderBy(item => item.DisplayOrder)
+            .ThenBy(item => item.Id)
+            .ToListAsync();
+    }
+
+    public async Task<JourneyHistory> CreateAsync(JourneyHistory item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        var maxOrder = await context.JourneyHistories
+            .Where(existing => existing.Section == item.Section)
+            .Select(existing => (int?)existing.DisplayOrder)
+            .MaxAsync()
+            .ConfigureAwait(false);
+
+        item.DisplayOrder = (maxOrder ?? 0) + 1;
+
+        context.JourneyHistories.Add(item);
+        await context.SaveChangesAsync().ConfigureAwait(false);
+
+        return item;
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var item = await context.JourneyHistories.FindAsync(id).ConfigureAwait(false);
+        if (item is null) return;
+
+        context.JourneyHistories.Remove(item);
+        await context.SaveChangesAsync().ConfigureAwait(false);
+    }
+}

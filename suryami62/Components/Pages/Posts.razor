@@ -1,0 +1,110 @@
+@page "/posts"
+@using suryami62.Domain.Models
+@using suryami62.Services
+@inject IBlogPostService BlogPostService
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+
+<PageTitle>My Tech Writings | suryami62</PageTitle>
+
+<!-- Meta Section -->
+<HeadContent>
+    <MetaOpenGraphCard Title="My Tech Writings | suryami62"
+                       Description="In-depth tutorials and insights from a .NET Developer and Physics Teacher."
+                       Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
+                       Url="@NavigationManager.Uri"/>
+</HeadContent>
+
+<div class="flex flex-col gap-12 py-8">
+    <!-- Header Section -->
+    <PageHeader Title="My Tech" Highlight="Writings">
+        <ChildContent>
+            In-depth tutorials and insights from a
+            <span class="underline decoration-4">.NET Developer</span> and
+            <span class="underline decoration-4">Physics Teacher</span>.
+        </ChildContent>
+    </PageHeader>
+
+    <!-- Search Section -->
+    <section>
+        <SearchForm @bind-Value="_localSearchTerm" OnSearch="HandleSearch"/>
+    </section>
+
+    <!-- Blog Posts Grid -->
+    <section>
+        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            @if (_posts == null)
+            {
+                <div class="col-span-full text-center">Loading posts...</div>
+            }
+            else if (!_posts.Any())
+            {
+                <div class="col-span-full text-center">No posts found yet. Check back soon!</div>
+            }
+            else
+            {
+                @foreach (var post in _posts)
+                {
+                    <PostCard Label="@post.Label" Date="@post.Date.ToString("MMM dd, yyyy")" Title="@post.Title"
+                              Href="@($"/posts/{post.Slug}")" Summary="@post.Summary"
+                              ImageUrl="@post.ImageUrl?.ToString()"/>
+                }
+            }
+        </div>
+
+        @if (_total > _pageSize)
+        {
+            <div class="mt-12 flex justify-center gap-4">
+                <button disabled="@(_page == 1)" @onclick="() => ChangePage(_page - 1)"
+                        class="neo-pagination-btn bg-white dark:bg-black">
+                    PREV
+                </button>
+                <div class="flex items-center text-2xl font-black">
+                    @_page / @(Math.Ceiling((double)_total / _pageSize))
+                </div>
+                <button disabled="@(_page * _pageSize >= _total)" @onclick="() => ChangePage(_page + 1)"
+                        class="neo-pagination-btn bg-lime-400 dark:bg-lime-500">
+                    NEXT
+                </button>
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "q")] private string? SearchQuery { get; set; }
+
+    private List<BlogPost>? _posts;
+    private int _page = 1;
+    private readonly int _pageSize = 6;
+    private int _total;
+    private string? _localSearchTerm;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _localSearchTerm = SearchQuery;
+        await LoadPosts();
+    }
+
+    private async Task LoadPosts()
+    {
+        var (items, total) = await BlogPostService.GetPostsAsync(true, (_page - 1) * _pageSize, _pageSize, SearchQuery);
+        _posts = items;
+        _total = total;
+    }
+
+    private async Task ChangePage(int newPage)
+    {
+        _page = newPage;
+        await LoadPosts();
+    }
+
+    private void HandleSearch(string? term)
+    {
+        _localSearchTerm = term;
+        _page = 1; // Reset to first page on new search
+        var uri = NavigationManager.GetUriWithQueryParameter("q", string.IsNullOrWhiteSpace(_localSearchTerm) ? null : _localSearchTerm);
+        NavigationManager.NavigateTo(uri);
+    }
+
+}

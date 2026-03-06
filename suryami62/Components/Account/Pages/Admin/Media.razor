@@ -1,0 +1,200 @@
+@page "/Account/Admin/Media"
+@using Microsoft.AspNetCore.Authorization
+@using suryami62.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IMediaService MediaService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<PageTitle>Media Manager - Surya Ramadhan</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <PageHeader Title="Media" Highlight="Manager"/>
+
+    <div class="neo-card p-8">
+        <h3 class="text-2xl font-black uppercase mb-6">Upload New Image</h3>
+        <div class="flex flex-col gap-4">
+            <InputFile OnChange="HandleFileSelected"
+                       class="@FileInputClass"/>
+
+            @if (_isUploading)
+            {
+                <div class="flex items-center gap-2">
+                    <div
+                        class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin dark:border-white dark:border-t-transparent"></div>
+                    <p class="font-bold text-blue-600">Uploading...</p>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_statusMessage))
+            {
+                <div class="@StatusMessageClass">
+                    <p class="font-bold">@_statusMessage</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        @if (_imageFiles == null)
+        {
+            <div class="col-span-full py-12 text-center">
+                <p class="text-xl font-bold animate-pulse">Loading gallery...</p>
+            </div>
+        }
+        else if (!_imageFiles.Any())
+        {
+            <div class="neo-card col-span-full border-dashed py-12 text-center">
+                <p class="text-gray-500 font-bold">No images uploaded yet.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var file in _imageFiles)
+            {
+                <div class="neo-card group relative overflow-hidden border-2">
+                    <div
+                        class="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden border-b-2 border-black dark:border-white">
+                        <img src="img/uploads/@file" alt="@file" loading="lazy"
+                             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"/>
+                    </div>
+                    <div class="p-3 flex flex-col gap-3">
+                        <p class="text-xs truncate font-bold" title="@file">@file</p>
+                        <div class="flex gap-2">
+                            <button @onclick="() => CopyToClipboard(file)"
+                                    class="@CopyUrlButtonClass">
+                                COPY URL
+                            </button>
+                            <button @onclick="() => ConfirmDelete(file)"
+                                    class="@DeleteButtonClass">
+                                DELETE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<ConfirmModal @ref="_confirmModal" Title="Delete Media"
+              Message="Are you sure you want to delete this image? This action cannot be undone."/>
+
+<script src="@Assets["js/utils.js"]"></script>
+
+@code {
+    private const string FileInputClass = "neo-input p-4 italic";
+    private const string CopyUrlButtonClass = "neo-button flex-1 bg-blue-400 px-2 py-1 text-[10px] text-black hover:bg-blue-500 dark:bg-blue-500";
+    private const string DeleteButtonClass = "neo-button-danger px-2 py-1 text-[10px]";
+
+    private string StatusMessageClass =>
+        $"neo-card p-4 {(_isError ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300" : "bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-300")}";
+
+    private List<string>? _imageFiles;
+    private bool _isUploading;
+    private string? _statusMessage;
+    private bool _isError;
+    private ConfirmModal? _confirmModal;
+    private const long MaxFileSize = 5120000; // 5MB
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadImagesAsync();
+    }
+
+    private async Task LoadImagesAsync()
+    {
+        _imageFiles = await MediaService.ListFilesAsync();
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        _isUploading = true;
+        _statusMessage = null;
+        _isError = false;
+
+        try
+        {
+            var file = e.File;
+
+            if (file.Size > MaxFileSize)
+            {
+                _statusMessage = "Error: File size exceeds 5MB limit.";
+                _isError = true;
+                return;
+            }
+
+            await using var stream = file.OpenReadStream(MaxFileSize);
+            var result = await MediaService.UploadFileAsync(file.Name, file.ContentType, stream);
+
+            if (result.Success)
+            {
+                _statusMessage = result.Message;
+                await LoadImagesAsync();
+            }
+            else
+            {
+                _statusMessage = $"Error: {result.Message}";
+                _isError = true;
+            }
+        }
+        catch (Exception)
+        {
+            _statusMessage = "Error: An unexpected error occurred during upload.";
+            _isError = true;
+        }
+        finally
+        {
+            _isUploading = false;
+        }
+    }
+
+    private async Task ConfirmDelete(string filename)
+    {
+        if (_confirmModal == null) return;
+
+        if (await _confirmModal.ShowAsync())
+        {
+            var success = await MediaService.DeleteFileAsync(filename);
+            if (success)
+            {
+                _statusMessage = $"Deleted {filename}";
+                _isError = false;
+                await LoadImagesAsync();
+            }
+            else
+            {
+                _statusMessage = $"Error: Could not delete {filename}";
+                _isError = true;
+            }
+        }
+    }
+
+    private async Task CopyToClipboard(string filename)
+    {
+        var relativeUrl = $"img/uploads/{filename}";
+        var absoluteUrl = NavigationManager.ToAbsoluteUri(relativeUrl).ToString();
+
+        try
+        {
+            var result = await JSRuntime.InvokeAsync<bool>("utils.copyTextToClipboard", absoluteUrl);
+            if (result)
+            {
+                _statusMessage = $"URL copied: {absoluteUrl}";
+                _isError = false;
+            }
+            else
+            {
+                _statusMessage = "Error: Failed to copy URL.";
+                _isError = true;
+            }
+        }
+        catch (Exception)
+        {
+            _statusMessage = "Error: JavaScript interop failed.";
+            _isError = true;
+        }
+    }
+
+}

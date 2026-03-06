@@ -1,7 +1,100 @@
 ﻿@page "/"
+@using suryami62.Domain.Models
+@using suryami62.Services
+@inject UserInfoSettingsStore UserInfoSettingsStore
+@inject IBlogPostService BlogPostService
+@inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
+<PageTitle>My Personal Blog | suryami62</PageTitle>
 
-<h1>Hello, world!</h1>
+<!-- Meta Section -->
+<HeadContent>
+    <MetaOpenGraphCard Title="My Personal Blog | suryami62"
+                       Description="Hi, I'm Surya Ramadhan. A .NET Developer and Physics Teacher sharing insights on minimal design, coding, and learning."
+                       Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
+                       Url="@NavigationManager.Uri"/>
+</HeadContent>
 
-Welcome to your new app.
+<div class="flex flex-col gap-12 py-8">
+    <!-- Header Section -->
+    <PageHeader Title="My Personal" Highlight="Blog">
+        <ChildContent>
+            Hi, I'm
+            <span class="underline decoration-4">
+                Surya Ramadhan
+            </span>. A .NET Developer and Physics Teacher
+            sharing insights on minimal design, coding, and learning.
+        </ChildContent>
+        <FooterContent>
+            @foreach (var social in Socials)
+            {
+                <SocialButton Href="@social.Href" IconClass="@social.IconClass"/>
+            }
+        </FooterContent>
+        <AsideContent>
+            <Avatar AvatarUrl="@Assets["img/photo.webp"]" Alt="Surya Ramadhan"/>
+        </AsideContent>
+    </PageHeader>
+
+    <!-- Latest Post Section -->
+    <section>
+        <div class="mb-12 flex items-end justify-between border-b-4 border-black pb-4 dark:border-white">
+            <h2 class="text-4xl font-black tracking-tighter uppercase md:text-6xl">Latest Writings</h2>
+            <a href="posts"
+               class="neo-inline-link hidden md:inline-flex">
+                View All Posts
+            </a>
+        </div>
+
+        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            @if (_posts == null)
+            {
+                <div class="col-span-full text-center">Loading posts...</div>
+            }
+            else if (!_posts.Any())
+            {
+                <div class="col-span-full text-center">No posts found yet. Check back soon!</div>
+            }
+            else
+            {
+                @foreach (var post in _posts)
+                {
+                    <PostCard Label="@post.Label" Date="@post.Date.ToString("MMM dd, yyyy")" Title="@post.Title"
+                              Href="@($"/posts/{post.Slug}")" Summary="@post.Summary"
+                              ImageUrl="@post.ImageUrl?.ToString()"/>
+                }
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+
+    private record Social(string Href, string IconClass);
+
+    private List<Social> Socials { get; set; } = [];
+
+    private List<BlogPost>? _posts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userInfo = await UserInfoSettingsStore.GetAsync();
+
+        Socials =
+        [
+            new Social(NormalizeHref(userInfo.Instagram), "fa-brands fa-instagram"),
+            new Social(NormalizeHref(userInfo.Linkedin), "fa-brands fa-linkedin"),
+            new Social(NormalizeHref(userInfo.Github), "fa-brands fa-github"),
+            new Social(NormalizeHref(userInfo.Email), "fa-regular fa-envelope")
+        ];
+
+        var (items, _) = await BlogPostService.GetPostsAsync(true, 0, 3);
+        _posts = items;
+    }
+
+    private static string NormalizeHref(string? href)
+    {
+        return string.IsNullOrWhiteSpace(href) ? "#" : href.Trim();
+    }
+
+}

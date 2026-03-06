@@ -1,0 +1,277 @@
+@page "/Account/Admin/Journey"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@using suryami62.Domain.Models
+@using suryami62.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IJourneyHistoryService JourneyHistoryService
+
+<PageTitle>Manage Journey - Surya Ramadhan</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <PageHeader Title="Manage" Highlight="Journey">
+        <ChildContent>
+            Add and remove experience and education history shown on the About page.
+        </ChildContent>
+    </PageHeader>
+
+    @if (!string.IsNullOrWhiteSpace(_statusMessage))
+    {
+        <div class="@StatusMessageClass">
+            @_statusMessage
+        </div>
+    }
+
+    <div class="grid gap-8 lg:grid-cols-2">
+        <section class="neo-card p-6">
+            <h2 class="text-2xl font-black uppercase">Experience</h2>
+
+            <EditForm Model="_experienceInput" OnValidSubmit="AddExperienceAsync" class="mt-6 flex flex-col gap-4">
+                <DataAnnotationsValidator/>
+
+                <InputText @bind-Value="_experienceInput.Title"
+                           class="@InputClass"
+                           placeholder="Title"/>
+                <ValidationMessage For="() => _experienceInput.Title"
+                                   class="text-sm font-bold text-red-600 dark:text-red-400"/>
+
+                <InputText @bind-Value="_experienceInput.Organization"
+                           class="@InputClass"
+                           placeholder="Organization"/>
+                <ValidationMessage For="() => _experienceInput.Organization"
+                                   class="text-sm font-bold text-red-600 dark:text-red-400"/>
+
+                <InputText @bind-Value="_experienceInput.Period"
+                           class="@InputClass"
+                           placeholder="Period"/>
+                <ValidationMessage For="() => _experienceInput.Period"
+                                   class="text-sm font-bold text-red-600 dark:text-red-400"/>
+
+                <InputTextArea @bind-Value="_experienceInput.Summary"
+                               class="@TextAreaInputClass"
+                               placeholder="Short summary"/>
+
+                <button type="submit"
+                        class="@AddExperienceButtonClass">
+                    ADD EXPERIENCE
+                </button>
+            </EditForm>
+
+            <div class="mt-8 flex flex-col gap-4">
+                @if (_journey.Experiences.Count == 0)
+                {
+                    <p class="font-bold text-neutral-500">No experience entries.</p>
+                }
+                else
+                {
+                    @foreach (var item in _journey.Experiences)
+                    {
+                        <article class="border-2 border-black p-4 dark:border-white">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 class="text-xl font-black">@item.Title</h3>
+                                    <p class="font-bold text-neutral-600 dark:text-neutral-400">@item.Organization</p>
+                                    <p class="text-sm font-mono">@item.Period</p>
+                                </div>
+                                <button @onclick="() => DeleteExperienceAsync(item.Id)"
+                                        class="@DeleteButtonClass">
+                                    DELETE
+                                </button>
+                            </div>
+                        </article>
+                    }
+                }
+            </div>
+        </section>
+
+        <section class="neo-card p-6">
+            <h2 class="text-2xl font-black uppercase">Education</h2>
+
+            <EditForm Model="_educationInput" OnValidSubmit="AddEducationAsync" class="mt-6 flex flex-col gap-4">
+                <DataAnnotationsValidator/>
+
+                <InputText @bind-Value="_educationInput.Title"
+                           class="@InputClass"
+                           placeholder="Degree / Title"/>
+                <ValidationMessage For="() => _educationInput.Title"
+                                   class="text-sm font-bold text-red-600 dark:text-red-400"/>
+
+                <InputText @bind-Value="_educationInput.Organization"
+                           class="@InputClass"
+                           placeholder="School / University"/>
+                <ValidationMessage For="() => _educationInput.Organization"
+                                   class="text-sm font-bold text-red-600 dark:text-red-400"/>
+
+                <InputText @bind-Value="_educationInput.Period"
+                           class="@InputClass"
+                           placeholder="Period"/>
+                <ValidationMessage For="() => _educationInput.Period"
+                                   class="text-sm font-bold text-red-600 dark:text-red-400"/>
+
+                <InputTextArea @bind-Value="_educationInput.Summary"
+                               class="@TextAreaInputClass"
+                               placeholder="Short summary"/>
+
+                <button type="submit"
+                        class="@AddEducationButtonClass">
+                    ADD EDUCATION
+                </button>
+            </EditForm>
+
+            <div class="mt-8 flex flex-col gap-4">
+                @if (_journey.Educations.Count == 0)
+                {
+                    <p class="font-bold text-neutral-500">No education entries.</p>
+                }
+                else
+                {
+                    @foreach (var item in _journey.Educations)
+                    {
+                        <article class="border-2 border-black p-4 dark:border-white">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 class="text-xl font-black">@item.Title</h3>
+                                    <p class="font-bold text-neutral-600 dark:text-neutral-400">@item.Organization</p>
+                                    <p class="text-sm font-mono">@item.Period</p>
+                                </div>
+                                <button @onclick="() => DeleteEducationAsync(item.Id)"
+                                        class="@DeleteButtonClass">
+                                    DELETE
+                                </button>
+                            </div>
+                        </article>
+                    }
+                }
+            </div>
+        </section>
+    </div>
+</div>
+
+@code {
+    private const string InputClass = "neo-input";
+    private const string TextAreaInputClass = "neo-input h-28";
+    private const string AddExperienceButtonClass = "neo-button bg-lime-400 px-4 py-3 text-black hover:bg-lime-500 dark:bg-lime-500";
+    private const string AddEducationButtonClass = "neo-button bg-orange-400 px-4 py-3 text-black hover:bg-orange-500 dark:bg-orange-500";
+    private const string DeleteButtonClass = "neo-button-danger px-3 py-1 text-xs";
+
+    private string StatusMessageClass =>
+        $"neo-card p-4 font-bold {(_isError ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" : "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300")}";
+
+    private JourneyViewModel _journey = new([], []);
+    private JourneyInputModel _experienceInput = new();
+    private JourneyInputModel _educationInput = new();
+    private string? _statusMessage;
+    private bool _isError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadJourneyAsync();
+    }
+
+    private async Task LoadJourneyAsync()
+    {
+        var experiences = await JourneyHistoryService.GetBySectionAsync(JourneySection.Experience);
+        var educations = await JourneyHistoryService.GetBySectionAsync(JourneySection.Education);
+
+        _journey = new JourneyViewModel(experiences, educations);
+    }
+
+    private async Task AddExperienceAsync()
+    {
+        try
+        {
+            var entry = new JourneyHistory
+            {
+                Section = JourneySection.Experience,
+                Title = _experienceInput.Title,
+                Organization = _experienceInput.Organization,
+                Period = _experienceInput.Period,
+                Summary = _experienceInput.Summary
+            };
+
+            await JourneyHistoryService.CreateAsync(entry);
+            _experienceInput = new JourneyInputModel();
+            await LoadJourneyAsync();
+            SetStatus(false, "Experience added successfully.");
+        }
+        catch (Exception)
+        {
+            SetStatus(true, "Failed to add experience.");
+        }
+    }
+
+    private async Task AddEducationAsync()
+    {
+        try
+        {
+            var entry = new JourneyHistory
+            {
+                Section = JourneySection.Education,
+                Title = _educationInput.Title,
+                Organization = _educationInput.Organization,
+                Period = _educationInput.Period,
+                Summary = _educationInput.Summary
+            };
+
+            await JourneyHistoryService.CreateAsync(entry);
+            _educationInput = new JourneyInputModel();
+            await LoadJourneyAsync();
+            SetStatus(false, "Education added successfully.");
+        }
+        catch (Exception)
+        {
+            SetStatus(true, "Failed to add education.");
+        }
+    }
+
+    private async Task DeleteExperienceAsync(int id)
+    {
+        try
+        {
+            await JourneyHistoryService.DeleteAsync(id);
+            await LoadJourneyAsync();
+            SetStatus(false, "Experience deleted successfully.");
+        }
+        catch (Exception)
+        {
+            SetStatus(true, "Failed to delete experience.");
+        }
+    }
+
+    private async Task DeleteEducationAsync(int id)
+    {
+        try
+        {
+            await JourneyHistoryService.DeleteAsync(id);
+            await LoadJourneyAsync();
+            SetStatus(false, "Education deleted successfully.");
+        }
+        catch (Exception)
+        {
+            SetStatus(true, "Failed to delete education.");
+        }
+    }
+
+    private void SetStatus(bool isError, string message)
+    {
+        _isError = isError;
+        _statusMessage = message;
+    }
+
+    private sealed class JourneyInputModel
+    {
+        [Required] public string Title { get; set; } = string.Empty;
+
+        [Required] public string Organization { get; set; } = string.Empty;
+
+        [Required] public string Period { get; set; } = string.Empty;
+
+        public string Summary { get; set; } = string.Empty;
+    }
+
+    private sealed record JourneyViewModel(
+        IReadOnlyList<JourneyHistory> Experiences,
+        IReadOnlyList<JourneyHistory> Educations);
+
+}

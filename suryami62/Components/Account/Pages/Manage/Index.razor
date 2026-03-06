@@ -1,0 +1,183 @@
+﻿@page "/Account/Manage"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using suryami62.Data
+@using suryami62.Services
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
+@inject UserInfoSettingsStore UserInfoSettingsStore
+
+<PageTitle>Profile</PageTitle>
+
+<div class="flex flex-col gap-6">
+    <div>
+        <h3 class="text-3xl font-black uppercase tracking-tighter">Profile</h3>
+        <p class="mt-2 text-sm font-bold uppercase">Update your profile details.</p>
+    </div>
+
+    <StatusMessage/>
+
+    <EditForm Model="Input" FormName="userInfo" OnValidSubmit="OnValidSubmitAsync" method="post">
+        <DataAnnotationsValidator/>
+        <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
+        <div class="mt-4 flex flex-col gap-4 max-w-xl">
+            <div class="flex flex-col gap-2">
+                <label for="username" class="text-sm font-black uppercase tracking-widest">Username</label>
+                <input type="text" value="@username" id="username"
+                       class="@DisabledInputClass"
+                       placeholder="Choose your username." disabled/>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="Input.Instagram" class="text-sm font-black uppercase tracking-widest">Instagram</label>
+                <InputText @bind-Value="Input.Instagram" id="Input.Instagram"
+                           class="@InputClass"
+                           placeholder="https://instagram.com/username"/>
+                <ValidationMessage For="() => Input.Instagram"
+                                   class="@ValidationMessageClass"/>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="Input.Linkedin" class="text-sm font-black uppercase tracking-widest">LinkedIn</label>
+                <InputText @bind-Value="Input.Linkedin" id="Input.Linkedin"
+                           class="@InputClass"
+                           placeholder="https://linkedin.com/in/username"/>
+                <ValidationMessage For="() => Input.Linkedin"
+                                   class="@ValidationMessageClass"/>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="Input.Github" class="text-sm font-black uppercase tracking-widest">GitHub</label>
+                <InputText @bind-Value="Input.Github" id="Input.Github"
+                           class="@InputClass"
+                           placeholder="https://github.com/username"/>
+                <ValidationMessage For="() => Input.Github"
+                                   class="@ValidationMessageClass"/>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
+                <InputText @bind-Value="Input.Email" id="Input.Email"
+                           class="@InputClass"
+                           placeholder="mailto:user@domain.com"/>
+                <ValidationMessage For="() => Input.Email"
+                                   class="@ValidationMessageClass"/>
+            </div>
+            <button type="submit" disabled="@_isSubmitting"
+                    class="neo-button w-full text-center disabled:cursor-not-allowed disabled:opacity-50">
+                @(_isSubmitting ? "Saving..." : "Save")
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private const string InputClass = "neo-input";
+    private const string DisabledInputClass = "neo-input cursor-not-allowed bg-neutral-100 dark:bg-neutral-900";
+    private const string ValidationSummaryClass = "text-sm font-bold text-red-600 dark:text-red-400";
+    private const string ValidationMessageClass = "text-sm font-bold text-red-600 dark:text-red-400";
+
+    private ApplicationUser? user;
+    private string? username;
+    private bool _isSubmitting;
+
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new InputModel();
+
+        user = await UserManager.GetUserAsync(HttpContext.User);
+        if (user is null)
+        {
+            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+            return;
+        }
+
+        username = await UserManager.GetUserNameAsync(user);
+
+        var userInfo = await UserInfoSettingsStore.GetAsync();
+        Input.Instagram ??= userInfo.Instagram;
+        Input.Linkedin ??= userInfo.Linkedin;
+        Input.Github ??= userInfo.Github;
+        Input.Email ??= userInfo.Email;
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (_isSubmitting) return;
+        _isSubmitting = true;
+
+        try
+        {
+            if (user is null)
+            {
+                RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+                _isSubmitting = false;
+                return;
+            }
+
+            await UserInfoSettingsStore.SaveAsync(new UserInfoSettings(
+                Input.Instagram ?? string.Empty,
+                Input.Linkedin ?? string.Empty,
+                Input.Github ?? string.Empty,
+                Input.Email ?? string.Empty));
+
+            await SignInManager.RefreshSignInAsync(user);
+            RedirectManager.RedirectToCurrentPageWithStatus("Your user info has been updated", HttpContext);
+        }
+        catch
+        {
+            _isSubmitting = false;
+            throw;
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [WebUrl] [Display(Name = "Instagram")] public string? Instagram { get; set; }
+
+        [WebUrl] [Display(Name = "LinkedIn")] public string? Linkedin { get; set; }
+
+        [WebUrl] [Display(Name = "GitHub")] public string? Github { get; set; }
+
+        [WebOrMailtoUrl]
+        [Display(Name = "Email")]
+        public string? Email { get; set; }
+    }
+
+    private sealed class WebUrlAttribute : ValidationAttribute
+    {
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+        {
+            if (value is null) return ValidationResult.Success;
+            if (value is not string text) return new ValidationResult("Invalid value.");
+            if (string.IsNullOrWhiteSpace(text)) return ValidationResult.Success;
+
+            if (!Uri.TryCreate(text, UriKind.Absolute, out var uri))
+                return new ValidationResult("Must be a valid absolute URL.");
+
+            return uri.Scheme is "http" or "https"
+                ? ValidationResult.Success
+                : new ValidationResult("URL must start with http:// or https://");
+        }
+    }
+
+    private sealed class WebOrMailtoUrlAttribute : ValidationAttribute
+    {
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+        {
+            if (value is null) return ValidationResult.Success;
+            if (value is not string text) return new ValidationResult("Invalid value.");
+            if (string.IsNullOrWhiteSpace(text)) return ValidationResult.Success;
+
+            if (!Uri.TryCreate(text, UriKind.Absolute, out var uri))
+                return new ValidationResult("Must be a valid absolute URL.");
+
+            return uri.Scheme is "http" or "https" or "mailto"
+                ? ValidationResult.Success
+                : new ValidationResult("URL must start with http://, https://, or mailto:");
+        }
+    }
+
+}

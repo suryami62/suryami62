@@ -1,0 +1,117 @@
+@page "/about"
+@using Markdig
+@using suryami62.Domain.Models
+@using suryami62.Services
+@inject NavigationManager NavigationManager
+@inject IJourneyHistoryService JourneyHistoryService
+
+<PageTitle>My Personal Bio | suryami62</PageTitle>
+
+<!-- Meta Section -->
+<HeadContent>
+    <MetaOpenGraphCard Title="My Personal Bio | suryami62"
+                       Description="A .NET Developer and Physics Teacher bridging the gap between theory and code."
+                       Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
+                       Url="@NavigationManager.Uri"/>
+</HeadContent>
+
+<div class="flex flex-col gap-12 py-8">
+    <!-- Header Section -->
+    <PageHeader Title="My Personal" Highlight="Bio">
+        <ChildContent>
+            A <span class="underline decoration-4">.NET Developer</span> and
+            <span class="underline decoration-4">Physics Teacher</span>
+            bridging the gap between theory and code.
+        </ChildContent>
+    </PageHeader>
+
+    <!-- Role Section -->
+    <section class="grid gap-8 md:grid-cols-2">
+        <!-- Developer Role -->
+        <InfoCard Title="The Developer" IconClass="fa-solid fa-code">
+            <p class="text-lg leading-relaxed font-medium">
+                Specializing in <strong>.NET</strong> and <strong>C#</strong>,
+                I build robust systems with a focus on logical precision. My approach to coding is grounded in
+                analytical thinking by breaking down complex problems into efficient, executable solutions.
+            </p>
+        </InfoCard>
+
+        <!-- Teacher Role -->
+        <InfoCard Title="The Teacher" IconClass="fa-solid fa-chalkboard-user">
+            <p class="text-lg leading-relaxed font-medium">
+                With a background in <strong>Physics Education</strong>, I
+                have a passion for simplifying difficult concepts. Whether teaching students about energy sources or
+                mentoring peers in code, my goal is always clarity and understanding.
+            </p>
+        </InfoCard>
+    </section>
+
+    <!-- Experience & Education Section -->
+    <section>
+        <h2 class="mb-8 text-4xl font-black tracking-tighter uppercase decoration-4 underline-offset-4 md:text-6xl md:underline">
+            Journey
+        </h2>
+
+        <div class="grid gap-8 lg:grid-cols-2">
+            <!-- Experience -->
+            <ContentBlock Title="Experience">
+                <div class="flex flex-col gap-6">
+                    @foreach (var experience in _journey.Experiences)
+                    {
+                        <div>
+                            <h4 class="text-2xl font-bold">@experience.Title</h4>
+                            <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">@experience.Organization</p>
+                            <p class="mb-2 font-mono text-sm">@experience.Period</p>
+                            @if (!string.IsNullOrWhiteSpace(experience.Summary))
+                            {
+                                <div class="prose prose-sm max-w-none font-medium dark:prose-invert">
+                                    @((MarkupString)Markdown.ToHtml(experience.Summary, _pipeline))
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </ContentBlock>
+
+            <!-- Education -->
+            <ContentBlock Title="Education">
+                <div class="flex flex-col gap-6">
+                    @foreach (var education in _journey.Educations)
+                    {
+                        <div>
+                            <h4 class="text-2xl font-bold">@education.Title</h4>
+                            <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">@education.Organization</p>
+                            <p class="mb-2 font-mono text-sm">@education.Period</p>
+                            @if (!string.IsNullOrWhiteSpace(education.Summary))
+                            {
+                                <div class="prose prose-sm max-w-none font-medium dark:prose-invert">
+                                    @((MarkupString)Markdown.ToHtml(education.Summary, _pipeline))
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </ContentBlock>
+        </div>
+    </section>
+</div>
+
+@code {
+    private JourneyViewModel _journey = new([], []);
+
+    private readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var experiences = await JourneyHistoryService.GetBySectionAsync(JourneySection.Experience);
+        var educations = await JourneyHistoryService.GetBySectionAsync(JourneySection.Education);
+        _journey = new JourneyViewModel(experiences, educations);
+    }
+
+    private sealed record JourneyViewModel(
+        IReadOnlyList<JourneyHistory> Experiences,
+        IReadOnlyList<JourneyHistory> Educations);
+
+}
