@@ -1,0 +1,133 @@
+@page "/Account/Admin"
+@using Microsoft.AspNetCore.Authorization
+@using suryami62.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IBlogPostService BlogPostService
+@inject IProjectService ProjectService
+@inject ApplicationSettingsStore ApplicationSettingsStore
+
+<PageTitle>Admin Dashboard - Surya Ramadhan</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <PageHeader Title="Admin" Highlight="Dashboard">
+        <ChildContent>
+            Manage your blog posts, projects, and other content.
+        </ChildContent>
+    </PageHeader>
+
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <InfoCard Title="System" IconClass="fas fa-server">
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <span>Registration:</span>
+                    <button @onclick="ToggleRegistration"
+                            class="@RegistrationButtonClass">
+                        @(_registrationEnabled ? "ENABLED" : "DISABLED")
+                    </button>
+                </div>
+                <p class="text-xs text-neutral-500">Enable or disable new user registration.</p>
+            </div>
+        </InfoCard>
+
+        <InfoCard Title="Posts" IconClass="fas fa-newspaper">
+            <div class="flex flex-col gap-4">
+                <p>Total posts: @(_postCount)</p>
+                <a href="/Account/Admin/Posts"
+                   class="@PostsButtonClass">
+                    MANAGE POSTS
+                </a>
+            </div>
+        </InfoCard>
+
+        <InfoCard Title="Projects" IconClass="fas fa-project-diagram">
+            <div class="flex flex-col gap-4">
+                <p>Total projects: @(_projectCount)</p>
+                <a href="/Account/Admin/Projects"
+                   class="@ProjectsButtonClass">
+                    MANAGE PROJECTS
+                </a>
+            </div>
+        </InfoCard>
+
+        <InfoCard Title="Media" IconClass="fas fa-images">
+            <div class="flex flex-col gap-4">
+                <p>Manage images and assets.</p>
+                <a href="/Account/Admin/Media"
+                   class="@MediaButtonClass">
+                    MEDIA GALLERY
+                </a>
+            </div>
+        </InfoCard>
+
+        <InfoCard Title="Journey" IconClass="fas fa-user-graduate">
+            <div class="flex flex-col gap-4">
+                <p>Manage your experience and education history.</p>
+                <a href="/Account/Admin/Journey"
+                   class="@JourneyButtonClass">
+                    MANAGE JOURNEY
+                </a>
+            </div>
+        </InfoCard>
+
+        <InfoCard Title="Settings" IconClass="fas fa-cog">
+            <div class="flex flex-col gap-4">
+                <p>Manage your site settings and profile.</p>
+                <a href="/Account/Manage"
+                   class="@SettingsButtonClass">
+                    SITE SETTINGS
+                </a>
+            </div>
+        </InfoCard>
+
+        <InfoCard Title="Logout" IconClass="fas fa-sign-out-alt">
+            <div class="flex flex-col gap-4">
+                <p>Sign out of your account.</p>
+                <form action="/Account/Logout" method="post">
+                    <AntiforgeryToken/>
+                    <input type="hidden" name="ReturnUrl" value=""/>
+                    <button type="submit"
+                            class="@LogoutButtonClass">
+                        LOGOUT
+                    </button>
+                </form>
+            </div>
+        </InfoCard>
+    </div>
+</div>
+
+@code {
+
+    private string RegistrationButtonClass =>
+        $"neo-button px-3 py-1 text-sm {(_registrationEnabled ? "bg-green-400 text-black hover:bg-green-500" : "bg-red-500 text-white hover:bg-red-600")}";
+
+    private const string PostsButtonClass = "neo-button bg-[#A3E635] px-4 py-2 text-black hover:bg-lime-400 dark:bg-lime-500";
+    private const string ProjectsButtonClass = "neo-button bg-[#FB923C] px-4 py-2 text-black hover:bg-orange-300 dark:bg-orange-400";
+    private const string MediaButtonClass = "neo-button bg-[#A855F7] px-4 py-2 text-white hover:bg-purple-600 dark:bg-purple-500";
+    private const string JourneyButtonClass = "neo-button bg-[#60A5FA] px-4 py-2 text-black hover:bg-blue-500 dark:bg-blue-400";
+    private const string SettingsButtonClass = "neo-button bg-[#60A5FA] px-4 py-2 text-black hover:bg-blue-500 dark:bg-blue-400";
+    private const string LogoutButtonClass = "neo-button-danger w-full px-4 py-2";
+
+    private int _postCount;
+    private int _projectCount;
+    private bool _registrationEnabled;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var (_, postTotal) = await BlogPostService.GetPostsAsync(false, take: 0);
+        _postCount = postTotal;
+
+        var (_, projectTotal) = await ProjectService.GetProjectsAsync(take: 0);
+        _projectCount = projectTotal;
+
+        var settings = await ApplicationSettingsStore.GetAsync();
+        _registrationEnabled = settings.RegistrationEnabled;
+    }
+
+    private async Task ToggleRegistration()
+    {
+        _registrationEnabled = !_registrationEnabled;
+        await ApplicationSettingsStore.SetRegistrationEnabledAsync(_registrationEnabled);
+    }
+
+}

@@ -1,0 +1,50 @@
+﻿<ul class="flex flex-row flex-wrap justify-center gap-2 text-sm font-black uppercase lg:flex-col">
+    <li>
+        <NavLink
+            class="@NavLinkClass"
+            ActiveClass="@ActiveNavClass"
+            href="Account/Manage" Match="NavLinkMatch.All">Profile
+        </NavLink>
+    </li>
+    <li>
+        <NavLink
+            class="@NavLinkClass"
+            ActiveClass="@ActiveNavClass"
+            href="Account/Manage/Email">Email
+        </NavLink>
+    </li>
+    <li>
+        <NavLink
+            class="@NavLinkClass"
+            ActiveClass="@ActiveNavClass"
+            href="Account/Manage/ChangePassword">Password
+        </NavLink>
+    </li>
+    <li>
+        <NavLink
+            class="@NavLinkClass"
+            ActiveClass="@ActiveNavClass"
+            href="Account/Manage/TwoFactorAuthentication">Two-factor authentication
+        </NavLink>
+    </li>
+    <li>
+        <NavLink
+            class="@NavLinkClass"
+            ActiveClass="@ActiveNavClass"
+            href="Account/Manage/SeoFiles">SEO Files
+        </NavLink>
+    </li>
+    <li>
+        <NavLink
+            class="@NavLinkClass"
+            ActiveClass="@ActiveNavClass"
+            href="Account/Manage/PersonalData">Personal data
+        </NavLink>
+    </li>
+</ul>
+
+@code {
+    private const string NavLinkClass = "block border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800";
+    private const string ActiveNavClass = "!bg-black !text-white !shadow-none translate-x-1 translate-y-1 dark:!bg-white dark:!text-black dark:!shadow-none";
+
+}

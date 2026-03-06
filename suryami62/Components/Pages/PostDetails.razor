@@ -1,0 +1,100 @@
+﻿@page "/posts/{Slug}"
+@using Markdig
+@using suryami62.Domain.Models
+@using suryami62.Services
+@inject IBlogPostService BlogPostService
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(_post?.Title is { Length: > 0 } title ? $"{title} | suryami62" : "Post | suryami62")</PageTitle>
+
+<!-- Meta Section -->
+<HeadContent>
+    <MetaOpenGraphCard Title="@(_post?.Title is { Length: > 0 } title ? $"{title} | suryami62" : "Post | suryami62")"
+                       Description="@(_post?.Summary ?? string.Empty)"
+                       Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
+                       Url="@NavigationManager.Uri"/>
+</HeadContent>
+
+<div class="flex flex-col gap-8 py-8">
+    <div>
+        <a href="/posts"
+           class="neo-inline-link">
+            <i class="fa-solid fa-arrow-left"></i>
+            Back
+        </a>
+    </div>
+
+    @if (!_isLoaded)
+    {
+        <div class="text-center text-xl font-bold">Loading post...</div>
+    }
+    else if (_post is null)
+    {
+        <div class="neo-card p-6 font-bold">
+            <h1 class="mb-2 text-3xl font-black uppercase">Post not found</h1>
+            <p class="text-lg">Post not found or not yet published.</p>
+        </div>
+    }
+    else
+    {
+        <article class="mx-auto w-full max-w-4xl">
+            <header class="mb-8 border-b-4 border-black pb-6 dark:border-white">
+                <div class="mb-4 flex flex-wrap items-center gap-4">
+					<span class="neo-pill">
+						@_post.Label
+					</span>
+                    <span class="font-mono font-bold">@_post.Date.ToString("MMM dd, yyyy")</span>
+                </div>
+
+                <h1 class="text-4xl font-black tracking-tighter uppercase md:text-6xl">@_post.Title</h1>
+
+                @if (!string.IsNullOrWhiteSpace(_post.Summary))
+                {
+                    <p class="mt-4 text-xl font-bold text-gray-700 dark:text-gray-300">@_post.Summary</p>
+                }
+            </header>
+
+            @if (_post.ImageUrl is not null)
+            {
+                <div class="neo-card mb-8 p-2">
+                    <img src="@_post.ImageUrl" alt="@_post.Title" class="h-auto w-full" loading="lazy"/>
+                </div>
+            }
+
+            <div class="prose prose-lg max-w-none text-justify dark:prose-invert">
+                @((MarkupString)Markdown.ToHtml(_post.Content ?? string.Empty, _pipeline))
+            </div>
+        </article>
+    }
+</div>
+
+
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+
+    private BlogPost? _post;
+    private bool _isLoaded;
+
+    private readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoaded = false;
+        _post = null;
+
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            _isLoaded = true;
+            return;
+        }
+
+        var post = await BlogPostService.GetPostBySlugAsync(Slug);
+        _post = post is { IsPublished: true } ? post : null;
+        _isLoaded = true;
+    }
+
+}

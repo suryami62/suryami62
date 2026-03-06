@@ -1,7 +1,7 @@
 ﻿<script type="module" src="@Assets["Components/Layout/ReconnectModal.razor.js"]"></script>
 
-<dialog id="components-reconnect-modal" data-nosnippet>
-    <div class="components-reconnect-container">
+<dialog id="components-reconnect-modal" data-nosnippet class="neo-card mt-[20vh] w-[20rem] p-8">
+    <div class="components-reconnect-container text-center">
         <div class="components-rejoining-animation" aria-hidden="true">
             <div></div>
             <div></div>
@@ -15,13 +15,13 @@
         <p class="components-reconnect-failed-visible">
             Failed to rejoin.<br/>Please retry or reload the page.
         </p>
-        <button id="components-reconnect-button" class="components-reconnect-failed-visible">
+        <button id="components-reconnect-button" class="components-reconnect-failed-visible neo-button px-6 py-1">
             Retry
         </button>
         <p class="components-pause-visible">
             The session has been paused by the server.
         </p>
-        <button id="components-resume-button" class="components-pause-visible">
+        <button id="components-resume-button" class="components-pause-visible neo-button px-6 py-1">
             Resume
         </button>
         <p class="components-resume-failed-visible">

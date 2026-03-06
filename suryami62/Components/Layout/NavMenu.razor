@@ -1,29 +1,37 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">suryami62</a>
-    </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
+<header class="w-full border-b-4 border-black bg-white p-4 dark:border-white dark:bg-black">
+    <nav class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
+        <!-- Brand / Logo Area -->
+        <div
+            class="neo-frame -rotate-2 transform border-2 bg-black px-3 py-1 text-2xl font-black tracking-tighter text-white uppercase select-none dark:bg-white dark:text-black">
+            <Brand/>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+        <ul class="flex flex-wrap justify-center gap-4">
+            @foreach (var link in Links)
+            {
+                <li>
+                    <NavButton Href="@link.Href" Text="@link.Text"/>
+                </li>
+            }
+            <AuthorizeView>
+                <li>
+                    <NavButton Href="/Account/Admin" Text="admin"/>
+                </li>
+            </AuthorizeView>
+        </ul>
     </nav>
-</div>
+</header>
+
+@code {
+
+    private record NavItem(string Href, string Text);
+
+    private List<NavItem> Links { get; } =
+    [
+        new("", "home"),
+        new("posts", "posts"),
+        new("projects", "projects"),
+        new("about", "about")
+    ];
+
+}

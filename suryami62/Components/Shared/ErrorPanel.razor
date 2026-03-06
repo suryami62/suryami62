@@ -1,0 +1,19 @@
+<div
+    class="neo-frame p-6 md:p-10">
+
+    <!-- Title -->
+    @if (!string.IsNullOrWhiteSpace(Title))
+    {
+        <h3 class="mb-6 text-2xl font-black tracking-tighter uppercase">
+            @Title
+        </h3>
+    }
+
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

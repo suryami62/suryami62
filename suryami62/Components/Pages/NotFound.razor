@@ -1,5 +1,29 @@
 ﻿@page "/not-found"
 @layout MainLayout
 
-<h3>Not Found</h3>
-<p>Sorry, the content you are looking for does not exist.</p>
+<PageTitle>404: Lost in Space | suryami62</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <PageHeader Title="ERROR" Highlight="404">
+        <ChildContent>
+            Maximum Entropy: The page you are looking for has undergone radioactive decay or shifted into another
+            dimension.
+        </ChildContent>
+        <AsideContent>
+            <ErrorGlyph Symbol="?"/>
+        </AsideContent>
+    </PageHeader>
+
+    <div class="grid gap-12 lg:grid-cols-[1fr_2fr]">
+        <ErrorSummarySection
+            Title="Uncertainty Principle"
+            Description="According to Heisenberg, we know you are looking for something, but this file's position cannot be determined. It might be Quantum Tunneling to another directory."/>
+
+        <ErrorPanel Title="Still Lost in the Void?">
+            <p class="mb-6 font-bold text-neutral-600 dark:text-neutral-400">
+                Search the database to find content that hasn't collapsed into a black hole yet.
+            </p>
+            <SearchForm/>
+        </ErrorPanel>
+    </div>
+</div>

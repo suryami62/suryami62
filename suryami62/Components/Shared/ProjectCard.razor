@@ -1,0 +1,59 @@
+<article
+    class="neo-card flex h-full flex-col p-6">
+
+    @if (!string.IsNullOrEmpty(ImageUrl))
+    {
+        <div class="mb-6 overflow-hidden border-4 border-black bg-gray-100 dark:border-white">
+            <img src="@ImageUrl" alt="@Title" class="aspect-video w-full object-cover"/>
+        </div>
+    }
+
+    <!-- Title & Header -->
+    <div class="mb-4">
+        <h3 class="mb-2 text-3xl leading-none font-black uppercase">@Title</h3>
+        <div class="flex flex-wrap gap-2">
+            @foreach (var tag in Tags ?? [])
+            {
+                <span
+                    class="border-2 border-black px-2 py-1 text-xs font-bold uppercase dark:border-white">
+                    @tag
+                </span>
+            }
+        </div>
+    </div>
+
+    <!-- Description -->
+    <p class="mb-8 font-medium text-gray-700 dark:text-gray-300">@Description</p>
+
+    <!-- Links/Actions -->
+    <div class="mt-auto flex gap-4">
+        @if (!string.IsNullOrEmpty(RepoUrl))
+        {
+            <a href="@RepoUrl" target="_blank" rel="noopener noreferrer"
+               class="neo-button-inverse flex-1">
+                View Code
+            </a>
+        }
+        @if (!string.IsNullOrEmpty(DemoUrl))
+        {
+            <a href="@DemoUrl" target="_blank" rel="noopener noreferrer"
+               class="neo-button flex-1 px-4 py-3 text-center">
+                Live Demo
+            </a>
+        }
+    </div>
+</article>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+
+    [Parameter] public string? Description { get; set; }
+
+    [Parameter] public string[]? Tags { get; set; }
+
+    [Parameter] public string? RepoUrl { get; set; }
+
+    [Parameter] public string? DemoUrl { get; set; }
+
+    [Parameter] public string? ImageUrl { get; set; }
+}

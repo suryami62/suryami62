@@ -1,0 +1,11 @@
+﻿<NavLink
+    class="neo-button"
+    href="@Href">
+    @Text
+</NavLink>
+
+@code {
+    [Parameter] public string? Href { get; set; }
+
+    [Parameter] public string? Text { get; set; }
+}

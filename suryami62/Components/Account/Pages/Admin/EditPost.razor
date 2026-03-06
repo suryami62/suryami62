@@ -1,0 +1,210 @@
+@page "/Account/Admin/Posts/New"
+@page "/Account/Admin/Posts/Edit/{Id:int}"
+@using System.Text
+@using Microsoft.AspNetCore.Authorization
+@using suryami62.Domain.Models
+@using suryami62.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IBlogPostService BlogPostService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(Id == null ? "New Post" : "Edit Post") - Surya Ramadhan</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <PageHeader Title="@(Id == null ? "New" : "Edit")" Highlight="Post"/>
+
+    <EditForm Model="@_post" OnValidSubmit="SavePostAsync" FormName="edit-post-form"
+              class="neo-card flex flex-col gap-6 p-8">
+        <DataAnnotationsValidator/>
+        <ValidationSummary class="@ValidationSummaryClass"/>
+
+        <div class="grid gap-6 md:grid-cols-2">
+            <div class="flex flex-col gap-2">
+                <label class="text-xl font-black uppercase">Title</label>
+                <InputText @bind-Value="_post.Title" @oninput="OnTitleChanged"
+                           class="@InputClass"/>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-xl font-black uppercase">Slug</label>
+                <InputText @bind-Value="_post.Slug"
+                           class="@InputClass"/>
+            </div>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-2">
+            <div class="flex flex-col gap-2">
+                <label class="text-xl font-black uppercase">Label</label>
+                <InputText @bind-Value="_post.Label"
+                           class="@InputClass"/>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label class="text-xl font-black uppercase">Date</label>
+                <InputDate @bind-Value="_post.Date"
+                           class="@InputClass"/>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xl font-black uppercase">Image URL</label>
+            <InputText @bind-Value="_imageUrlText" placeholder="https://.../thumbnail.jpg"
+                       class="@InputClass"/>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xl font-black uppercase">Summary</label>
+            <InputTextArea @bind-Value="_post.Summary" rows="2"
+                           class="@InputClass"/>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <label class="text-xl font-black uppercase">Content</label>
+            <MarkdownEditor @bind-Value="_post.Content"/>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <label class="text-xl font-black uppercase">Published</label>
+            <InputCheckbox @bind-Value="_post.IsPublished"
+                           class="@CheckboxClass"/>
+        </div>
+
+        <div class="flex gap-4 mt-4">
+            <button type="submit" disabled="@_isSubmitting"
+                    class="@PrimaryButtonClass">
+                @(_isSubmitting ? "SAVING..." : "SAVE POST")
+            </button>
+            <a href="/Account/Admin/Posts"
+               class="@SecondaryButtonClass">
+                CANCEL
+            </a>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private const string InputClass = "neo-input";
+    private const string CheckboxClass = "h-6 w-6 border-2 border-black bg-white accent-black dark:border-white dark:bg-black dark:accent-white";
+    private const string ValidationSummaryClass = "mb-4 font-bold text-red-600 dark:text-red-400";
+    private const string PrimaryButtonClass = "neo-button bg-[#A3E635] px-8 py-3 text-xl text-black hover:bg-lime-400 disabled:opacity-50 dark:bg-lime-500 dark:text-black";
+    private const string SecondaryButtonClass = "neo-button bg-gray-200 px-8 py-3 text-xl text-black hover:bg-gray-300 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700";
+
+    [Parameter] public int? Id { get; set; }
+
+    private BlogPost _post = CreateNewPost();
+    private string? _imageUrlText;
+    private bool _isSubmitting;
+
+    private bool IsNewPost => Id is null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is null)
+        {
+            _imageUrlText = _post.ImageUrl?.ToString();
+            return;
+        }
+
+        var post = await BlogPostService.GetPostByIdAsync(Id.Value);
+        if (post is not null)
+        {
+            _post = post;
+        }
+
+        _imageUrlText = _post.ImageUrl?.ToString();
+    }
+
+    private static Uri? TryParseAbsoluteUri(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
+    }
+
+    private void OnTitleChanged(ChangeEventArgs e)
+    {
+        if (!IsNewPost)
+        {
+            return;
+        }
+
+        var title = e.Value?.ToString();
+        _post.Slug = CreateSlug(title);
+    }
+
+    private async Task SavePostAsync()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        _isSubmitting = true;
+
+        try
+        {
+            _post.ImageUrl = TryParseAbsoluteUri(_imageUrlText);
+
+            if (IsNewPost)
+            {
+                await BlogPostService.CreatePostAsync(_post);
+            }
+            else
+            {
+                await BlogPostService.UpdatePostAsync(_post);
+            }
+
+            NavigationManager.NavigateTo("/Account/Admin/Posts");
+        }
+        catch
+        {
+            // Intentionally swallow to keep UX simple (button re-enabled in finally).
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private static BlogPost CreateNewPost()
+    {
+        return new BlogPost { Date = DateTime.UtcNow };
+    }
+
+    private static string CreateSlug(string? title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder(title.Length);
+        var previousWasDash = false;
+
+        foreach (var c in title.Trim().ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(c))
+            {
+                builder.Append(c);
+                previousWasDash = false;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(c) || c is '-' or '_')
+            {
+                if (builder.Length > 0 && !previousWasDash)
+                {
+                    builder.Append('-');
+                    previousWasDash = true;
+                }
+            }
+        }
+
+        return builder.ToString().Trim('-');
+    }
+
+}

@@ -1,0 +1,62 @@
+@import "tailwindcss" source("../Components");
+
+@plugin "@tailwindcss/typography";
+
+@layer components {
+    .neo-frame {
+        @apply border-4 border-black shadow-[8px_8px_0px_0px_#000] dark:border-white dark:shadow-[8px_8px_0px_0px_#fff];
+    }
+
+    .neo-card {
+        @apply border-4 border-black bg-white shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff];
+    }
+
+    .neo-button {
+        @apply block translate-x-0 translate-y-0 border-2 border-black bg-white px-6 py-2 font-bold text-black uppercase shadow-[4px_4px_0px_0px_#000] transition-all hover:bg-neutral-300 active:translate-x-1 active:translate-y-1 active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_#fff] dark:hover:bg-neutral-700 dark:focus-visible:ring-white dark:focus-visible:ring-offset-black;
+    }
+
+    .neo-button-inverse {
+        @apply block translate-x-0 translate-y-0 border-2 border-white bg-black px-4 py-3 text-center font-bold text-white uppercase shadow-[4px_4px_0px_0px_#888] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 dark:border-black dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_#444] dark:hover:bg-neutral-200 dark:focus-visible:ring-white dark:focus-visible:ring-offset-black;
+    }
+
+    .neo-button-danger {
+        @apply border-2 border-black bg-red-400 px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 dark:border-white dark:text-black dark:focus-visible:ring-white dark:focus-visible:ring-offset-black;
+    }
+
+    .neo-input {
+        @apply w-full border-4 border-black bg-white px-4 py-3 font-bold placeholder-gray-500 shadow-[4px_4px_0px_0px_#000] transition-all outline-none focus:translate-x-1 focus:translate-y-1 focus:shadow-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 dark:border-white dark:bg-black dark:text-white dark:placeholder-gray-400 dark:shadow-[4px_4px_0px_0px_#fff] dark:focus-visible:ring-white dark:focus-visible:ring-offset-black;
+    }
+
+    .md-toolbar-btn {
+        @apply h-10 w-10 border-2 border-black transition-colors hover:bg-lime-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:hover:bg-lime-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 dark:focus-visible:ring-white dark:focus-visible:ring-offset-black;
+    }
+
+    .md-mode-btn {
+        @apply px-4 font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 dark:text-black dark:focus-visible:ring-white dark:focus-visible:ring-offset-black;
+    }
+
+    .neo-pill {
+        @apply bg-black px-3 py-1 text-sm font-bold text-white uppercase dark:bg-white dark:text-black;
+    }
+
+    .neo-inline-link {
+        @apply inline-flex items-center gap-2 text-xl font-bold uppercase underline decoration-4 underline-offset-4 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 dark:hover:text-neutral-400 dark:focus-visible:ring-white dark:focus-visible:ring-offset-black;
+    }
+
+    .neo-pagination-btn {
+        @apply border-4 border-black px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 dark:border-white dark:shadow-[4px_4px_0px_0px_#fff] dark:focus-visible:ring-white dark:focus-visible:ring-offset-black;
+    }
+
+    .neo-footer {
+        @apply border-t-4 border-black bg-neutral-100 p-8 text-center font-black tracking-widest uppercase dark:border-white dark:bg-neutral-900;
+    }
+}
+
+html,
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+h1:focus {
+    outline: none;
+}

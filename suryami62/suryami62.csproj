@@ -1,10 +1,43 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-suryami62-b0afe39a-c08c-4619-9a72-e6d71e843c7e</UserSecretsId>
         <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <AnalysisLevel>10.0</AnalysisLevel>
+        <AnalysisMode>All</AnalysisMode>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="HtmlSanitizer" Version="9.0.892"/>
+        <PackageReference Include="Markdig" Version="0.45.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.App.Internal.Assets" Version="10.0.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2"/>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="QRCoder" Version="1.7.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\suryami62.Domain\suryami62.Domain.csproj"/>
+        <ProjectReference Include="..\suryami62.Infrastructure\suryami62.Infrastructure.csproj"/>
+        <ProjectReference Include="..\suryami62.Application\suryami62.Application.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
+    </ItemGroup>
 
 </Project>

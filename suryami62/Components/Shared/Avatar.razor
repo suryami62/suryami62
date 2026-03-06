@@ -1,0 +1,10 @@
+<div class="relative mx-auto w-full max-w-70 md:mx-0 md:max-w-[320px]">
+    <img src="@AvatarUrl" alt="@Alt"
+         class="neo-frame aspect-square w-full object-cover"/>
+</div>
+
+@code {
+    [Parameter] public string? AvatarUrl { get; set; }
+
+    [Parameter] public string? Alt { get; set; }
+}

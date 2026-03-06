@@ -1,0 +1,37 @@
+<form @onsubmit="InvokeSearch" @onsubmit:preventDefault
+      class="mb-4 flex w-full max-w-xl flex-col items-stretch gap-4 sm:flex-row sm:items-center">
+
+    <!-- Search Input -->
+    <input type="text"
+           @bind:get="Value"
+           @bind:set="UpdateValue"
+           @bind:event="oninput"
+           class="neo-input"
+           placeholder="Search posts..."/>
+
+    <!-- Search Button -->
+    <button
+        type="submit"
+        class="neo-button border-4 px-6 py-3">
+        Search
+    </button>
+</form>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public EventCallback<string?> OnSearch { get; set; }
+
+    private async Task UpdateValue(string? newValue)
+    {
+        Value = newValue;
+        await ValueChanged.InvokeAsync(newValue);
+    }
+
+    private async Task InvokeSearch()
+    {
+        await OnSearch.InvokeAsync(Value);
+    }
+
+}
+

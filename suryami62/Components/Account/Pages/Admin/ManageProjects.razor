@@ -1,0 +1,152 @@
+@page "/Account/Admin/Projects"
+@using Microsoft.AspNetCore.Authorization
+@using suryami62.Domain.Models
+@using suryami62.Services
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject IProjectService ProjectService
+
+<PageTitle>Manage Projects - Surya Ramadhan</PageTitle>
+
+<div class="flex flex-col gap-12 py-8">
+    <div class="flex items-center justify-between">
+        <PageHeader Title="Manage" Highlight="Projects"/>
+        <a href="/Account/Admin/Projects/New"
+           class="@AddButtonClass">
+            ADD NEW PROJECT
+        </a>
+    </div>
+
+    <div class="neo-card overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-black text-white dark:bg-white dark:text-black">
+            <tr>
+                <th class="p-4 font-black uppercase">Order</th>
+                <th class="p-4 font-black uppercase">Title</th>
+                <th class="p-4 font-black uppercase">Tags</th>
+                <th class="p-4 font-black uppercase">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y-2 divide-black dark:divide-white">
+            @if (_projects == null)
+            {
+                <tr>
+                    <td colspan="4" class="p-4">Loading...</td>
+                </tr>
+            }
+            else if (!_projects.Any())
+            {
+                <tr>
+                    <td colspan="4" class="p-4">No projects found.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var project in _projects)
+                {
+                    <tr class="hover:bg-gray-100 dark:hover:bg-gray-900">
+                        <td class="p-4 font-bold">@project.DisplayOrder</td>
+                        <td class="p-4 font-bold">@project.Title</td>
+                        <td class="p-4">
+                            <div class="flex flex-wrap gap-1">
+                                @foreach (var tag in project.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <span
+                                        class="bg-gray-200 border border-black px-1 text-[10px] font-bold">@tag.Trim()</span>
+                                }
+                            </div>
+                        </td>
+                        <td class="p-4 flex gap-2">
+                            <a href="/Account/Admin/Projects/Edit/@project.Id"
+                               class="@EditButtonClass">EDIT</a>
+                            <button @onclick="() => DeleteProjectAsync(project.Id)"
+                                    disabled="@(_isDeleting == project.Id)"
+                                    class="@DeleteButtonClass">
+                                @(_isDeleting == project.Id ? "..." : "DELETE")
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+
+    @if (_total > _pageSize)
+    {
+        <div class="flex justify-center gap-4">
+            <button disabled="@(_page == 1)" @onclick="() => ChangePageAsync(_page - 1)"
+                    class="@PagerPrevButtonClass">
+                PREV
+            </button>
+            <div class="flex items-center text-2xl font-black">
+                @_page / @(Math.Ceiling((double)_total / _pageSize))
+            </div>
+            <button disabled="@(_page * _pageSize >= _total)" @onclick="() => ChangePageAsync(_page + 1)"
+                    class="@PagerNextButtonClass">
+                NEXT
+            </button>
+        </div>
+    }
+</div>
+
+<ConfirmModal @ref="_confirmModal" Title="Delete Project"
+              Message="Are you sure you want to delete this project? This action cannot be undone."/>
+
+@code {
+    private const string AddButtonClass = "neo-button bg-[#FB923C] px-6 py-3 text-xl text-black hover:bg-orange-300 dark:bg-orange-400";
+    private const string EditButtonClass = "neo-button bg-blue-400 px-3 py-1 text-sm text-black hover:bg-blue-500";
+    private const string DeleteButtonClass = "neo-button-danger px-3 py-1 text-sm disabled:opacity-50";
+    private const string PagerPrevButtonClass = "neo-button px-6 py-2 text-black disabled:opacity-50";
+    private const string PagerNextButtonClass = "neo-button bg-[#FB923C] px-6 py-2 text-black hover:bg-orange-300 disabled:opacity-50 dark:bg-orange-400";
+
+    private List<Project>? _projects;
+    private int _page = 1;
+    private readonly int _pageSize = 10;
+    private int _total;
+    private int? _isDeleting;
+    private ConfirmModal? _confirmModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProjectsAsync();
+    }
+
+    private async Task LoadProjectsAsync()
+    {
+        var (items, total) = await ProjectService.GetProjectsAsync((_page - 1) * _pageSize, _pageSize);
+        _projects = items;
+        _total = total;
+    }
+
+    private async Task ChangePageAsync(int newPage)
+    {
+        if (newPage < 1)
+        {
+            return;
+        }
+
+        _page = newPage;
+        await LoadProjectsAsync();
+    }
+
+    private async Task DeleteProjectAsync(int id)
+    {
+        if (_confirmModal == null) return;
+
+        if (await _confirmModal.ShowAsync())
+        {
+            _isDeleting = id;
+            try
+            {
+                await ProjectService.DeleteProjectAsync(id);
+                _projects?.RemoveAll(p => p.Id == id);
+            }
+            finally
+            {
+                _isDeleting = null;
+            }
+        }
+    }
+
+}

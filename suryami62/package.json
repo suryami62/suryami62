@@ -1,0 +1,14 @@
+{
+  "name": "suryami62",
+  "module": "index.ts",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.1",
+    "@tailwindcss/typography": "^0.5.19",
+    "tailwindcss": "^4.2.1"
+  },
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./Styles/app.css -o ./wwwroot/app.css"
+  },
+  "type": "module"
+}

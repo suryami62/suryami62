@@ -1,0 +1,50 @@
+@if (_isOpen)
+{
+    <div class="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div
+            class="neo-card w-full max-w-md p-8">
+            <h2 class="mb-4 text-3xl font-black tracking-tighter uppercase">@Title</h2>
+            <p class="mb-8 text-lg font-bold">@Message</p>
+
+            <div class="flex justify-end gap-4">
+                <button @onclick="Cancel"
+                        class="neo-button bg-gray-200 font-black dark:bg-gray-200 dark:text-black">
+                    CANCEL
+                </button>
+                <button @onclick="Confirm"
+                        class="neo-button-danger">
+                    CONFIRM
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _isOpen;
+    private TaskCompletionSource<bool>? _tcs;
+
+    [Parameter] public string Title { get; set; } = "Confirm Action";
+    [Parameter] public string Message { get; set; } = "Are you sure you want to proceed?";
+
+    public Task<bool> ShowAsync()
+    {
+        _isOpen = true;
+        _tcs = new TaskCompletionSource<bool>();
+        StateHasChanged();
+        return _tcs.Task;
+    }
+
+    private void Confirm()
+    {
+        _isOpen = false;
+        _tcs?.SetResult(true);
+    }
+
+    private void Cancel()
+    {
+        _isOpen = false;
+        _tcs?.SetResult(false);
+    }
+
+}

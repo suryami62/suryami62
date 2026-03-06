@@ -1,0 +1,192 @@
+﻿@page "/Account/Register"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using suryami62.Data
+@using suryami62.Services
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Register> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+@inject ApplicationSettingsStore SettingsStore
+
+<PageTitle>Register</PageTitle>
+
+<div class="flex flex-col gap-8 py-8">
+    <header class="border-b-4 border-black pb-6 dark:border-white">
+        <h1 class="text-4xl font-black tracking-tighter uppercase md:text-5xl">Register</h1>
+        <p class="mt-2 text-lg font-bold">Create a new account.</p>
+    </header>
+
+    <div class="grid gap-8">
+        <section class="neo-card p-6">
+            <StatusMessage Message="@Message"/>
+            @if (Input is not null)
+            {
+                <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="register">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
+                    <div class="mt-4 flex flex-col gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.UserName"
+                                   class="text-sm font-black uppercase tracking-widest">Username</label>
+                            <InputText @bind-Value="Input.UserName" id="Input.UserName"
+                                       class="@InputClass"
+                                       autocomplete="username" aria-required="true" placeholder="username"/>
+                            <ValidationMessage For="() => Input.UserName"
+                                               class="@ValidationMessageClass"/>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
+                            <InputText @bind-Value="Input.Email" id="Input.Email"
+                                       class="@InputClass"
+                                       autocomplete="email" aria-required="true" placeholder="name@example.com"/>
+                            <ValidationMessage For="() => Input.Email"
+                                               class="@ValidationMessageClass"/>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.Password"
+                                   class="text-sm font-black uppercase tracking-widest">Password</label>
+                            <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
+                                       class="@InputClass"
+                                       autocomplete="new-password" aria-required="true" placeholder="password"/>
+                            <ValidationMessage For="() => Input.Password"
+                                               class="@ValidationMessageClass"/>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="Input.ConfirmPassword" class="text-sm font-black uppercase tracking-widest">Confirm
+                                Password</label>
+                            <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword"
+                                       class="@InputClass"
+                                       autocomplete="new-password" aria-required="true" placeholder="password"/>
+                            <ValidationMessage For="() => Input.ConfirmPassword"
+                                               class="@ValidationMessageClass"/>
+                        </div>
+                        <button type="submit" disabled="@_isSubmitting"
+                                class="neo-button w-full text-center disabled:cursor-not-allowed disabled:opacity-50">
+                            @(_isSubmitting ? "Registering..." : "Register")
+                        </button>
+                    </div>
+                </EditForm>
+            }
+        </section>
+    </div>
+</div>
+
+@code {
+    private const string InputClass = "neo-input";
+    private const string ValidationSummaryClass = "text-sm font-bold text-red-600 dark:text-red-400";
+    private const string ValidationMessageClass = "text-sm font-bold text-red-600 dark:text-red-400";
+
+    private IEnumerable<IdentityError>? identityErrors;
+    private bool _isSubmitting;
+
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
+
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var settings = await SettingsStore.GetAsync();
+        if (!settings.RegistrationEnabled)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        Input ??= new InputModel();
+    }
+
+    public async Task RegisterUser(EditContext editContext)
+    {
+        if (_isSubmitting) return;
+
+        var settings = await SettingsStore.GetAsync();
+        if (!settings.RegistrationEnabled)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        _isSubmitting = true;
+
+        try
+        {
+            var user = CreateUser();
+
+            await UserStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
+            var emailStore = GetEmailStore();
+            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+            var result = await UserManager.CreateAsync(user, Input.Password);
+
+            if (!result.Succeeded)
+            {
+                identityErrors = result.Errors;
+                _isSubmitting = false;
+                return;
+            }
+
+            Logger.LogInformation("User created a new account with password.");
+
+            await SignInManager.SignInAsync(user, false);
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+        catch
+        {
+            _isSubmitting = false;
+            throw;
+        }
+    }
+
+    private ApplicationUser CreateUser()
+    {
+        try
+        {
+            return Activator.CreateInstance<ApplicationUser>();
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                                                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+        }
+    }
+
+    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    {
+        if (!UserManager.SupportsUserEmail)
+        {
+            throw new NotSupportedException("The default UI requires a user store with email support.");
+        }
+
+        return (IUserEmailStore<ApplicationUser>)UserStore;
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [StringLength(50, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+        [Display(Name = "Username")]
+        public string UserName { get; set; } = "";
+
+        [Required]
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+
+}

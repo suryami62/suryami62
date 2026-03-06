@@ -1,0 +1,10 @@
+<a href="@Href" target="_blank" rel="noopener noreferrer"
+   class="neo-button">
+    <i class="@IconClass fa-2x"></i>
+</a>
+
+@code {
+    [Parameter] public string? Href { get; set; }
+
+    [Parameter] public string? IconClass { get; set; }
+}
