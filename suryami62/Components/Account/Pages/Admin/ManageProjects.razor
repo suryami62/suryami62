@@ -12,13 +12,12 @@
     <div class="flex items-center justify-between">
         <PageHeader Title="Manage" Highlight="Projects"/>
         <a href="/Account/Admin/Projects/New"
-           class="border-2 border-black bg-[#FB923C] px-6 py-3 text-xl font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-orange-400 dark:shadow-[4px_4px_0px_0px_#fff]">
+           class="@AddButtonClass">
             ADD NEW PROJECT
         </a>
     </div>
 
-    <div
-        class="overflow-x-auto border-4 border-black bg-white shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+    <div class="neo-card overflow-x-auto">
         <table class="w-full text-left">
             <thead class="bg-black text-white dark:bg-white dark:text-black">
             <tr>
@@ -59,10 +58,10 @@
                         </td>
                         <td class="p-4 flex gap-2">
                             <a href="/Account/Admin/Projects/Edit/@project.Id"
-                               class="border-2 border-black bg-blue-400 px-3 py-1 font-bold shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000]">EDIT</a>
+                               class="@EditButtonClass">EDIT</a>
                             <button @onclick="() => DeleteProjectAsync(project.Id)"
                                     disabled="@(_isDeleting == project.Id)"
-                                    class="border-2 border-black bg-red-400 px-3 py-1 font-bold shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50">
+                                    class="@DeleteButtonClass">
                                 @(_isDeleting == project.Id ? "..." : "DELETE")
                             </button>
                         </td>
@@ -77,14 +76,14 @@
     {
         <div class="flex justify-center gap-4">
             <button disabled="@(_page == 1)" @onclick="() => ChangePageAsync(_page - 1)"
-                    class="border-4 border-black bg-white px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 dark:border-white dark:bg-black dark:shadow-[4px_4px_0px_0px_#fff]">
+                    class="@PagerPrevButtonClass">
                 PREV
             </button>
             <div class="flex items-center text-2xl font-black">
                 @_page / @(Math.Ceiling((double)_total / _pageSize))
             </div>
             <button disabled="@(_page * _pageSize >= _total)" @onclick="() => ChangePageAsync(_page + 1)"
-                    class="border-4 border-black bg-[#FB923C] px-6 py-2 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 dark:border-white dark:bg-orange-400 dark:shadow-[4px_4px_0px_0px_#fff]">
+                    class="@PagerNextButtonClass">
                 NEXT
             </button>
         </div>
@@ -95,6 +94,12 @@
               Message="Are you sure you want to delete this project? This action cannot be undone."/>
 
 @code {
+    private const string AddButtonClass = "neo-button bg-[#FB923C] px-6 py-3 text-xl text-black hover:bg-orange-300 dark:bg-orange-400";
+    private const string EditButtonClass = "neo-button bg-blue-400 px-3 py-1 text-sm text-black hover:bg-blue-500";
+    private const string DeleteButtonClass = "neo-button-danger px-3 py-1 text-sm disabled:opacity-50";
+    private const string PagerPrevButtonClass = "neo-button px-6 py-2 text-black disabled:opacity-50";
+    private const string PagerNextButtonClass = "neo-button bg-[#FB923C] px-6 py-2 text-black hover:bg-orange-300 disabled:opacity-50 dark:bg-orange-400";
+
     private List<Project>? _projects;
     private int _page = 1;
     private readonly int _pageSize = 10;

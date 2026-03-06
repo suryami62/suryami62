@@ -18,44 +18,42 @@
 
     @if (!string.IsNullOrWhiteSpace(_statusMessage))
     {
-        <div
-            class="border-2 border-black p-4 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:shadow-[4px_4px_0px_0px_#fff] @(_isError ? "bg-red-100 text-red-700" : "bg-lime-100 text-lime-700")">
+        <div class="@StatusMessageClass">
             @_statusMessage
         </div>
     }
 
     <div class="grid gap-8 lg:grid-cols-2">
-        <section
-            class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+        <section class="neo-card p-6">
             <h2 class="text-2xl font-black uppercase">Experience</h2>
 
             <EditForm Model="_experienceInput" OnValidSubmit="AddExperienceAsync" class="mt-6 flex flex-col gap-4">
                 <DataAnnotationsValidator/>
 
                 <InputText @bind-Value="_experienceInput.Title"
-                           class="w-full border-2 border-black px-4 py-3 font-bold dark:border-white dark:bg-neutral-900"
+                           class="@InputClass"
                            placeholder="Title"/>
                 <ValidationMessage For="() => _experienceInput.Title"
                                    class="text-sm font-bold text-red-600 dark:text-red-400"/>
 
                 <InputText @bind-Value="_experienceInput.Organization"
-                           class="w-full border-2 border-black px-4 py-3 font-bold dark:border-white dark:bg-neutral-900"
+                           class="@InputClass"
                            placeholder="Organization"/>
                 <ValidationMessage For="() => _experienceInput.Organization"
                                    class="text-sm font-bold text-red-600 dark:text-red-400"/>
 
                 <InputText @bind-Value="_experienceInput.Period"
-                           class="w-full border-2 border-black px-4 py-3 font-bold dark:border-white dark:bg-neutral-900"
+                           class="@InputClass"
                            placeholder="Period"/>
                 <ValidationMessage For="() => _experienceInput.Period"
                                    class="text-sm font-bold text-red-600 dark:text-red-400"/>
 
                 <InputTextArea @bind-Value="_experienceInput.Summary"
-                               class="h-28 w-full border-2 border-black px-4 py-3 font-bold dark:border-white dark:bg-neutral-900"
+                               class="@TextAreaInputClass"
                                placeholder="Short summary"/>
 
                 <button type="submit"
-                        class="border-2 border-black bg-lime-400 px-4 py-3 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-lime-500 dark:shadow-[4px_4px_0px_0px_#fff]">
+                        class="@AddExperienceButtonClass">
                     ADD EXPERIENCE
                 </button>
             </EditForm>
@@ -77,7 +75,7 @@
                                     <p class="text-sm font-mono">@item.Period</p>
                                 </div>
                                 <button @onclick="() => DeleteExperienceAsync(item.Id)"
-                                        class="border-2 border-black bg-red-400 px-3 py-1 text-xs font-black shadow-[2px_2px_0px_0px_#000] dark:border-white dark:shadow-[2px_2px_0px_0px_#fff]">
+                                        class="@DeleteButtonClass">
                                     DELETE
                                 </button>
                             </div>
@@ -87,37 +85,36 @@
             </div>
         </section>
 
-        <section
-            class="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+        <section class="neo-card p-6">
             <h2 class="text-2xl font-black uppercase">Education</h2>
 
             <EditForm Model="_educationInput" OnValidSubmit="AddEducationAsync" class="mt-6 flex flex-col gap-4">
                 <DataAnnotationsValidator/>
 
                 <InputText @bind-Value="_educationInput.Title"
-                           class="w-full border-2 border-black px-4 py-3 font-bold dark:border-white dark:bg-neutral-900"
+                           class="@InputClass"
                            placeholder="Degree / Title"/>
                 <ValidationMessage For="() => _educationInput.Title"
                                    class="text-sm font-bold text-red-600 dark:text-red-400"/>
 
                 <InputText @bind-Value="_educationInput.Organization"
-                           class="w-full border-2 border-black px-4 py-3 font-bold dark:border-white dark:bg-neutral-900"
+                           class="@InputClass"
                            placeholder="School / University"/>
                 <ValidationMessage For="() => _educationInput.Organization"
                                    class="text-sm font-bold text-red-600 dark:text-red-400"/>
 
                 <InputText @bind-Value="_educationInput.Period"
-                           class="w-full border-2 border-black px-4 py-3 font-bold dark:border-white dark:bg-neutral-900"
+                           class="@InputClass"
                            placeholder="Period"/>
                 <ValidationMessage For="() => _educationInput.Period"
                                    class="text-sm font-bold text-red-600 dark:text-red-400"/>
 
                 <InputTextArea @bind-Value="_educationInput.Summary"
-                               class="h-28 w-full border-2 border-black px-4 py-3 font-bold dark:border-white dark:bg-neutral-900"
+                               class="@TextAreaInputClass"
                                placeholder="Short summary"/>
 
                 <button type="submit"
-                        class="border-2 border-black bg-orange-400 px-4 py-3 font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-orange-500 dark:shadow-[4px_4px_0px_0px_#fff]">
+                        class="@AddEducationButtonClass">
                     ADD EDUCATION
                 </button>
             </EditForm>
@@ -139,7 +136,7 @@
                                     <p class="text-sm font-mono">@item.Period</p>
                                 </div>
                                 <button @onclick="() => DeleteEducationAsync(item.Id)"
-                                        class="border-2 border-black bg-red-400 px-3 py-1 text-xs font-black shadow-[2px_2px_0px_0px_#000] dark:border-white dark:shadow-[2px_2px_0px_0px_#fff]">
+                                        class="@DeleteButtonClass">
                                     DELETE
                                 </button>
                             </div>
@@ -152,6 +149,15 @@
 </div>
 
 @code {
+    private const string InputClass = "neo-input";
+    private const string TextAreaInputClass = "neo-input h-28";
+    private const string AddExperienceButtonClass = "neo-button bg-lime-400 px-4 py-3 text-black hover:bg-lime-500 dark:bg-lime-500";
+    private const string AddEducationButtonClass = "neo-button bg-orange-400 px-4 py-3 text-black hover:bg-orange-500 dark:bg-orange-500";
+    private const string DeleteButtonClass = "neo-button-danger px-3 py-1 text-xs";
+
+    private string StatusMessageClass =>
+        $"neo-card p-4 font-bold {(_isError ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" : "bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300")}";
+
     private JourneyViewModel _journey = new([], []);
     private JourneyInputModel _experienceInput = new();
     private JourneyInputModel _educationInput = new();

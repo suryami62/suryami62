@@ -14,63 +14,63 @@
     <PageHeader Title="@(Id == null ? "New" : "Edit")" Highlight="Project"/>
 
     <EditForm Model="@_project" OnValidSubmit="SaveProject" FormName="edit-project-form" method="post"
-              class="flex flex-col gap-6 border-4 border-black bg-white p-8 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:bg-black dark:shadow-[8px_8px_0px_0px_#fff]">
+              class="neo-card flex flex-col gap-6 p-8">
         <DataAnnotationsValidator/>
-        <ValidationSummary class="text-red-600 font-bold mb-4"/>
+        <ValidationSummary class="@ValidationSummaryClass"/>
 
         <div class="grid gap-6 md:grid-cols-2">
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Title</label>
                 <InputText @bind-Value="_project.Title"
-                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_#000] outline-none dark:border-white dark:bg-gray-900"/>
+                           class="@InputClass"/>
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Tags (comma separated)</label>
                 <InputText @bind-Value="_project.Tags" placeholder="e.g. .NET, Blazor, Tailwind"
-                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] outline-none dark:border-white dark:bg-gray-900"/>
+                           class="@InputClass"/>
             </div>
         </div>
 
         <div class="flex flex-col gap-2">
             <label class="text-xl font-black uppercase">Description</label>
             <InputTextArea @bind-Value="_project.Description" rows="3"
-                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
+                           class="@InputClass"/>
         </div>
 
         <div class="grid gap-6 md:grid-cols-2">
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Repo URL</label>
                 <InputText @bind-Value="_repoUrlText"
-                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
+                           class="@InputClass"/>
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Demo URL</label>
                 <InputText @bind-Value="_demoUrlText"
-                           class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
+                           class="@InputClass"/>
             </div>
         </div>
 
         <div class="flex flex-col gap-2">
             <label class="text-xl font-black uppercase">Image URL</label>
             <InputText @bind-Value="_imageUrlText" placeholder="https://.../project-screenshot.png"
-                       class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_#000] outline-none dark:border-white dark:bg-gray-900"/>
+                       class="@InputClass"/>
         </div>
 
         <div class="flex flex-col gap-2 w-32">
             <label class="text-xl font-black uppercase">Order</label>
             <InputNumber @bind-Value="_project.DisplayOrder"
-                         class="border-2 border-black p-3 font-bold shadow-[4px_4px_0px_0px_#000] dark:border-white dark:bg-gray-900"/>
+                         class="@InputClass"/>
         </div>
 
         <div class="flex gap-4 mt-4">
             <button type="submit" disabled="@_isSubmitting"
-                    class="border-2 border-black bg-[#FB923C] px-8 py-3 text-xl font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] disabled:opacity-50 dark:border-white dark:bg-orange-400 dark:shadow-[4px_4px_0px_0px_#fff]">
+                    class="@PrimaryButtonClass">
                 @(_isSubmitting ? "SAVING..." : "SAVE PROJECT")
             </button>
             <a href="/Account/Admin/Projects"
-               class="border-2 border-black bg-gray-200 px-8 py-3 text-xl font-black shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-gray-800 dark:shadow-[4px_4px_0px_0px_#fff]">
+               class="@SecondaryButtonClass">
                 CANCEL
             </a>
         </div>
@@ -78,6 +78,11 @@
 </div>
 
 @code {
+    private const string InputClass = "neo-input";
+    private const string ValidationSummaryClass = "mb-4 font-bold text-red-600 dark:text-red-400";
+    private const string PrimaryButtonClass = "neo-button bg-[#FB923C] px-8 py-3 text-xl text-black hover:bg-orange-300 disabled:opacity-50 dark:bg-orange-400 dark:text-black";
+    private const string SecondaryButtonClass = "neo-button bg-gray-200 px-8 py-3 text-xl text-black hover:bg-gray-300 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700";
+
     [Parameter] public int? Id { get; set; }
 
     [SupplyParameterFromForm] private Project _project { get; set; } = default!;

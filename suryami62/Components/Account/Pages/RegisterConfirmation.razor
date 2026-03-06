@@ -20,8 +20,7 @@
 
     @if (emailConfirmationLink is not null)
     {
-        <div
-            class="border-4 border-black bg-neutral-100 p-6 font-bold shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+        <div class="neo-card bg-neutral-100 p-6 font-bold dark:bg-neutral-900">
             This app does not currently have a real email sender registered. See
             <a class="underline decoration-4 underline-offset-4" href="https://aka.ms/aspaccountconf">these docs</a>
             for how to configure a real email sender.
@@ -32,9 +31,7 @@
     }
     else
     {
-        <div
-            class="border-4 border-black bg-neutral-100 p-6 font-bold shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-neutral-900 dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]"
-            role="alert">
+        <div class="neo-card bg-neutral-100 p-6 font-bold dark:bg-neutral-900" role="alert">
             Please check your email to confirm your account.
         </div>
     }

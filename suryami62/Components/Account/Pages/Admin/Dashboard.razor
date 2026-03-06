@@ -22,7 +22,7 @@
                 <div class="flex items-center justify-between">
                     <span>Registration:</span>
                     <button @onclick="ToggleRegistration"
-                            class="inline-block border-2 border-black @(_registrationEnabled ? "bg-green-400" : "bg-red-400") px-3 py-1 text-sm font-bold shadow-[2px_2px_0px_0px_#000] transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none dark:border-white dark:shadow-[2px_2px_0px_0px_#fff]">
+                            class="@RegistrationButtonClass">
                         @(_registrationEnabled ? "ENABLED" : "DISABLED")
                     </button>
                 </div>
@@ -34,7 +34,7 @@
             <div class="flex flex-col gap-4">
                 <p>Total posts: @(_postCount)</p>
                 <a href="/Account/Admin/Posts"
-                   class="inline-block border-2 border-black bg-[#A3E635] px-4 py-2 font-bold shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-lime-500 dark:shadow-[4px_4px_0px_0px_#fff]">
+                   class="@PostsButtonClass">
                     MANAGE POSTS
                 </a>
             </div>
@@ -44,7 +44,7 @@
             <div class="flex flex-col gap-4">
                 <p>Total projects: @(_projectCount)</p>
                 <a href="/Account/Admin/Projects"
-                   class="inline-block border-2 border-black bg-[#FB923C] px-4 py-2 font-bold shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-orange-400 dark:shadow-[4px_4px_0px_0px_#fff]">
+                   class="@ProjectsButtonClass">
                     MANAGE PROJECTS
                 </a>
             </div>
@@ -54,7 +54,7 @@
             <div class="flex flex-col gap-4">
                 <p>Manage images and assets.</p>
                 <a href="/Account/Admin/Media"
-                   class="inline-block border-2 border-black bg-[#A855F7] px-4 py-2 font-bold shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-purple-500 dark:shadow-[4px_4px_0px_0px_#fff]">
+                   class="@MediaButtonClass">
                     MEDIA GALLERY
                 </a>
             </div>
@@ -64,7 +64,7 @@
             <div class="flex flex-col gap-4">
                 <p>Manage your experience and education history.</p>
                 <a href="/Account/Admin/Journey"
-                   class="inline-block border-2 border-black bg-[#60A5FA] px-4 py-2 font-bold shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-blue-400 dark:shadow-[4px_4px_0px_0px_#fff]">
+                   class="@JourneyButtonClass">
                     MANAGE JOURNEY
                 </a>
             </div>
@@ -74,7 +74,7 @@
             <div class="flex flex-col gap-4">
                 <p>Manage your site settings and profile.</p>
                 <a href="/Account/Manage"
-                   class="inline-block border-2 border-black bg-[#60A5FA] px-4 py-2 font-bold shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-blue-400 dark:shadow-[4px_4px_0px_0px_#fff]">
+                   class="@SettingsButtonClass">
                     SITE SETTINGS
                 </a>
             </div>
@@ -87,7 +87,7 @@
                     <AntiforgeryToken/>
                     <input type="hidden" name="ReturnUrl" value=""/>
                     <button type="submit"
-                            class="w-full inline-block border-2 border-black bg-[#EF4444] px-4 py-2 font-bold shadow-[4px_4px_0px_0px_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] dark:border-white dark:bg-red-500 dark:shadow-[4px_4px_0px_0px_#fff]">
+                            class="@LogoutButtonClass">
                         LOGOUT
                     </button>
                 </form>
@@ -97,6 +97,17 @@
 </div>
 
 @code {
+
+    private string RegistrationButtonClass =>
+        $"neo-button px-3 py-1 text-sm {(_registrationEnabled ? "bg-green-400 text-black hover:bg-green-500" : "bg-red-500 text-white hover:bg-red-600")}";
+
+    private const string PostsButtonClass = "neo-button bg-[#A3E635] px-4 py-2 text-black hover:bg-lime-400 dark:bg-lime-500";
+    private const string ProjectsButtonClass = "neo-button bg-[#FB923C] px-4 py-2 text-black hover:bg-orange-300 dark:bg-orange-400";
+    private const string MediaButtonClass = "neo-button bg-[#A855F7] px-4 py-2 text-white hover:bg-purple-600 dark:bg-purple-500";
+    private const string JourneyButtonClass = "neo-button bg-[#60A5FA] px-4 py-2 text-black hover:bg-blue-500 dark:bg-blue-400";
+    private const string SettingsButtonClass = "neo-button bg-[#60A5FA] px-4 py-2 text-black hover:bg-blue-500 dark:bg-blue-400";
+    private const string LogoutButtonClass = "neo-button-danger w-full px-4 py-2";
+
     private int _postCount;
     private int _projectCount;
     private bool _registrationEnabled;
