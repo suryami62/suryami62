@@ -146,4 +146,28 @@ app.MapGet("/robots.txt", async (ISettingsRepository settingsRepository, HttpCon
     return Results.Text(sb.ToString(), "text/plain; charset=utf-8");
 });
 
+using (var scope = app.Services.CreateScope())
+{
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+        var logMigrationsApplied = LoggerMessage.Define(
+            LogLevel.Information,
+            new EventId(1001, nameof(Program)),
+            "Applied database migrations at startup.");
+        logMigrationsApplied(logger, null);
+    }
+    catch (Exception ex)
+    {
+        var logMigrationError = LoggerMessage.Define(
+            LogLevel.Error,
+            new EventId(1002, nameof(Program)),
+            "An error occurred while applying database migrations at startup.");
+        logMigrationError(logger, ex);
+        throw;
+    }
+}
+
 app.Run();
