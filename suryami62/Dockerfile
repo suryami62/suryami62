@@ -1,8 +1,19 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
+USER root
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
+
+# Install native dependency required by Npgsql for GSS/Kerberos auth negotiation.
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+	&& rm -rf /var/lib/apt/lists/*
+
+# Ensure runtime-writable directories exist for non-root user.
+RUN mkdir -p /home/app/.aspnet/DataProtection-Keys /app/wwwroot/img/uploads \
+	&& chown -R $APP_UID:0 /home/app/.aspnet /app/wwwroot
+
+USER $APP_UID
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
