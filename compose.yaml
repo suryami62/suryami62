@@ -16,7 +16,7 @@
             ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
         volumes:
             - ./uploads:/app/wwwroot/img/uploads
-            - ./dataprotection-keys:/home/app/.aspnet/DataProtection-Keys
+            - suryami62-dpkeys:/home/app/.aspnet/DataProtection-Keys
         networks:
             - backend
 
@@ -34,7 +34,7 @@
         networks:
             - backend
         healthcheck:
-            test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+            test: [ "CMD-SHELL", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"" ]
             interval: 10s
             timeout: 5s
             retries: 5
@@ -45,3 +45,4 @@ networks:
 
 volumes:
     suryami62-db:
+    suryami62-dpkeys:
