@@ -1,25 +1,47 @@
 ﻿services:
-    suryami62:
+    web:
         image: suryami62
         build:
             context: .
             dockerfile: suryami62/Dockerfile
-    
-    suryami62.application:
-        image: suryami62.application
-        build:
-            context: .
-            dockerfile: suryami62.Application/Dockerfile
-    
-    suryami62.domain:
-        image: suryami62.domain
-        build:
-            context: .
-            dockerfile: suryami62.Domain/Dockerfile
-    
-    suryami62.infrastructure:
-        image: suryami62.infrastructure
-        build:
-            context: .
-            dockerfile: suryami62.Infrastructure/Dockerfile
+        container_name: suryami62_web
+        restart: unless-stopped
+        ports:
+            - "8080:8080"
+            - "8081:8081"
+        depends_on:
+            db:
+                condition: service_healthy
+        environment:
+            ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+        volumes:
+            - ./uploads:/app/wwwroot/img/uploads
+            - ./dataprotection-keys:/home/app/.aspnet/DataProtection-Keys
+        networks:
+            - backend
 
+    db:
+        image: postgres:18-alpine
+        container_name: suryami62_db
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+            PGDATA: /var/lib/postgresql/data/pgdata
+        volumes:
+            - suryami62-db:/var/lib/postgresql/data
+        networks:
+            - backend
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+networks:
+    backend:
+        internal: true
+
+volumes:
+    suryami62-db:

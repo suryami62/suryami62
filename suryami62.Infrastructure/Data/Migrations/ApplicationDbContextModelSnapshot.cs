@@ -8,7 +8,7 @@ using suryami62.Data;
 
 #nullable disable
 
-namespace suryami62.Data.Migrations
+namespace suryami62.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
