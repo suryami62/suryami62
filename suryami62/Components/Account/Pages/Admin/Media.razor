@@ -56,7 +56,7 @@
                 <div class="neo-card group relative overflow-hidden border-2">
                     <div
                         class="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden border-b-2 border-black dark:border-white">
-                        <img src="img/uploads/@file" alt="@file" loading="lazy"
+                        <img src="/img/uploads/@ToEncodedUrlSegment(file)" alt="@file" loading="lazy"
                              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"/>
                     </div>
                     <div class="p-3 flex flex-col gap-3">
@@ -173,7 +173,7 @@
 
     private async Task CopyToClipboard(string filename)
     {
-        var relativeUrl = $"img/uploads/{filename}";
+        var relativeUrl = $"/img/uploads/{ToEncodedUrlSegment(filename)}";
         var absoluteUrl = NavigationManager.ToAbsoluteUri(relativeUrl).ToString();
 
         try
@@ -195,6 +195,11 @@
             _statusMessage = "Error: JavaScript interop failed.";
             _isError = true;
         }
+    }
+
+    private static string ToEncodedUrlSegment(string fileName)
+    {
+        return Uri.EscapeDataString(Uri.UnescapeDataString(fileName));
     }
 
 }

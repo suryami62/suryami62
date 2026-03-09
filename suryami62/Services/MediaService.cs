@@ -1,6 +1,7 @@
 #region
 
 using System.Globalization;
+using System.Text;
 
 #endregion
 
@@ -8,6 +9,8 @@ namespace suryami62.Services;
 
 internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMediaService
 {
+    private const int MaxSeoFileNameLength = 80;
+
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".jpg",
@@ -49,6 +52,9 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
             var extension = Path.GetExtension(safeFileName);
             if (!AllowedExtensions.Contains(extension))
                 return new UploadResult(false, $"Extension '{extension}' is not allowed.");
+
+            safeFileName = BuildUrlEncodedFileName(safeFileName);
+            if (string.IsNullOrWhiteSpace(safeFileName)) return new UploadResult(false, "Invalid file name.");
 
             if (!AllowedContentTypes.Contains(contentType))
                 return new UploadResult(false, $"Content type '{contentType}' is not allowed.");
@@ -145,5 +151,49 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         }
 
         return (true, string.Empty);
+    }
+
+    private static string BuildUrlEncodedFileName(string fileName)
+    {
+        var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName).Trim();
+        if (string.IsNullOrWhiteSpace(nameWithoutExtension)) return string.Empty;
+
+        var seoFriendlyName = BuildSeoFriendlyName(nameWithoutExtension);
+        if (seoFriendlyName.Length > MaxSeoFileNameLength)
+            seoFriendlyName = seoFriendlyName[..MaxSeoFileNameLength].Trim('-');
+        if (string.IsNullOrWhiteSpace(seoFriendlyName)) seoFriendlyName = "image";
+
+        var extension = Path.GetExtension(fileName);
+        var encodedName = Uri.EscapeDataString(seoFriendlyName);
+
+        return $"{encodedName}{extension}";
+    }
+
+    private static string BuildSeoFriendlyName(string input)
+    {
+        var normalized = input.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder(normalized.Length);
+        var lastWasDash = false;
+
+        foreach (var c in normalized)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (category == UnicodeCategory.NonSpacingMark) continue;
+
+            if (char.IsLetterOrDigit(c))
+            {
+                sb.Append(char.ToLowerInvariant(c));
+                lastWasDash = false;
+                continue;
+            }
+
+            if ((char.IsWhiteSpace(c) || c is '-' or '_') && !lastWasDash && sb.Length > 0)
+            {
+                sb.Append('-');
+                lastWasDash = true;
+            }
+        }
+
+        return sb.ToString().Trim('-');
     }
 }

@@ -15,7 +15,7 @@
         environment:
             ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
         volumes:
-            - ./uploads:/app/wwwroot/img/uploads
+            - ./uploads:/app/wwwroot/img/uploads:Z
             - suryami62-dpkeys:/home/app/.aspnet/DataProtection-Keys
         networks:
             - backend
