@@ -187,12 +187,11 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
                 continue;
             }
 
-            if (char.IsWhiteSpace(c) || c is '-' or '_')
-                if (!lastWasDash && sb.Length > 0)
-                {
-                    sb.Append('-');
-                    lastWasDash = true;
-                }
+            if ((char.IsWhiteSpace(c) || c is '-' or '_') && !lastWasDash && sb.Length > 0)
+            {
+                sb.Append('-');
+                lastWasDash = true;
+            }
         }
 
         return sb.ToString().Trim('-');

@@ -27,7 +27,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 RUN mkdir -p /home/app/.aspnet/DataProtection-Keys /app/wwwroot/img/uploads \
-	&& chown -R $APP_UID:0 /home/app/.aspnet /app/wwwroot/img/uploads \
+	&& chown -R "$APP_UID:0" /home/app/.aspnet /app/wwwroot/img/uploads \
 	&& chmod -R 775 /app/wwwroot/img/uploads
 USER $APP_UID
 ENTRYPOINT ["dotnet", "suryami62.dll"]
