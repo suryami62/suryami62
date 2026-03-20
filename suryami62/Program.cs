@@ -2,6 +2,7 @@
 
 using System.Globalization;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,6 +15,7 @@ using suryami62.Components;
 using suryami62.Components.Account;
 using suryami62.Data;
 using suryami62.Infrastructure;
+using suryami62.Security;
 using suryami62.Services;
 
 #endregion
@@ -35,6 +37,16 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => new IdentityRevali
 
 builder.Services.AddApplicationServices();
 builder.Services.AddScoped<IMediaService>(sp => new MediaService(sp.GetRequiredService<IWebHostEnvironment>()));
+builder.Services.AddScoped(_ => new MarkdownRenderer());
+
+builder.Services.AddSingleton<IAuthorizationHandler>(sp =>
+    new AdminAccessHandler(sp.GetRequiredService<IConfiguration>()));
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(AdminAccessPolicy.Name, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(AdminAccessRequirement.Instance);
+    });
 
 builder.Services.AddAuthentication(options => { options.DefaultScheme = IdentityConstants.ApplicationScheme; })
     .AddIdentityCookies();

@@ -1,16 +1,20 @@
-@page "/Account/Manage/SeoFiles"
+@page "/Account/Admin/SeoFiles"
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using suryami62.Data
 @using suryami62.Domain.Models
+@attribute [Authorize(Policy = AdminAccessPolicy.Name)]
+@rendermode InteractiveServer
 @inject ApplicationDbContext DbContext
 
 <PageTitle>SEO Files Configuration</PageTitle>
 
-<div class="flex flex-col gap-6">
-    <div>
-        <h3 class="text-3xl font-black tracking-tighter uppercase">SEO Files</h3>
-        <p class="mt-2 text-sm font-bold uppercase">Configure sitemap.xml and robots.txt.</p>
-    </div>
+<div class="flex flex-col gap-6 py-8">
+    <PageHeader Title="SEO" Highlight="Files">
+        <ChildContent>
+            Configure sitemap.xml and robots.txt for the public site.
+        </ChildContent>
+    </PageHeader>
 
     @if (showSuccessMessage)
     {
@@ -69,34 +73,29 @@
 
     private bool showSuccessMessage;
 
-    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
-
     [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
         Input ??= new InputModel();
 
-        if (HttpMethods.IsGet(HttpContext.Request.Method))
-        {
-            var baseUrlSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:BaseUrl");
-            var enableSitemapSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableSitemap");
-            var enableRobotsSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableRobots");
-            var robotsDisallowSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:RobotsDisallow");
+        var baseUrlSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:BaseUrl");
+        var enableSitemapSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableSitemap");
+        var enableRobotsSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableRobots");
+        var robotsDisallowSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:RobotsDisallow");
 
-            Input.BaseUrl = baseUrlSetting?.Value ?? "";
-            Input.EnableSitemap = enableSitemapSetting?.Value != "false";
-            Input.EnableRobots = enableRobotsSetting?.Value != "false";
-            Input.RobotsDisallow = robotsDisallowSetting?.Value ?? "/Account";
-        }
+        Input.BaseUrl = baseUrlSetting?.Value ?? string.Empty;
+        Input.EnableSitemap = enableSitemapSetting?.Value != "false";
+        Input.EnableRobots = enableRobotsSetting?.Value != "false";
+        Input.RobotsDisallow = robotsDisallowSetting?.Value ?? "/Account";
     }
 
     private async Task OnValidSubmitAsync()
     {
-        await SaveSettingAsync("Seo:BaseUrl", Input.BaseUrl ?? "");
+        await SaveSettingAsync("Seo:BaseUrl", Input.BaseUrl ?? string.Empty);
         await SaveSettingAsync("Seo:EnableSitemap", Input.EnableSitemap ? "true" : "false");
         await SaveSettingAsync("Seo:EnableRobots", Input.EnableRobots ? "true" : "false");
-        await SaveSettingAsync("Seo:RobotsDisallow", Input.RobotsDisallow ?? "");
+        await SaveSettingAsync("Seo:RobotsDisallow", Input.RobotsDisallow ?? string.Empty);
 
         await DbContext.SaveChangesAsync();
         showSuccessMessage = true;
