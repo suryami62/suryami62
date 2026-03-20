@@ -44,7 +44,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(AdminAccessPolicy.Name, policy =>
     {
         policy.RequireAuthenticatedUser();
-        policy.AddRequirements(new AdminAccessRequirement());
+        policy.AddRequirements(AdminAccessRequirement.Instance);
     });
 
 builder.Services.AddAuthentication(options => { options.DefaultScheme = IdentityConstants.ApplicationScheme; })

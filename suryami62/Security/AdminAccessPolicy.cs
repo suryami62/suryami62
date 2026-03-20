@@ -13,7 +13,14 @@ internal static class AdminAccessPolicy
     public const string SectionName = "Security:AdminAccess";
 }
 
-internal sealed class AdminAccessRequirement : IAuthorizationRequirement;
+internal sealed class AdminAccessRequirement : IAuthorizationRequirement
+{
+    private AdminAccessRequirement()
+    {
+    }
+
+    public static AdminAccessRequirement Instance { get; } = new();
+}
 
 internal sealed class AdminAccessHandler(IConfiguration configuration) : AuthorizationHandler<AdminAccessRequirement>
 {
