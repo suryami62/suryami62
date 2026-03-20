@@ -2,8 +2,7 @@
 @page "/Account/Admin/Projects/Edit/{Id:int}"
 @using Microsoft.AspNetCore.Authorization
 @using suryami62.Domain.Models
-@using suryami62.Services
-@attribute [Authorize]
+@attribute [Authorize(Policy = AdminAccessPolicy.Name)]
 @rendermode InteractiveServer
 @inject IProjectService ProjectService
 @inject NavigationManager NavigationManager

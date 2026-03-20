@@ -1,7 +1,6 @@
 @page "/Account/Admin/Media"
 @using Microsoft.AspNetCore.Authorization
-@using suryami62.Services
-@attribute [Authorize]
+@attribute [Authorize(Policy = AdminAccessPolicy.Name)]
 @rendermode InteractiveServer
 @inject IMediaService MediaService
 @inject IJSRuntime JSRuntime

@@ -13,7 +13,7 @@
                     <NavButton Href="@link.Href" Text="@link.Text"/>
                 </li>
             }
-            <AuthorizeView>
+            <AuthorizeView Policy="@AdminAccessPolicy.Name">
                 <li>
                     <NavButton Href="/Account/Admin" Text="admin"/>
                 </li>

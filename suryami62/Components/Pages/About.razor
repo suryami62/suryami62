@@ -1,9 +1,8 @@
 @page "/about"
-@using Markdig
 @using suryami62.Domain.Models
-@using suryami62.Services
 @inject NavigationManager NavigationManager
 @inject IJourneyHistoryService JourneyHistoryService
+@inject MarkdownRenderer MarkdownRenderer
 
 <PageTitle>My Personal Bio | suryami62</PageTitle>
 
@@ -65,7 +64,7 @@
                             @if (!string.IsNullOrWhiteSpace(experience.Summary))
                             {
                                 <div class="prose prose-sm max-w-none font-medium dark:prose-invert">
-                                    @((MarkupString)Markdown.ToHtml(experience.Summary, _pipeline))
+                                    @MarkdownRenderer.Render(experience.Summary)
                                 </div>
                             }
                         </div>
@@ -85,7 +84,7 @@
                             @if (!string.IsNullOrWhiteSpace(education.Summary))
                             {
                                 <div class="prose prose-sm max-w-none font-medium dark:prose-invert">
-                                    @((MarkupString)Markdown.ToHtml(education.Summary, _pipeline))
+                                    @MarkdownRenderer.Render(education.Summary)
                                 </div>
                             }
                         </div>
@@ -98,10 +97,6 @@
 
 @code {
     private JourneyViewModel _journey = new([], []);
-
-    private readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
-        .UseAdvancedExtensions()
-        .Build();
 
     protected override async Task OnInitializedAsync()
     {

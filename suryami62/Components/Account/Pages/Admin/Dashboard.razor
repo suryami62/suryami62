@@ -1,7 +1,6 @@
 @page "/Account/Admin"
 @using Microsoft.AspNetCore.Authorization
-@using suryami62.Services
-@attribute [Authorize]
+@attribute [Authorize(Policy = AdminAccessPolicy.Name)]
 @rendermode InteractiveServer
 @inject IBlogPostService BlogPostService
 @inject IProjectService ProjectService
@@ -70,12 +69,32 @@
             </div>
         </InfoCard>
 
-        <InfoCard Title="Settings" IconClass="fas fa-cog">
+        <InfoCard Title="Site Profile" IconClass="fas fa-address-card">
             <div class="flex flex-col gap-4">
-                <p>Manage your site settings and profile.</p>
+                <p>Manage global social links and public contact details.</p>
+                <a href="/Account/Admin/SiteProfile"
+                   class="@SiteProfileButtonClass">
+                    SITE PROFILE
+                </a>
+            </div>
+        </InfoCard>
+
+        <InfoCard Title="SEO" IconClass="fas fa-globe">
+            <div class="flex flex-col gap-4">
+                <p>Manage sitemap and robots configuration.</p>
+                <a href="/Account/Admin/SeoFiles"
+                   class="@SeoButtonClass">
+                    SEO FILES
+                </a>
+            </div>
+        </InfoCard>
+
+        <InfoCard Title="Account" IconClass="fas fa-user-cog">
+            <div class="flex flex-col gap-4">
+                <p>Manage your own account settings.</p>
                 <a href="/Account/Manage"
                    class="@SettingsButtonClass">
-                    SITE SETTINGS
+                    ACCOUNT SETTINGS
                 </a>
             </div>
         </InfoCard>
@@ -105,6 +124,8 @@
     private const string ProjectsButtonClass = "neo-button bg-[#FB923C] px-4 py-2 text-black hover:bg-orange-300 dark:bg-orange-400";
     private const string MediaButtonClass = "neo-button bg-[#A855F7] px-4 py-2 text-white hover:bg-purple-600 dark:bg-purple-500";
     private const string JourneyButtonClass = "neo-button bg-[#60A5FA] px-4 py-2 text-black hover:bg-blue-500 dark:bg-blue-400";
+    private const string SiteProfileButtonClass = "neo-button bg-[#FDE047] px-4 py-2 text-black hover:bg-yellow-300 dark:bg-yellow-400";
+    private const string SeoButtonClass = "neo-button bg-[#F472B6] px-4 py-2 text-black hover:bg-pink-400 dark:bg-pink-400";
     private const string SettingsButtonClass = "neo-button bg-[#60A5FA] px-4 py-2 text-black hover:bg-blue-500 dark:bg-blue-400";
     private const string LogoutButtonClass = "neo-button-danger w-full px-4 py-2";
 

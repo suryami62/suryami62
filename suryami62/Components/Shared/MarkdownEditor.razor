@@ -1,7 +1,6 @@
-@using Ganss.Xss
-@using Markdig
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
+@inject MarkdownRenderer MarkdownRenderer
 
 <div
     class="neo-card flex flex-col">
@@ -124,21 +123,7 @@
     private EditorMode Mode { get; set; } = EditorMode.Edit;
     private bool IsFormattingDisabled => Mode == EditorMode.Preview || _module is null;
 
-    private readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
-        .UseAdvancedExtensions()
-        .Build();
-
-    private readonly HtmlSanitizer _htmlSanitizer = new();
-
-    private MarkupString PreviewMarkup
-    {
-        get
-        {
-            var html = Markdown.ToHtml(Value ?? string.Empty, _pipeline);
-            var sanitizedHtml = _htmlSanitizer.Sanitize(html);
-            return new MarkupString(sanitizedHtml);
-        }
-    }
+    private MarkupString PreviewMarkup => MarkdownRenderer.Render(Value);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

@@ -1,7 +1,6 @@
 ﻿@page "/"
 @using suryami62.Domain.Models
-@using suryami62.Services
-@inject UserInfoSettingsStore UserInfoSettingsStore
+@inject SiteProfileSettingsStore SiteProfileSettingsStore
 @inject IBlogPostService BlogPostService
 @inject NavigationManager NavigationManager
 
@@ -78,7 +77,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var userInfo = await UserInfoSettingsStore.GetAsync();
+        var userInfo = await SiteProfileSettingsStore.GetAsync();
 
         Socials =
         [
