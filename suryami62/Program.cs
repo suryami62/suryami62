@@ -2,9 +2,11 @@
 
 using System.Globalization;
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -38,6 +40,42 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => new IdentityRevali
 builder.Services.AddApplicationServices();
 builder.Services.AddScoped<IMediaService>(sp => new MediaService(sp.GetRequiredService<IWebHostEnvironment>()));
 builder.Services.AddScoped(_ => new MarkdownRenderer());
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                               ForwardedHeaders.XForwardedProto |
+                               ForwardedHeaders.XForwardedHost;
+});
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "text/plain; charset=utf-8";
+        return new ValueTask(context.HttpContext.Response.WriteAsync(
+            "Too many authentication attempts. Please wait a minute and try again.",
+            cancellationToken));
+    };
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        if (!IsSensitiveAuthRequest(httpContext.Request)) return RateLimitPartition.GetNoLimiter("default");
+
+        var clientAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var partitionKey = $"{clientAddress}:{httpContext.Request.Path.Value}";
+
+        return RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey,
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+});
 
 builder.Services.AddSingleton<IAuthorizationHandler>(sp =>
     new AdminAccessHandler(sp.GetRequiredService<IConfiguration>()));
@@ -60,7 +98,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddInfrastructureServices();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddIdentityCore<ApplicationUser>(options => { options.SignIn.RequireConfirmedAccount = false; })
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+        options.Lockout.AllowedForNewUsers = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
@@ -81,8 +125,25 @@ else
     app.UseHsts();
 }
 
+app.UseForwardedHeaders();
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        var headers = context.Response.Headers;
+        headers["Content-Security-Policy"] = BuildContentSecurityPolicy();
+        headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        headers["X-Content-Type-Options"] = "nosniff";
+        headers["X-Frame-Options"] = "DENY";
+        headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+        return Task.CompletedTask;
+    });
+
+    await next().ConfigureAwait(false);
+});
+app.UseRateLimiter();
 
 var uploadsPath = Path.Combine(app.Environment.WebRootPath, "img", "uploads");
 Directory.CreateDirectory(uploadsPath);
@@ -102,15 +163,18 @@ app.MapRazorComponents<App>()
 app.MapAdditionalIdentityEndpoints();
 
 app.MapGet("/sitemap.xml",
-    async (ISettingsRepository settingsRepository, IBlogPostService blogPostService, HttpContext context) =>
+    async (IConfiguration configuration, ISettingsRepository settingsRepository, IBlogPostService blogPostService) =>
     {
         var enableSitemap =
             await settingsRepository.GetValueAsync("Seo:EnableSitemap").ConfigureAwait(false);
         if (enableSitemap == "false") return Results.NotFound();
 
         var baseUrl = await settingsRepository.GetValueAsync("Seo:BaseUrl").ConfigureAwait(false);
-        if (string.IsNullOrWhiteSpace(baseUrl)) baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
-        baseUrl = baseUrl.TrimEnd('/');
+        var canonicalBaseUrl = ResolveCanonicalBaseUrl(baseUrl, configuration["Security:CanonicalBaseUrl"]);
+        if (canonicalBaseUrl is null)
+            return Results.Problem(
+                "Configure Seo:BaseUrl or Security:CanonicalBaseUrl before enabling sitemap.xml.",
+                statusCode: StatusCodes.Status503ServiceUnavailable);
 
         var (posts, _) = await blogPostService.GetPostsAsync().ConfigureAwait(false);
 
@@ -122,14 +186,14 @@ app.MapGet("/sitemap.xml",
         foreach (var page in staticPages)
         {
             sb.AppendLine("  <url>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    <loc>{baseUrl}{page}</loc>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    <loc>{canonicalBaseUrl}{page}</loc>");
             sb.AppendLine("  </url>");
         }
 
         foreach (var post in posts)
         {
             sb.AppendLine("  <url>");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"    <loc>{baseUrl}/posts/{post.Slug}</loc>");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    <loc>{canonicalBaseUrl}/posts/{post.Slug}</loc>");
             sb.AppendLine(CultureInfo.InvariantCulture, $"    <lastmod>{post.Date:yyyy-MM-dd}</lastmod>");
             sb.AppendLine("  </url>");
         }
@@ -139,15 +203,18 @@ app.MapGet("/sitemap.xml",
         return Results.Text(sb.ToString(), "application/xml; charset=utf-8");
     });
 
-app.MapGet("/robots.txt", async (ISettingsRepository settingsRepository, HttpContext context) =>
+app.MapGet("/robots.txt", async (IConfiguration configuration, ISettingsRepository settingsRepository) =>
 {
     var enableRobots =
         await settingsRepository.GetValueAsync("Seo:EnableRobots").ConfigureAwait(false);
     if (enableRobots == "false") return Results.NotFound();
 
     var baseUrl = await settingsRepository.GetValueAsync("Seo:BaseUrl").ConfigureAwait(false);
-    if (string.IsNullOrWhiteSpace(baseUrl)) baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
-    baseUrl = baseUrl.TrimEnd('/');
+    var canonicalBaseUrl = ResolveCanonicalBaseUrl(baseUrl, configuration["Security:CanonicalBaseUrl"]);
+    if (canonicalBaseUrl is null)
+        return Results.Problem(
+            "Configure Seo:BaseUrl or Security:CanonicalBaseUrl before enabling robots.txt.",
+            statusCode: StatusCodes.Status503ServiceUnavailable);
 
     var disallowList =
         await settingsRepository.GetValueAsync("Seo:RobotsDisallow").ConfigureAwait(false) ?? "/Account";
@@ -162,7 +229,7 @@ app.MapGet("/robots.txt", async (ISettingsRepository settingsRepository, HttpCon
         foreach (var line in lines) sb.AppendLine(CultureInfo.InvariantCulture, $"Disallow: {line.Trim()}");
     }
 
-    sb.AppendLine(CultureInfo.InvariantCulture, $"Sitemap: {baseUrl}/sitemap.xml");
+    sb.AppendLine(CultureInfo.InvariantCulture, $"Sitemap: {canonicalBaseUrl}/sitemap.xml");
 
     return Results.Text(sb.ToString(), "text/plain; charset=utf-8");
 });
@@ -189,6 +256,46 @@ using (var scope = app.Services.CreateScope())
         logMigrationError(logger, ex);
         throw;
     }
+}
+
+static bool IsSensitiveAuthRequest(HttpRequest request)
+{
+    if (!HttpMethods.IsPost(request.Method)) return false;
+
+    return request.Path.Equals("/Account/Login", StringComparison.OrdinalIgnoreCase) ||
+           request.Path.Equals("/Account/Register", StringComparison.OrdinalIgnoreCase) ||
+           request.Path.Equals("/Account/ForgotPassword", StringComparison.OrdinalIgnoreCase) ||
+           request.Path.Equals("/Account/ResendEmailConfirmation", StringComparison.OrdinalIgnoreCase);
+}
+
+static string BuildContentSecurityPolicy()
+{
+    return string.Join("; ",
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "frame-ancestors 'none'",
+        "img-src 'self' data: https:",
+        "font-src 'self' data:",
+        "style-src 'self' 'unsafe-inline'",
+        "script-src 'self' 'unsafe-inline'",
+        "connect-src 'self' ws: wss:",
+        "form-action 'self'");
+}
+
+static string? ResolveCanonicalBaseUrl(string? settingsBaseUrl, string? configuredBaseUrl)
+{
+    var candidate = string.IsNullOrWhiteSpace(settingsBaseUrl)
+        ? configuredBaseUrl
+        : settingsBaseUrl;
+
+    if (string.IsNullOrWhiteSpace(candidate)) return null;
+
+    if (!Uri.TryCreate(candidate, UriKind.Absolute, out var uri)) return null;
+
+    if (uri.Scheme is not ("http" or "https")) return null;
+
+    return candidate.TrimEnd('/');
 }
 
 app.Run();
