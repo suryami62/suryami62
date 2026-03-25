@@ -15,7 +15,23 @@ COPY ["suryami62.Domain/suryami62.Domain.csproj", "suryami62.Domain/"]
 COPY ["suryami62.Infrastructure/suryami62.Infrastructure.csproj", "suryami62.Infrastructure/"]
 COPY ["suryami62.Application/suryami62.Application.csproj", "suryami62.Application/"]
 RUN dotnet restore "suryami62/suryami62.csproj"
-COPY . .
+COPY ["suryami62/Components/", "suryami62/Components/"]
+COPY ["suryami62/Data/", "suryami62/Data/"]
+COPY ["suryami62/Properties/", "suryami62/Properties/"]
+COPY ["suryami62/Security/", "suryami62/Security/"]
+COPY ["suryami62/Services/", "suryami62/Services/"]
+COPY ["suryami62/Styles/", "suryami62/Styles/"]
+COPY ["suryami62/wwwroot/", "suryami62/wwwroot/"]
+COPY ["suryami62/Program.cs", "suryami62/"]
+COPY ["suryami62/appsettings.json", "suryami62/"]
+COPY ["suryami62/package.json", "suryami62/"]
+COPY ["suryami62.Application/DependencyInjection.cs", "suryami62.Application/"]
+COPY ["suryami62.Application/Persistence/", "suryami62.Application/Persistence/"]
+COPY ["suryami62.Application/Services/", "suryami62.Application/Services/"]
+COPY ["suryami62.Domain/Models/", "suryami62.Domain/Models/"]
+COPY ["suryami62.Infrastructure/Data/", "suryami62.Infrastructure/Data/"]
+COPY ["suryami62.Infrastructure/Persistence/", "suryami62.Infrastructure/Persistence/"]
+COPY ["suryami62.Infrastructure/DependencyInjection.cs", "suryami62.Infrastructure/"]
 WORKDIR "/src/suryami62"
 RUN dotnet build "./suryami62.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
