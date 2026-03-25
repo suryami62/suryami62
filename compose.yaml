@@ -14,6 +14,11 @@
                 condition: service_healthy
         environment:
             ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+            Security__CanonicalBaseUrl: ${CANONICAL_BASE_URL:-http://localhost:8080}
+            Security__AdminAccess__AllowedUserNames__0: ${ADMIN_ACCESS_USERNAME_0:-}
+            Security__AdminAccess__AllowedUserNames__1: ${ADMIN_ACCESS_USERNAME_1:-}
+            Security__AdminAccess__AllowedEmails__0: ${ADMIN_ACCESS_EMAIL_0:-}
+            Security__AdminAccess__AllowedEmails__1: ${ADMIN_ACCESS_EMAIL_1:-}
         volumes:
             - ./uploads:/app/wwwroot/img/uploads:Z
             - suryami62-dpkeys:/home/app/.aspnet/DataProtection-Keys
