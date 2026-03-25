@@ -9,8 +9,12 @@ using suryami62.Domain.Models;
 
 namespace suryami62.Infrastructure.Persistence;
 
+/// <summary>
+///     Persists and queries projects using Entity Framework Core.
+/// </summary>
 public sealed class ProjectRepository(ApplicationDbContext context) : IProjectRepository
 {
+    /// <inheritdoc />
     public async Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null)
     {
         var query = context.Projects.AsNoTracking().AsQueryable();
@@ -26,11 +30,13 @@ public sealed class ProjectRepository(ApplicationDbContext context) : IProjectRe
         return (items, total);
     }
 
+    /// <inheritdoc />
     public async Task<Project?> GetByIdAsync(int id)
     {
         return await context.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task<Project> CreateAsync(Project project)
     {
         ArgumentNullException.ThrowIfNull(project);
@@ -40,6 +46,7 @@ public sealed class ProjectRepository(ApplicationDbContext context) : IProjectRe
         return project;
     }
 
+    /// <inheritdoc />
     public async Task UpdateAsync(Project project)
     {
         ArgumentNullException.ThrowIfNull(project);
@@ -52,6 +59,7 @@ public sealed class ProjectRepository(ApplicationDbContext context) : IProjectRe
         await context.SaveChangesAsync().ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task DeleteAsync(int id)
     {
         var project = await context.Projects.FindAsync(id).ConfigureAwait(false);

@@ -9,8 +9,12 @@ using suryami62.Domain.Models;
 
 namespace suryami62.Infrastructure.Persistence;
 
+/// <summary>
+///     Persists key/value settings using Entity Framework Core.
+/// </summary>
 public sealed class SettingsRepository(ApplicationDbContext context) : ISettingsRepository
 {
+    /// <inheritdoc />
     public async Task<string?> GetValueAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -24,6 +28,7 @@ public sealed class SettingsRepository(ApplicationDbContext context) : ISettings
             .ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<string, string>> GetValuesAsync(
         IReadOnlyCollection<string> keys,
         CancellationToken cancellationToken = default)
@@ -39,6 +44,7 @@ public sealed class SettingsRepository(ApplicationDbContext context) : ISettings
             .ConfigureAwait(false);
     }
 
+            /// <inheritdoc />
     public async Task UpsertAsync(string key, string value, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -50,6 +56,7 @@ public sealed class SettingsRepository(ApplicationDbContext context) : ISettings
             cancellationToken).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task UpsertManyAsync(IReadOnlyDictionary<string, string> values,
         CancellationToken cancellationToken = default)
     {

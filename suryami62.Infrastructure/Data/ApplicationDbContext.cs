@@ -9,14 +9,36 @@ using suryami62.Domain.Models;
 
 namespace suryami62.Data;
 
+/// <summary>
+///     EF Core database context that stores identity data and site content.
+/// </summary>
 public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : IdentityDbContext<ApplicationUser>(options)
 {
+    /// <summary>
+    ///     Gets or sets the blog posts persisted by the application.
+    /// </summary>
     public DbSet<BlogPost> BlogPosts { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the portfolio projects persisted by the application.
+    /// </summary>
     public DbSet<Project> Projects { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the journey timeline entries persisted by the application.
+    /// </summary>
     public DbSet<JourneyHistory> JourneyHistories { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the key/value settings persisted by the application.
+    /// </summary>
     public DbSet<Setting> Settings { get; set; }
 
+    /// <summary>
+    ///     Configures entity mappings and value converters for the application's models.
+    /// </summary>
+    /// <param name="builder">The model builder used to configure entities.</param>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -43,6 +65,11 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         });
     }
 
+    /// <summary>
+    ///     Rehydrates an absolute URI from the string value stored in the database.
+    /// </summary>
+    /// <param name="value">The raw value read from persistence.</param>
+    /// <returns>The parsed absolute URI, or <see langword="null" /> when the value is empty or invalid.</returns>
     private static Uri? ParseAbsoluteUri(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;

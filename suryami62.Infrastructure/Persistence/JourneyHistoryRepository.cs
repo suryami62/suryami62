@@ -9,8 +9,12 @@ using suryami62.Domain.Models;
 
 namespace suryami62.Infrastructure.Persistence;
 
+/// <summary>
+///     Persists and queries journey history items using Entity Framework Core.
+/// </summary>
 public sealed class JourneyHistoryRepository(ApplicationDbContext context) : IJourneyHistoryRepository
 {
+    /// <inheritdoc />
     public Task<List<JourneyHistory>> GetBySectionAsync(JourneySection section)
     {
         return context.JourneyHistories
@@ -21,6 +25,7 @@ public sealed class JourneyHistoryRepository(ApplicationDbContext context) : IJo
             .ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<JourneyHistory> CreateAsync(JourneyHistory item)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -39,6 +44,7 @@ public sealed class JourneyHistoryRepository(ApplicationDbContext context) : IJo
         return item;
     }
 
+    /// <inheritdoc />
     public async Task DeleteAsync(int id)
     {
         var item = await context.JourneyHistories.FindAsync(id).ConfigureAwait(false);
