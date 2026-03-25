@@ -7,6 +7,13 @@ using System.Text;
 
 namespace suryami62.Services;
 
+/// <summary>
+///     Manages uploaded image files stored under the site's public uploads directory.
+/// </summary>
+/// <remarks>
+///     This service backs the admin media workflow by validating incoming files, normalizing public file names,
+///     and exposing the upload directory as a simple image library for the rest of the site.
+/// </remarks>
 internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMediaService
 {
     private const int MaxSeoFileNameLength = 80;
@@ -28,6 +35,7 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
 
     private readonly string _uploadsDirectory = Path.Combine(webHostEnvironment.WebRootPath, "img", "uploads");
 
+    /// <inheritdoc />
     public Task<List<string>> ListFilesAsync()
     {
         if (!Directory.Exists(_uploadsDirectory)) return Task.FromResult<List<string>>([]);
@@ -41,6 +49,7 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         return Task.FromResult(fileNames);
     }
 
+    /// <inheritdoc />
     public async Task<UploadResult> UploadFileAsync(string fileName, string contentType, Stream stream,
         long maxAllowedSize = 5120000)
     {
@@ -81,11 +90,11 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
                 }
                 catch (IOException)
                 {
-                    // Best-effort cleanup. The upload still fails.
+                    // Cleanup is best-effort; preserve the original upload failure when deletion also fails.
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    // Best-effort cleanup. The upload still fails.
+                    // Cleanup is best-effort; preserve the original upload failure when deletion also fails.
                 }
 
                 return new UploadResult(false, copyResult.Message);
@@ -103,6 +112,7 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         }
     }
 
+    /// <inheritdoc />
     public Task<bool> DeleteFileAsync(string fileName)
     {
         try
@@ -128,6 +138,13 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         }
     }
 
+    /// <summary>
+    ///     Streams an uploaded file to disk while enforcing the configured size limit.
+    /// </summary>
+    /// <param name="source">The source stream.</param>
+    /// <param name="destination">The destination stream.</param>
+    /// <param name="maxAllowedSize">The maximum number of bytes allowed.</param>
+    /// <returns>A tuple describing whether the copy succeeded and an optional message.</returns>
     private static async Task<(bool Success, string Message)> CopyToAsyncWithLimit(
         Stream source,
         Stream destination,
@@ -153,6 +170,11 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         return (true, string.Empty);
     }
 
+    /// <summary>
+    ///     Normalizes an uploaded file name into a stable, URL-safe asset name for public storage.
+    /// </summary>
+    /// <param name="fileName">The original file name.</param>
+    /// <returns>The sanitized file name, or an empty string when the input is unusable.</returns>
     private static string BuildUrlEncodedFileName(string fileName)
     {
         var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName).Trim();
@@ -169,6 +191,11 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         return $"{encodedName}{extension}";
     }
 
+    /// <summary>
+    ///     Converts a free-form file name into a short slug that remains readable in public asset URLs.
+    /// </summary>
+    /// <param name="input">The raw file name without extension.</param>
+    /// <returns>The generated slug.</returns>
     private static string BuildSeoFriendlyName(string input)
     {
         var normalized = input.Normalize(NormalizationForm.FormD);

@@ -28,7 +28,8 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Registers the Blazor UI stack, Identity services, application layers, and request hardening
+// dependencies used by the site before the host is built.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -81,7 +82,8 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>>(_ => new IdentityNo
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Composes the runtime middleware and endpoint pipeline for forwarded headers, security,
+// static assets, interactive components, account endpoints, SEO documents, and startup migrations.
 ConfigureExceptionHandling(app);
 
 app.UseForwardedHeaders();
@@ -98,11 +100,14 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Add additional endpoints required by the Identity /Account Razor components.
+// Registers supporting account endpoints that the Blazor Identity pages post back to,
+// including logout and personal-data export flows under /Account.
 app.MapAdditionalIdentityEndpoints();
 MapSeoEndpoints(app);
 ApplyDatabaseMigrations(app);
 
+// Identifies POST requests that can change authentication state and therefore need
+// stricter rate limiting than the rest of the site.
 static bool IsSensitiveAuthRequest(HttpRequest request)
 {
     if (!HttpMethods.IsPost(request.Method)) return false;
@@ -113,6 +118,8 @@ static bool IsSensitiveAuthRequest(HttpRequest request)
            request.Path.Equals("/Account/ResendEmailConfirmation", StringComparison.OrdinalIgnoreCase);
 }
 
+// Builds the baseline Content-Security-Policy header used for all responses, allowing
+// the site's local assets and the websocket connections required by interactive Blazor.
 static string BuildContentSecurityPolicy()
 {
     return string.Join("; ",
@@ -128,7 +135,8 @@ static string BuildContentSecurityPolicy()
         "form-action 'self'");
 }
 
-// Configures trusted forwarded headers when the app is deployed behind a reverse proxy.
+    // Trusts the forwarded host, scheme, and client IP headers emitted by a fronting proxy
+    // so generated URLs, redirects, and request metadata reflect the public endpoint.
 static void ConfigureForwardedHeaders(ForwardedHeadersOptions options)
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
@@ -136,7 +144,8 @@ static void ConfigureForwardedHeaders(ForwardedHeadersOptions options)
                                ForwardedHeaders.XForwardedHost;
 }
 
-// Configures a narrow sliding window limiter only for sensitive authentication endpoints.
+// Applies a dedicated sliding-window limiter to sensitive account POST endpoints while
+// leaving the rest of the application unthrottled by the global limiter.
 static void ConfigureAuthenticationRateLimiting(RateLimiterOptions options)
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -150,7 +159,8 @@ static void ConfigureAuthenticationRateLimiting(RateLimiterOptions options)
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(BuildAuthenticationRateLimitPartition);
 }
 
-// Builds a partition key that scopes throttling by client address and auth route.
+// Keys authentication throttling by remote address and requested auth path so repeated
+// attempts against one flow do not consume the budget for unrelated requests.
 static RateLimitPartition<string> BuildAuthenticationRateLimitPartition(HttpContext httpContext)
 {
     if (!IsSensitiveAuthRequest(httpContext.Request)) return RateLimitPartition.GetNoLimiter("default");
@@ -171,7 +181,8 @@ static RateLimitPartition<string> BuildAuthenticationRateLimitPartition(HttpCont
         });
 }
 
-// Configures development and production exception handling behavior.
+// Uses detailed migration diagnostics in development and the hardened error pipeline in
+// non-development environments, including HSTS for production deployments.
 static void ConfigureExceptionHandling(WebApplication app)
 {
     if (app.Environment.IsDevelopment())
@@ -184,7 +195,8 @@ static void ConfigureExceptionHandling(WebApplication app)
     app.UseHsts();
 }
 
-// Adds baseline response hardening headers to every request.
+// Appends the baseline hardening headers for every response after downstream middleware
+// has prepared the status code and payload.
 static void ConfigureSecurityHeaders(WebApplication app)
 {
     app.Use(async (context, next) =>
@@ -204,7 +216,8 @@ static void ConfigureSecurityHeaders(WebApplication app)
     });
 }
 
-// Serves uploaded media from the dedicated uploads directory under wwwroot.
+// Ensures the uploads directory exists and exposes it through the same static file
+// pipeline as the rest of the site's public web assets.
 static void ConfigureStaticUploads(WebApplication app)
 {
     var uploadsPath = Path.Combine(app.Environment.WebRootPath, "img", "uploads");
@@ -217,14 +230,16 @@ static void ConfigureStaticUploads(WebApplication app)
     });
 }
 
-// Registers SEO-related endpoints with dedicated handlers.
+// Maps the generated SEO documents so search engines can fetch sitemap.xml and robots.txt
+// directly from the application when those features are enabled.
 static void MapSeoEndpoints(WebApplication app)
 {
     app.MapGet("/sitemap.xml", GetSitemapAsync);
     app.MapGet("/robots.txt", GetRobotsAsync);
 }
 
-// Generates sitemap.xml when SEO settings enable it and a canonical base URL is configured.
+// Produces sitemap.xml from the site's static routes and published blog posts only when
+// the feature is enabled and a canonical base URL can be resolved.
 static async Task<IResult> GetSitemapAsync(
     IConfiguration configuration,
     ISettingsRepository settingsRepository,
@@ -240,7 +255,8 @@ static async Task<IResult> GetSitemapAsync(
     return Results.Text(BuildSitemapXml(canonicalBaseUrl, posts), "application/xml; charset=utf-8");
 }
 
-// Generates robots.txt when SEO settings enable it and a canonical base URL is configured.
+// Produces robots.txt from the stored disallow rules and sitemap location only when the
+// robots feature is enabled and the canonical base URL is available.
 static async Task<IResult> GetRobotsAsync(IConfiguration configuration, ISettingsRepository settingsRepository)
 {
     if (!await IsSeoDocumentEnabledAsync(settingsRepository, "Seo:EnableRobots").ConfigureAwait(false))
@@ -255,7 +271,8 @@ static async Task<IResult> GetRobotsAsync(IConfiguration configuration, ISetting
     return Results.Text(BuildRobotsText(canonicalBaseUrl, disallowList), "text/plain; charset=utf-8");
 }
 
-// Reads a feature toggle stored in settings and treats any value other than false as enabled.
+// Reads an SEO feature toggle from persisted settings and treats missing values as enabled
+// so the default behavior remains permissive unless the administrator explicitly disables it.
 static async Task<bool> IsSeoDocumentEnabledAsync(ISettingsRepository settingsRepository, string settingKey)
 {
     return !string.Equals(
@@ -264,7 +281,8 @@ static async Task<bool> IsSeoDocumentEnabledAsync(ISettingsRepository settingsRe
         StringComparison.OrdinalIgnoreCase);
 }
 
-// Resolves the canonical base URL from SEO settings first, then from application configuration.
+    // Resolves the canonical site URL by preferring the editable SEO setting and falling back
+    // to static application configuration when no site-specific override is stored.
 static async Task<string?> GetCanonicalBaseUrlAsync(
     IConfiguration configuration,
     ISettingsRepository settingsRepository)
@@ -273,7 +291,8 @@ static async Task<string?> GetCanonicalBaseUrlAsync(
     return ResolveCanonicalBaseUrl(baseUrl, configuration["Security:CanonicalBaseUrl"]);
 }
 
-// Returns a standardized problem response when canonical URL configuration is missing.
+// Returns a consistent operational error when an SEO document is enabled without a usable
+// canonical base URL, making the misconfiguration visible to administrators and monitors.
 static IResult CreateMissingCanonicalBaseUrlProblem(string fileName)
 {
     return Results.Problem(
@@ -281,7 +300,8 @@ static IResult CreateMissingCanonicalBaseUrlProblem(string fileName)
         statusCode: StatusCodes.Status503ServiceUnavailable);
 }
 
-// Builds the sitemap payload for static pages and published posts.
+    // Builds the final sitemap XML document by combining fixed site routes with the current
+    // set of blog post URLs returned by the application layer.
 static string BuildSitemapXml(string canonicalBaseUrl, IEnumerable<BlogPost> posts)
 {
     var sb = new StringBuilder();
@@ -295,7 +315,8 @@ static string BuildSitemapXml(string canonicalBaseUrl, IEnumerable<BlogPost> pos
     return sb.ToString();
 }
 
-// Adds fixed site routes that should always appear in the sitemap.
+// Appends the site's always-available public routes so crawlers can discover the core
+// landing, about, posts, and projects pages even without dynamic content.
 static void AppendStaticSitemapEntries(StringBuilder sb, string canonicalBaseUrl)
 {
     ReadOnlySpan<string> staticPages = ["/", "/about", "/posts", "/projects"];
@@ -307,7 +328,8 @@ static void AppendStaticSitemapEntries(StringBuilder sb, string canonicalBaseUrl
     }
 }
 
-// Adds sitemap entries for blog posts including their last modified date.
+// Appends one sitemap entry per blog post, including the post slug and last-modified date
+// so search engines can detect content updates efficiently.
 static void AppendBlogPostSitemapEntries(StringBuilder sb, string canonicalBaseUrl, IEnumerable<BlogPost> posts)
 {
     foreach (var post in posts)
@@ -319,7 +341,8 @@ static void AppendBlogPostSitemapEntries(StringBuilder sb, string canonicalBaseU
     }
 }
 
-// Builds the robots.txt payload from the configured disallow rules and sitemap location.
+// Builds robots.txt with a permissive default allow rule, the configured disallow entries,
+// and a sitemap reference anchored to the resolved canonical base URL.
 static string BuildRobotsText(string canonicalBaseUrl, string? disallowList)
 {
     var sb = new StringBuilder();
@@ -333,7 +356,8 @@ static string BuildRobotsText(string canonicalBaseUrl, string? disallowList)
     return sb.ToString();
 }
 
-// Normalizes the configured robots disallow rules into non-empty trimmed lines.
+// Splits the stored robots disallow text into normalized non-empty entries so admins can
+// maintain one or many paths using simple multiline text in settings.
 static IEnumerable<string> EnumerateRobotsDisallowEntries(string? disallowList)
 {
     if (string.IsNullOrWhiteSpace(disallowList)) yield break;
@@ -346,7 +370,8 @@ static IEnumerable<string> EnumerateRobotsDisallowEntries(string? disallowList)
     }
 }
 
-// Applies pending EF Core migrations during application startup and logs the outcome.
+// Applies any pending EF Core migrations during startup so deployed environments converge
+// on the expected schema before the site begins serving requests.
 static void ApplyDatabaseMigrations(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
@@ -374,6 +399,8 @@ static void ApplyDatabaseMigrations(WebApplication app)
     }
 }
 
+// Chooses the first non-empty canonical base URL candidate, validates that it is an HTTP(S)
+// absolute URI, and trims the trailing slash for stable downstream URL composition.
 static string? ResolveCanonicalBaseUrl(string? settingsBaseUrl, string? configuredBaseUrl)
 {
     var candidate = string.IsNullOrWhiteSpace(settingsBaseUrl)

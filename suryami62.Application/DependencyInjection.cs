@@ -7,8 +7,16 @@ using suryami62.Services;
 
 namespace suryami62.Application;
 
+/// <summary>
+///     Provides dependency injection registration for the application layer.
+/// </summary>
 public static class ApplicationServiceCollectionExtensions
 {
+    /// <summary>
+    ///     Registers application services and settings stores used by the site.
+    /// </summary>
+    /// <param name="services">The service collection being configured.</param>
+    /// <returns>The same service collection for chaining.</returns>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);

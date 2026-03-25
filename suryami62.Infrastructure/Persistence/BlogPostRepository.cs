@@ -9,8 +9,12 @@ using suryami62.Domain.Models;
 
 namespace suryami62.Infrastructure.Persistence;
 
+/// <summary>
+///     Persists and queries blog posts using Entity Framework Core.
+/// </summary>
 public sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPostRepository
 {
+    /// <inheritdoc />
     public async Task<(List<BlogPost> Items, int Total)> GetPostsAsync(
         bool onlyPublished = true,
         int? skip = null,
@@ -36,6 +40,7 @@ public sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPost
         return (items, total);
     }
 
+    /// <inheritdoc />
     public async Task<BlogPost?> GetBySlugAsync(string slug)
     {
         if (string.IsNullOrWhiteSpace(slug))
@@ -44,11 +49,13 @@ public sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPost
         return await context.BlogPosts.AsNoTracking().FirstOrDefaultAsync(p => p.Slug == slug).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task<BlogPost?> GetByIdAsync(int id)
     {
         return await context.BlogPosts.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task<BlogPost> CreateAsync(BlogPost post)
     {
         ArgumentNullException.ThrowIfNull(post);
@@ -58,6 +65,7 @@ public sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPost
         return post;
     }
 
+    /// <inheritdoc />
     public async Task UpdateAsync(BlogPost post)
     {
         ArgumentNullException.ThrowIfNull(post);
@@ -70,6 +78,7 @@ public sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPost
         await context.SaveChangesAsync().ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task DeleteAsync(int id)
     {
         var post = await context.BlogPosts.FindAsync(id).ConfigureAwait(false);

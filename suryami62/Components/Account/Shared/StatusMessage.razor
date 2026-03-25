@@ -1,4 +1,5 @@
-﻿@if (!string.IsNullOrEmpty(DisplayMessage))
+﻿@* Reusable status banner that displays transient account-related messages. *@
+@if (!string.IsNullOrEmpty(DisplayMessage))
 {
     var statusMessageClass = DisplayMessage.StartsWith("Error")
         ? "border-red-600 text-red-700 dark:border-red-400 dark:text-red-300"

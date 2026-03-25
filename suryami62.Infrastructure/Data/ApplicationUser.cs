@@ -6,5 +6,10 @@ using Microsoft.AspNetCore.Identity;
 
 namespace suryami62.Data;
 
-// Add profile data for application users by adding properties to the ApplicationUser class
+/// <summary>
+///     Represents the application's identity user record.
+/// </summary>
+/// <remarks>
+///     Extend this type when the site needs additional profile fields beyond the default ASP.NET Core Identity user model.
+/// </remarks>
 public sealed class ApplicationUser : IdentityUser;
