@@ -39,7 +39,7 @@ internal static class WebServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configuration);
 
         AddPresentationServices(services);
-        AddSecurityServices(services, configuration);
+        AddSecurityServices(services);
         AddPersistenceServices(services, configuration);
 
         return services;
@@ -62,7 +62,7 @@ internal static class WebServiceCollectionExtensions
         services.AddScoped(_ => new MarkdownRenderer());
     }
 
-    private static void AddSecurityServices(IServiceCollection services, IConfiguration configuration)
+    private static void AddSecurityServices(IServiceCollection services)
     {
         services.Configure<ForwardedHeadersOptions>(ConfigureForwardedHeaders);
         services.AddRateLimiter(ConfigureAuthenticationRateLimiting);
