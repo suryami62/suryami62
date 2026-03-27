@@ -15,7 +15,7 @@
     <div class="neo-card p-8">
         <h3 class="text-2xl font-black uppercase mb-6">Upload New Image</h3>
         <div class="flex flex-col gap-4">
-            <InputFile OnChange="HandleFileSelected"
+            <InputFile OnChange="HandleFileSelectedAsync"
                        class="@FileInputClass"/>
 
             @if (_isUploading)
@@ -27,7 +27,7 @@
                 </div>
             }
 
-            @if (!string.IsNullOrEmpty(_statusMessage))
+            @if (HasStatusMessage)
             {
                 <div class="@StatusMessageClass">
                     <p class="font-bold">@_statusMessage</p>
@@ -37,36 +37,36 @@
     </div>
 
     <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        @if (_imageFiles == null)
+        @if (IsLoadingGallery)
         {
             <div class="col-span-full py-12 text-center">
                 <p class="text-xl font-bold animate-pulse">Loading gallery...</p>
             </div>
         }
-        else if (!_imageFiles.Any())
+        else if (HasNoImages)
         {
             <div class="neo-card col-span-full border-dashed py-12 text-center">
                 <p class="text-gray-500 font-bold">No images uploaded yet.</p>
             </div>
         }
-        else
+        else if (_imageFiles is { Count: > 0 } imageFiles)
         {
-            @foreach (var file in _imageFiles)
+            @foreach (var file in imageFiles)
             {
                 <div class="neo-card group relative overflow-hidden border-2">
                     <div
                         class="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden border-b-2 border-black dark:border-white">
-                        <img src="/img/uploads/@ToEncodedUrlSegment(file)" alt="@file" loading="lazy"
+                        <img src="@BuildImageSource(file)" alt="@file" loading="lazy"
                              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"/>
                     </div>
                     <div class="p-3 flex flex-col gap-3">
                         <p class="text-xs truncate font-bold" title="@file">@file</p>
                         <div class="flex gap-2">
-                            <button @onclick="() => CopyToClipboard(file)"
+                            <button @onclick="() => CopyToClipboardAsync(file)"
                                     class="@CopyUrlButtonClass">
                                 COPY URL
                             </button>
-                            <button @onclick="() => ConfirmDelete(file)"
+                            <button @onclick="() => ConfirmDeleteAsync(file)"
                                     class="@DeleteButtonClass">
                                 DELETE
                             </button>
@@ -98,51 +98,51 @@
     private ConfirmModal? _confirmModal;
     private const long MaxFileSize = 5120000; // 5MB
 
+    private bool HasStatusMessage => !string.IsNullOrEmpty(_statusMessage);
+
+    private bool IsLoadingGallery => _imageFiles is null;
+
+    private bool HasNoImages => _imageFiles is { Count: 0 };
+
+    /// <summary>
+    ///     Loads the media gallery shown on the admin page.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await LoadImagesAsync();
     }
 
+    /// <summary>
+    ///     Reads the uploaded file list from the media service.
+    /// </summary>
     private async Task LoadImagesAsync()
     {
         _imageFiles = await MediaService.ListFilesAsync();
     }
 
-    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    /// <summary>
+    ///     Uploads the selected file and refreshes the gallery when the upload succeeds.
+    /// </summary>
+    private async Task HandleFileSelectedAsync(InputFileChangeEventArgs e)
     {
-        _isUploading = true;
-        _statusMessage = null;
-        _isError = false;
+        BeginUpload();
 
         try
         {
             var file = e.File;
 
-            if (file.Size > MaxFileSize)
+            if (!TryValidateFileSize(file, out var validationErrorMessage))
             {
-                _statusMessage = "Error: File size exceeds 5MB limit.";
-                _isError = true;
+                SetErrorStatus(validationErrorMessage);
                 return;
             }
 
             await using var stream = file.OpenReadStream(MaxFileSize);
-            var result = await MediaService.UploadFileAsync(file.Name, file.ContentType, stream);
-
-            if (result.Success)
-            {
-                _statusMessage = result.Message;
-                await LoadImagesAsync();
-            }
-            else
-            {
-                _statusMessage = $"Error: {result.Message}";
-                _isError = true;
-            }
+            await UploadSelectedFileAsync(file, stream);
         }
         catch (Exception)
         {
-            _statusMessage = "Error: An unexpected error occurred during upload.";
-            _isError = true;
+            SetErrorStatus("Error: An unexpected error occurred during upload.");
         }
         finally
         {
@@ -150,51 +150,123 @@
         }
     }
 
-    private async Task ConfirmDelete(string filename)
+    /// <summary>
+    ///     Deletes the selected image after the user confirms the action.
+    /// </summary>
+    private async Task ConfirmDeleteAsync(string fileName)
     {
-        if (_confirmModal == null) return;
-
-        if (await _confirmModal.ShowAsync())
+        if (!await ShouldDeleteImageAsync())
         {
-            var success = await MediaService.DeleteFileAsync(filename);
-            if (success)
-            {
-                _statusMessage = $"Deleted {filename}";
-                _isError = false;
-                await LoadImagesAsync();
-            }
-            else
-            {
-                _statusMessage = $"Error: Could not delete {filename}";
-                _isError = true;
-            }
+            return;
         }
+
+        var deleted = await MediaService.DeleteFileAsync(fileName);
+
+        if (deleted)
+        {
+            SetSuccessStatus($"Deleted {fileName}");
+            await LoadImagesAsync();
+            return;
+        }
+
+        SetErrorStatus($"Error: Could not delete {fileName}");
     }
 
-    private async Task CopyToClipboard(string filename)
+    /// <summary>
+    ///     Copies the absolute public URL of the selected image to the clipboard.
+    /// </summary>
+    private async Task CopyToClipboardAsync(string fileName)
     {
-        var relativeUrl = $"/img/uploads/{ToEncodedUrlSegment(filename)}";
-        var absoluteUrl = NavigationManager.ToAbsoluteUri(relativeUrl).ToString();
+        var absoluteUrl = BuildAbsoluteImageUrl(fileName);
 
         try
         {
             var result = await JSRuntime.InvokeAsync<bool>("utils.copyTextToClipboard", absoluteUrl);
             if (result)
             {
-                _statusMessage = $"URL copied: {absoluteUrl}";
-                _isError = false;
+                SetSuccessStatus($"URL copied: {absoluteUrl}");
             }
             else
             {
-                _statusMessage = "Error: Failed to copy URL.";
-                _isError = true;
+                SetErrorStatus("Error: Failed to copy URL.");
             }
         }
         catch (Exception)
         {
-            _statusMessage = "Error: JavaScript interop failed.";
-            _isError = true;
+            SetErrorStatus("Error: JavaScript interop failed.");
         }
+    }
+
+    private void BeginUpload()
+    {
+        _isUploading = true;
+        ClearStatus();
+    }
+
+    private void ClearStatus()
+    {
+        _statusMessage = null;
+        _isError = false;
+    }
+
+    private bool TryValidateFileSize(IBrowserFile file, out string errorMessage)
+    {
+        if (file.Size <= MaxFileSize)
+        {
+            errorMessage = string.Empty;
+            return true;
+        }
+
+        errorMessage = "Error: File size exceeds 5MB limit.";
+        return false;
+    }
+
+    private async Task UploadSelectedFileAsync(IBrowserFile file, Stream stream)
+    {
+        var uploadResult = await MediaService.UploadFileAsync(file.Name, file.ContentType, stream);
+
+        if (!uploadResult.Success)
+        {
+            SetErrorStatus($"Error: {uploadResult.Message}");
+            return;
+        }
+
+        SetSuccessStatus(uploadResult.Message);
+
+        // Refreshing the gallery after a successful upload keeps the server-rendered list aligned with stored files.
+        await LoadImagesAsync();
+    }
+
+    private async Task<bool> ShouldDeleteImageAsync()
+    {
+        if (_confirmModal is null)
+        {
+            return false;
+        }
+
+        return await _confirmModal.ShowAsync();
+    }
+
+    private string BuildImageSource(string fileName)
+    {
+        return $"/img/uploads/{ToEncodedUrlSegment(fileName)}";
+    }
+
+    private string BuildAbsoluteImageUrl(string fileName)
+    {
+        return NavigationManager.ToAbsoluteUri(BuildImageSource(fileName)).ToString();
+    }
+
+    private void SetSuccessStatus(string message)
+    {
+        _statusMessage = message;
+        _isError = false;
+    }
+
+    private void SetErrorStatus(string message)
+    {
+        _statusMessage = message;
+        _isError = true;
     }
 
     private static string ToEncodedUrlSegment(string fileName)

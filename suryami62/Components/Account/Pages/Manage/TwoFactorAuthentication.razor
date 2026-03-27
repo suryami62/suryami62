@@ -136,7 +136,8 @@
         }
 
         canTrack = HttpContext.Features.Get<ITrackingConsentFeature>()?.CanTrack ?? true;
-        hasAuthenticator = await UserManager.GetAuthenticatorKeyAsync(user) is not null;
+        var authenticatorKey = await UserManager.GetAuthenticatorKeyAsync(user);
+        hasAuthenticator = authenticatorKey != null;
         is2faEnabled = await UserManager.GetTwoFactorEnabledAsync(user);
         isMachineRemembered = await SignInManager.IsTwoFactorClientRememberedAsync(user);
         recoveryCodesLeft = await UserManager.CountRecoveryCodesAsync(user);

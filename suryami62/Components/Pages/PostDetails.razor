@@ -6,11 +6,11 @@
 @inject NavigationManager NavigationManager
 @inject MarkdownRenderer MarkdownRenderer
 
-<PageTitle>@(_post?.Title is { Length: > 0 } title ? $"{title} | suryami62" : "Post | suryami62")</PageTitle>
+<PageTitle>@PostPageTitle</PageTitle>
 
 <!-- Meta Section -->
 <HeadContent>
-    <MetaOpenGraphCard Title="@(_post?.Title is { Length: > 0 } title ? $"{title} | suryami62" : "Post | suryami62")"
+    <MetaOpenGraphCard Title="@PostPageTitle"
                        Description="@(_post?.Summary ?? string.Empty)"
                        Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
                        Url="@NavigationManager.Uri"/>
@@ -77,6 +77,20 @@
     private BlogPost? _post;
     private bool _isLoaded;
 
+    // Builds the page title from the post's title, or falls back to a generic label.
+    private string PostPageTitle
+    {
+        get
+        {
+            if (_post != null && !string.IsNullOrEmpty(_post.Title))
+            {
+                return $"{_post.Title} | suryami62";
+            }
+
+            return "Post | suryami62";
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         _isLoaded = false;
@@ -89,7 +103,13 @@
         }
 
         var post = await BlogPostService.GetPostBySlugAsync(Slug);
-        _post = post is { IsPublished: true } ? post : null;
+
+        // Only show the post if it has been published.
+        if (post != null && post.IsPublished)
+        {
+            _post = post;
+        }
+
         _isLoaded = true;
     }
 

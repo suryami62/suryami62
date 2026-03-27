@@ -40,7 +40,8 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
     {
         if (!Directory.Exists(_uploadsDirectory)) return Task.FromResult<List<string>>([]);
 
-        var fileNames = new DirectoryInfo(_uploadsDirectory)
+        var uploadDirectory = new DirectoryInfo(_uploadsDirectory);
+        var fileNames = uploadDirectory
             .EnumerateFiles()
             .OrderByDescending(file => file.LastWriteTimeUtc)
             .Select(file => file.Name)
@@ -55,52 +56,18 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
     {
         try
         {
-            var safeFileName = Path.GetFileName(fileName);
-            if (string.IsNullOrWhiteSpace(safeFileName)) return new UploadResult(false, "Invalid file name.");
-
-            var extension = Path.GetExtension(safeFileName);
-            if (!AllowedExtensions.Contains(extension))
-                return new UploadResult(false, $"Extension '{extension}' is not allowed.");
-
-            safeFileName = BuildUrlEncodedFileName(safeFileName);
-            if (string.IsNullOrWhiteSpace(safeFileName)) return new UploadResult(false, "Invalid file name.");
-
-            if (!AllowedContentTypes.Contains(contentType))
-                return new UploadResult(false, $"Content type '{contentType}' is not allowed.");
+            var validationResult = ValidateUpload(fileName, contentType);
+            if (!validationResult.Success) return validationResult.Error!;
 
             Directory.CreateDirectory(_uploadsDirectory);
 
-            var destinationPath = Path.Combine(_uploadsDirectory, safeFileName);
-            if (File.Exists(destinationPath))
-            {
-                var nameWithoutExtension = Path.GetFileNameWithoutExtension(safeFileName);
-                var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-                safeFileName = $"{nameWithoutExtension}_{timestamp}{extension}";
-                destinationPath = Path.Combine(_uploadsDirectory, safeFileName);
-            }
+            var storedFileName = GetUniqueFileName(validationResult.SafeFileName!);
+            var destinationPath = Path.Combine(_uploadsDirectory, storedFileName);
+            var copyResult = await SaveFileAsync(stream, destinationPath, maxAllowedSize).ConfigureAwait(false);
 
-            using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
-            var copyResult = await CopyToAsyncWithLimit(stream, fileStream, maxAllowedSize).ConfigureAwait(false);
-
-            if (!copyResult.Success)
-            {
-                try
-                {
-                    File.Delete(destinationPath);
-                }
-                catch (IOException)
-                {
-                    // Cleanup is best-effort; preserve the original upload failure when deletion also fails.
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    // Cleanup is best-effort; preserve the original upload failure when deletion also fails.
-                }
-
-                return new UploadResult(false, copyResult.Message);
-            }
-
-            return new UploadResult(true, $"Successfully uploaded {safeFileName}", safeFileName);
+            return copyResult.Success
+                ? new UploadResult(true, $"Successfully uploaded {storedFileName}", storedFileName)
+                : new UploadResult(false, copyResult.Message);
         }
         catch (IOException)
         {
@@ -135,6 +102,69 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         catch (UnauthorizedAccessException)
         {
             return Task.FromResult(false);
+        }
+    }
+
+    private static (bool Success, string? SafeFileName, UploadResult? Error) ValidateUpload(
+        string fileName,
+        string contentType)
+    {
+        var safeFileName = Path.GetFileName(fileName);
+        if (string.IsNullOrWhiteSpace(safeFileName))
+            return (false, null, new UploadResult(false, "Invalid file name."));
+
+        var extension = Path.GetExtension(safeFileName);
+        if (!AllowedExtensions.Contains(extension))
+            return (false, null, new UploadResult(false, $"Extension '{extension}' is not allowed."));
+
+        var normalizedFileName = BuildUrlEncodedFileName(safeFileName);
+        if (string.IsNullOrWhiteSpace(normalizedFileName))
+            return (false, null, new UploadResult(false, "Invalid file name."));
+
+        if (!AllowedContentTypes.Contains(contentType))
+            return (false, null, new UploadResult(false, $"Content type '{contentType}' is not allowed."));
+
+        return (true, normalizedFileName, null);
+    }
+
+    private string GetUniqueFileName(string safeFileName)
+    {
+        var destinationPath = Path.Combine(_uploadsDirectory, safeFileName);
+        if (!File.Exists(destinationPath)) return safeFileName;
+
+        var extension = Path.GetExtension(safeFileName);
+        var nameWithoutExtension = Path.GetFileNameWithoutExtension(safeFileName);
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+
+        return $"{nameWithoutExtension}_{timestamp}{extension}";
+    }
+
+    private static async Task<(bool Success, string Message)> SaveFileAsync(
+        Stream source,
+        string destinationPath,
+        long maxAllowedSize)
+    {
+        using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None);
+        var copyResult = await CopyToAsyncWithLimit(source, fileStream, maxAllowedSize).ConfigureAwait(false);
+        if (copyResult.Success) return copyResult;
+
+        TryDeletePartialFile(destinationPath);
+        return copyResult;
+    }
+
+    private static void TryDeletePartialFile(string destinationPath)
+    {
+        try
+        {
+            File.Delete(destinationPath);
+        }
+        catch (IOException)
+        {
+            // Cleanup is best-effort; preserve the original upload failure when deletion also fails.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Cleanup is best-effort; preserve the original upload failure when deletion also fails.
         }
     }
 
@@ -181,8 +211,10 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         if (string.IsNullOrWhiteSpace(nameWithoutExtension)) return string.Empty;
 
         var seoFriendlyName = BuildSeoFriendlyName(nameWithoutExtension);
+
         if (seoFriendlyName.Length > MaxSeoFileNameLength)
             seoFriendlyName = seoFriendlyName[..MaxSeoFileNameLength].Trim('-');
+
         if (string.IsNullOrWhiteSpace(seoFriendlyName)) seoFriendlyName = "image";
 
         var extension = Path.GetExtension(fileName);

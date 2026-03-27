@@ -16,7 +16,7 @@
         </ChildContent>
     </PageHeader>
 
-    @if (!string.IsNullOrWhiteSpace(_statusMessage))
+    @if (HasStatusMessage)
     {
         <div class="@StatusMessageClass">
             @_statusMessage
@@ -59,7 +59,7 @@
             </EditForm>
 
             <div class="mt-8 flex flex-col gap-4">
-                @if (_journey.Experiences.Count == 0)
+                @if (!HasExperienceEntries)
                 {
                     <p class="font-bold text-neutral-500">No experience entries.</p>
                 }
@@ -120,7 +120,7 @@
             </EditForm>
 
             <div class="mt-8 flex flex-col gap-4">
-                @if (_journey.Educations.Count == 0)
+                @if (!HasEducationEntries)
                 {
                     <p class="font-bold text-neutral-500">No education entries.</p>
                 }
@@ -164,93 +164,154 @@
     private string? _statusMessage;
     private bool _isError;
 
+    private bool HasStatusMessage => !string.IsNullOrWhiteSpace(_statusMessage);
+
+    private bool HasExperienceEntries => _journey.Experiences.Count > 0;
+
+    private bool HasEducationEntries => _journey.Educations.Count > 0;
+
+    /// <summary>
+    ///     Loads both journey sections required by the admin page.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await LoadJourneyAsync();
     }
 
+    /// <summary>
+    ///     Reloads experience and education entries from the application layer.
+    /// </summary>
     private async Task LoadJourneyAsync()
     {
-        var experiences = await JourneyHistoryService.GetBySectionAsync(JourneySection.Experience);
-        var educations = await JourneyHistoryService.GetBySectionAsync(JourneySection.Education);
+        var experiences = await LoadJourneySectionAsync(JourneySection.Experience);
+        var educations = await LoadJourneySectionAsync(JourneySection.Education);
 
         _journey = new JourneyViewModel(experiences, educations);
     }
 
+    /// <summary>
+    ///     Adds a new experience entry and refreshes the timeline.
+    /// </summary>
     private async Task AddExperienceAsync()
     {
-        try
-        {
-            var entry = new JourneyHistory
-            {
-                Section = JourneySection.Experience,
-                Title = _experienceInput.Title,
-                Organization = _experienceInput.Organization,
-                Period = _experienceInput.Period,
-                Summary = _experienceInput.Summary
-            };
-
-            await JourneyHistoryService.CreateAsync(entry);
-            _experienceInput = new JourneyInputModel();
-            await LoadJourneyAsync();
-            SetStatus(false, "Experience added successfully.");
-        }
-        catch (Exception)
-        {
-            SetStatus(true, "Failed to add experience.");
-        }
+        await AddJourneyEntryAsync(
+            JourneySection.Experience,
+            _experienceInput,
+            ResetExperienceInput,
+            "Experience added successfully.",
+            "Failed to add experience.");
     }
 
+    /// <summary>
+    ///     Adds a new education entry and refreshes the timeline.
+    /// </summary>
     private async Task AddEducationAsync()
     {
-        try
-        {
-            var entry = new JourneyHistory
-            {
-                Section = JourneySection.Education,
-                Title = _educationInput.Title,
-                Organization = _educationInput.Organization,
-                Period = _educationInput.Period,
-                Summary = _educationInput.Summary
-            };
-
-            await JourneyHistoryService.CreateAsync(entry);
-            _educationInput = new JourneyInputModel();
-            await LoadJourneyAsync();
-            SetStatus(false, "Education added successfully.");
-        }
-        catch (Exception)
-        {
-            SetStatus(true, "Failed to add education.");
-        }
+        await AddJourneyEntryAsync(
+            JourneySection.Education,
+            _educationInput,
+            ResetEducationInput,
+            "Education added successfully.",
+            "Failed to add education.");
     }
 
+    /// <summary>
+    ///     Deletes an experience entry and refreshes the timeline.
+    /// </summary>
     private async Task DeleteExperienceAsync(int id)
     {
+        await DeleteJourneyEntryAsync(
+            id,
+            "Experience deleted successfully.",
+            "Failed to delete experience.");
+    }
+
+    /// <summary>
+    ///     Deletes an education entry and refreshes the timeline.
+    /// </summary>
+    private async Task DeleteEducationAsync(int id)
+    {
+        await DeleteJourneyEntryAsync(
+            id,
+            "Education deleted successfully.",
+            "Failed to delete education.");
+    }
+
+    /// <summary>
+    ///     Loads a single journey section from the application service.
+    /// </summary>
+    private Task<List<JourneyHistory>> LoadJourneySectionAsync(JourneySection section)
+    {
+        return JourneyHistoryService.GetBySectionAsync(section);
+    }
+
+    /// <summary>
+    ///     Creates a journey entry, resets the form, and reloads the latest persisted data.
+    /// </summary>
+    private async Task AddJourneyEntryAsync(
+        JourneySection section,
+        JourneyInputModel input,
+        Action resetInput,
+        string successMessage,
+        string failureMessage)
+    {
         try
         {
-            await JourneyHistoryService.DeleteAsync(id);
-            await LoadJourneyAsync();
-            SetStatus(false, "Experience deleted successfully.");
+            var entry = CreateJourneyEntry(section, input);
+
+            await JourneyHistoryService.CreateAsync(entry);
+            resetInput();
+            await RefreshJourneyAfterMutationAsync(successMessage);
         }
         catch (Exception)
         {
-            SetStatus(true, "Failed to delete experience.");
+            SetStatus(true, failureMessage);
         }
     }
 
-    private async Task DeleteEducationAsync(int id)
+    /// <summary>
+    ///     Deletes a journey entry and reloads the latest persisted data.
+    /// </summary>
+    private async Task DeleteJourneyEntryAsync(int id, string successMessage, string failureMessage)
     {
         try
         {
             await JourneyHistoryService.DeleteAsync(id);
-            await LoadJourneyAsync();
-            SetStatus(false, "Education deleted successfully.");
+            await RefreshJourneyAfterMutationAsync(successMessage);
         }
         catch (Exception)
         {
-            SetStatus(true, "Failed to delete education.");
+            SetStatus(true, failureMessage);
         }
+    }
+
+    private static JourneyHistory CreateJourneyEntry(JourneySection section, JourneyInputModel input)
+    {
+        return new JourneyHistory
+        {
+            Section = section,
+            Title = input.Title,
+            Organization = input.Organization,
+            Period = input.Period,
+            Summary = input.Summary
+        };
+    }
+
+    private async Task RefreshJourneyAfterMutationAsync(string successMessage)
+    {
+        // Reloading after each mutation keeps the admin view aligned with the persisted display order.
+        await LoadJourneyAsync();
+        SetStatus(false, successMessage);
+    }
+
+    private void ResetExperienceInput()
+    {
+        _experienceInput = new JourneyInputModel();
+    }
+
+    private void ResetEducationInput()
+    {
+        _educationInput = new JourneyInputModel();
     }
 
     private void SetStatus(bool isError, string message)
@@ -259,6 +320,9 @@
         _statusMessage = message;
     }
 
+    /// <summary>
+    ///     Captures editable form values before they are mapped into a domain journey entry.
+    /// </summary>
     private sealed class JourneyInputModel
     {
         [Required] public string Title { get; set; } = string.Empty;
@@ -270,6 +334,9 @@
         public string Summary { get; set; } = string.Empty;
     }
 
+    /// <summary>
+    ///     Groups journey entries by section so the page can render each column independently.
+    /// </summary>
     private sealed record JourneyViewModel(
         IReadOnlyList<JourneyHistory> Experiences,
         IReadOnlyList<JourneyHistory> Educations);

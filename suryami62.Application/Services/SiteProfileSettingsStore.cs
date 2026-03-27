@@ -75,21 +75,8 @@ public sealed class SiteProfileSettingsStore(ISettingsRepository repository)
     /// <returns>The resolved profile settings with fallback defaults.</returns>
     public async Task<SiteProfileSettings> GetAsync(CancellationToken cancellationToken = default)
     {
-        var items = await repository.GetValuesAsync(Keys, cancellationToken).ConfigureAwait(false);
-
-        var defaults = SiteProfileSettings.Defaults;
-
-        // Resolves a persisted profile field while falling back to the default public profile value.
-        string Get(string key, string defaultValue)
-        {
-            return items.TryGetValue(key, out var value) ? value : defaultValue;
-        }
-
-        return new SiteProfileSettings(
-            Get(SiteProfileSettingKeys.Instagram, defaults.Instagram),
-            Get(SiteProfileSettingKeys.Linkedin, defaults.Linkedin),
-            Get(SiteProfileSettingKeys.Github, defaults.Github),
-            Get(SiteProfileSettingKeys.Email, defaults.Email));
+        var storedValues = await LoadStoredValuesAsync(cancellationToken).ConfigureAwait(false);
+        return CreateSettings(storedValues);
     }
 
     /// <summary>
@@ -101,14 +88,42 @@ public sealed class SiteProfileSettingsStore(ISettingsRepository repository)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        var values = new Dictionary<string, string>(StringComparer.Ordinal)
+        await repository.UpsertManyAsync(CreatePersistedValues(settings), cancellationToken).ConfigureAwait(false);
+    }
+
+    private Task<IReadOnlyDictionary<string, string>> LoadStoredValuesAsync(CancellationToken cancellationToken)
+    {
+        return repository.GetValuesAsync(Keys, cancellationToken);
+    }
+
+    private static SiteProfileSettings CreateSettings(IReadOnlyDictionary<string, string> storedValues)
+    {
+        return new SiteProfileSettings(
+            ReadStoredValue(storedValues, SiteProfileSettingKeys.Instagram, SiteProfileSettings.Defaults.Instagram),
+            ReadStoredValue(storedValues, SiteProfileSettingKeys.Linkedin, SiteProfileSettings.Defaults.Linkedin),
+            ReadStoredValue(storedValues, SiteProfileSettingKeys.Github, SiteProfileSettings.Defaults.Github),
+            ReadStoredValue(storedValues, SiteProfileSettingKeys.Email, SiteProfileSettings.Defaults.Email));
+    }
+
+    private static string ReadStoredValue(
+        IReadOnlyDictionary<string, string> storedValues,
+        string key,
+        string fallback)
+    {
+        // Empty-string fallbacks keep the public profile safe to render even while setup is only partially complete.
+        return storedValues.TryGetValue(key, out var value)
+            ? value ?? fallback
+            : fallback;
+    }
+
+    private static Dictionary<string, string> CreatePersistedValues(SiteProfileSettings settings)
+    {
+        return new Dictionary<string, string>(StringComparer.Ordinal)
         {
             [SiteProfileSettingKeys.Instagram] = settings.Instagram,
             [SiteProfileSettingKeys.Linkedin] = settings.Linkedin,
             [SiteProfileSettingKeys.Github] = settings.Github,
             [SiteProfileSettingKeys.Email] = settings.Email
         };
-
-        await repository.UpsertManyAsync(values, cancellationToken).ConfigureAwait(false);
     }
 }

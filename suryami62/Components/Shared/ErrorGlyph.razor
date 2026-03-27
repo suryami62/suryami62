@@ -1,6 +1,5 @@
 ﻿@* Reusable oversized symbol component used on error-oriented screens. *@
-<div
-    class="@($"neo-frame flex h-32 w-32 items-center justify-center text-6xl font-black md:h-48 md:w-48 md:text-8xl {BackgroundClass}")">
+<div class="@ContainerClass">
     @Symbol
 </div>
 
@@ -8,4 +7,7 @@
     [Parameter] [EditorRequired] public string Symbol { get; set; } = "";
 
     [Parameter] public string BackgroundClass { get; set; } = "bg-white dark:bg-black";
+
+    private string ContainerClass => $"neo-frame flex h-32 w-32 items-center justify-center text-6xl font-black md:h-48 md:w-48 md:text-8xl {BackgroundClass}";
+
 }

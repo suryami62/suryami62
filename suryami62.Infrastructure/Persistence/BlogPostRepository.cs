@@ -21,38 +21,31 @@ public sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPost
         int? take = null,
         string? searchTerm = null)
     {
-        var postsQuery = context.BlogPosts.AsNoTracking();
+        var filteredPosts = CreateFilteredPostsQuery(onlyPublished, searchTerm);
+        var total = await filteredPosts.CountAsync().ConfigureAwait(false);
+        var items = await LoadPagedPostsAsync(filteredPosts, skip, take).ConfigureAwait(false);
 
-        if (onlyPublished) postsQuery = postsQuery.Where(post => post.IsPublished);
-
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-            postsQuery = postsQuery.Where(post =>
-                post.Title.Contains(searchTerm) || (post.Summary != null && post.Summary.Contains(searchTerm)));
-
-        var total = await postsQuery.CountAsync().ConfigureAwait(false);
-
-        postsQuery = postsQuery.OrderByDescending(post => post.Date);
-        if (skip is > 0) postsQuery = postsQuery.Skip(skip.Value);
-
-        if (take is > 0) postsQuery = postsQuery.Take(take.Value);
-
-        var items = await postsQuery.ToListAsync().ConfigureAwait(false);
         return (items, total);
     }
 
     /// <inheritdoc />
     public async Task<BlogPost?> GetBySlugAsync(string slug)
     {
-        if (string.IsNullOrWhiteSpace(slug))
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(slug));
+        EnsureSlug(slug);
 
-        return await context.BlogPosts.AsNoTracking().FirstOrDefaultAsync(p => p.Slug == slug).ConfigureAwait(false);
+        return await context.BlogPosts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(post => post.Slug == slug)
+            .ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<BlogPost?> GetByIdAsync(int id)
     {
-        return await context.BlogPosts.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id).ConfigureAwait(false);
+        return await context.BlogPosts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(post => post.Id == id)
+            .ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -70,11 +63,7 @@ public sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPost
     {
         ArgumentNullException.ThrowIfNull(post);
 
-        var trackedPost = context.BlogPosts.Local.FirstOrDefault(p => p.Id == post.Id);
-        if (trackedPost is not null && !ReferenceEquals(trackedPost, post))
-            context.Entry(trackedPost).CurrentValues.SetValues(post);
-        else if (trackedPost is null) context.Entry(post).State = EntityState.Modified;
-
+        EfRepositoryHelpers.UpdateExistingOrAttachModified(context, context.BlogPosts, post, item => item.Id);
         await context.SaveChangesAsync().ConfigureAwait(false);
     }
 
@@ -82,10 +71,36 @@ public sealed class BlogPostRepository(ApplicationDbContext context) : IBlogPost
     public async Task DeleteAsync(int id)
     {
         var post = await context.BlogPosts.FindAsync(id).ConfigureAwait(false);
-        if (post != null)
-        {
-            context.BlogPosts.Remove(post);
-            await context.SaveChangesAsync().ConfigureAwait(false);
-        }
+        if (post is null) return;
+
+        context.BlogPosts.Remove(post);
+        await context.SaveChangesAsync().ConfigureAwait(false);
+    }
+
+    private IQueryable<BlogPost> CreateFilteredPostsQuery(bool onlyPublished, string? searchTerm)
+    {
+        var query = context.BlogPosts.AsNoTracking();
+
+        if (onlyPublished) query = query.Where(post => post.IsPublished);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+            query = query.Where(post => post.Title.Contains(searchTerm) || post.Summary.Contains(searchTerm));
+
+        return query;
+    }
+
+    private static Task<List<BlogPost>> LoadPagedPostsAsync(
+        IQueryable<BlogPost> filteredPosts,
+        int? skip,
+        int? take)
+    {
+        var sortedPosts = filteredPosts.OrderByDescending(post => post.Date);
+        var pagedPosts = EfRepositoryHelpers.ApplyOptionalPaging(sortedPosts, skip, take);
+        return pagedPosts.ToListAsync();
+    }
+
+    private static void EnsureSlug(string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug)) throw new ArgumentException("Slug cannot be empty.", nameof(slug));
     }
 }

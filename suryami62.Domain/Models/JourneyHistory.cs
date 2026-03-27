@@ -45,22 +45,29 @@ public sealed class JourneyHistory
     /// <summary>
     ///     Gets or sets the title of the role, program, or milestone.
     /// </summary>
-    [Required] [StringLength(200)] public string Title { get; set; } = string.Empty;
+    [Required]
+    [StringLength(DomainModelConstraints.TitleMaxLength)]
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the organization associated with the entry.
     /// </summary>
-    [Required] [StringLength(300)] public string Organization { get; set; } = string.Empty;
+    [Required]
+    [StringLength(DomainModelConstraints.JourneyOrganizationMaxLength)]
+    public string Organization { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the date range or period label for the entry.
     /// </summary>
-    [Required] [StringLength(100)] public string Period { get; set; } = string.Empty;
+    [Required]
+    [StringLength(DomainModelConstraints.JourneyPeriodMaxLength)]
+    public string Period { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the descriptive summary for the entry.
     /// </summary>
-    [Required] public string Summary { get; set; } = string.Empty;
+    [Required]
+    public string Summary { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the sort order within the selected section.

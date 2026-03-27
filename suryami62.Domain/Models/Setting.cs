@@ -19,7 +19,8 @@ public sealed class Setting
     /// <summary>
     ///     Gets or sets the unique configuration key.
     /// </summary>
-    [Required] public string Key { get; set; } = string.Empty;
+    [Required]
+    public string Key { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the stored value for the key.

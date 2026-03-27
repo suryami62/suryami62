@@ -28,44 +28,35 @@
             </tr>
             </thead>
             <tbody class="divide-y-2 divide-black dark:divide-white">
-            @if (_posts == null)
+            @if (IsLoadingPosts)
             {
                 <tr>
                     <td colspan="4" class="p-4">Loading...</td>
                 </tr>
             }
-            else if (!_posts.Any())
+            else if (HasNoPosts)
             {
                 <tr>
                     <td colspan="4" class="p-4">No posts found.</td>
                 </tr>
             }
-            else
+            else if (_posts is { Count: > 0 } posts)
             {
-                foreach (var post in _posts)
+                foreach (var post in posts)
                 {
                     <tr class="hover:bg-gray-100 dark:hover:bg-gray-900">
                         <td class="p-4 font-bold">@post.Title</td>
                         <td class="p-4">@post.Date.ToString("MMM dd, yyyy")</td>
                         <td class="p-4">
-                            @if (post.IsPublished)
-                            {
-                                <span
-                                    class="bg-green-400 border-2 border-black px-2 py-1 font-bold text-xs">PUBLISHED</span>
-                            }
-                            else
-                            {
-                                <span
-                                    class="bg-yellow-400 border-2 border-black px-2 py-1 font-bold text-xs">DRAFT</span>
-                            }
+                            <span class="@GetPostStatusBadgeClass(post)">@GetPostStatusText(post)</span>
                         </td>
                         <td class="p-4 flex gap-2">
                             <a href="/Account/Admin/Posts/Edit/@post.Id"
                                class="@EditButtonClass">EDIT</a>
-                            <button @onclick="() => DeletePost(post.Id)"
-                                    disabled="@(_isDeleting == post.Id)"
+                            <button @onclick="() => DeletePostAsync(post.Id)"
+                                    disabled="@IsDeletingPost(post.Id)"
                                     class="@DeleteButtonClass">
-                                @(_isDeleting == post.Id ? "..." : "DELETE")
+                                @(IsDeletingPost(post.Id) ? "..." : "DELETE")
                             </button>
                         </td>
                     </tr>
@@ -75,17 +66,17 @@
         </table>
     </div>
 
-    @if (_total > _pageSize)
+    @if (ShouldShowPagination)
     {
         <div class="flex justify-center gap-4">
-            <button disabled="@(_page == 1)" @onclick="() => ChangePage(_page - 1)"
+            <button disabled="@(!CanMoveToPreviousPage)" @onclick="GoToPreviousPageAsync"
                     class="@PagerPrevButtonClass">
                 PREV
             </button>
             <div class="flex items-center text-2xl font-black">
-                @_page / @(Math.Ceiling((double)_total / _pageSize))
+                @_page / @TotalPages
             </div>
-            <button disabled="@(_page * _pageSize >= _total)" @onclick="() => ChangePage(_page + 1)"
+            <button disabled="@(!CanMoveToNextPage)" @onclick="GoToNextPageAsync"
                     class="@PagerNextButtonClass">
                 NEXT
             </button>
@@ -102,6 +93,8 @@
     private const string DeleteButtonClass = "neo-button-danger px-3 py-1 text-sm disabled:opacity-50";
     private const string PagerPrevButtonClass = "neo-button px-6 py-2 text-black disabled:opacity-50";
     private const string PagerNextButtonClass = "neo-button bg-[#A3E635] px-6 py-2 text-black hover:bg-lime-400 disabled:opacity-50 dark:bg-lime-500";
+    private const string PublishedStatusBadgeClass = "bg-green-400 border-2 border-black px-2 py-1 font-bold text-xs";
+    private const string DraftStatusBadgeClass = "bg-yellow-400 border-2 border-black px-2 py-1 font-bold text-xs";
 
     private List<BlogPost>? _posts;
     private int _page = 1;
@@ -110,35 +103,128 @@
     private int? _isDeleting;
     private ConfirmModal? _confirmModal;
 
+    private bool IsLoadingPosts => _posts is null;
+
+    private bool HasNoPosts => _posts is { Count: 0 };
+
+    private bool ShouldShowPagination => _total > _pageSize;
+
+    private bool CanMoveToPreviousPage => _page > 1;
+
+    private bool CanMoveToNextPage => _page * _pageSize < _total;
+
+    private int TotalPages => (int)Math.Ceiling((double)_total / _pageSize);
+
+    /// <summary>
+    ///     Loads the first page of posts for the admin listing.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        await LoadPosts();
+        await LoadPostsAsync();
     }
 
-    private async Task LoadPosts()
+    /// <summary>
+    ///     Reads the posts for the current page and refreshes the pager metadata.
+    /// </summary>
+    private async Task LoadPostsAsync()
     {
-        var (items, total) = await BlogPostService.GetPostsAsync(false, (_page - 1) * _pageSize, _pageSize);
-        _posts = items;
-        _total = total;
+        var pageOffset = GetCurrentPageOffset();
+        var (posts, totalPosts) = await BlogPostService.GetPostsAsync(
+            false,
+            pageOffset,
+            _pageSize);
+
+        _posts = posts;
+        _total = totalPosts;
     }
 
-    private async Task ChangePage(int newPage)
+    /// <summary>
+    ///     Moves the pager to a specific page and reloads the grid.
+    /// </summary>
+    private async Task ChangePageAsync(int newPage)
     {
-        _page = newPage;
-        await LoadPosts();
-    }
-
-    private async Task DeletePost(int id)
-    {
-        if (_confirmModal == null) return;
-
-        if (await _confirmModal.ShowAsync())
+        if (newPage < 1)
         {
-            _isDeleting = id;
-            await BlogPostService.DeletePostAsync(id);
-            _posts?.RemoveAll(p => p.Id == id);
+            return;
+        }
+
+        _page = newPage;
+        await LoadPostsAsync();
+    }
+
+    /// <summary>
+    ///     Moves to the previous page when the pager allows it.
+    /// </summary>
+    private Task GoToPreviousPageAsync()
+    {
+        return ChangePageAsync(_page - 1);
+    }
+
+    /// <summary>
+    ///     Moves to the next page when more posts are available.
+    /// </summary>
+    private Task GoToNextPageAsync()
+    {
+        return ChangePageAsync(_page + 1);
+    }
+
+    /// <summary>
+    ///     Deletes a post after user confirmation.
+    /// </summary>
+    private async Task DeletePostAsync(int postId)
+    {
+        if (!await ShouldDeletePostAsync())
+        {
+            return;
+        }
+
+        _isDeleting = postId;
+
+        try
+        {
+            await BlogPostService.DeletePostAsync(postId);
+            RemovePostFromCurrentList(postId);
+        }
+        finally
+        {
+            // Resetting the busy flag in finally prevents the row button from getting stuck after a failed delete.
             _isDeleting = null;
         }
+    }
+
+    private int GetCurrentPageOffset()
+    {
+        return (_page - 1) * _pageSize;
+    }
+
+    private bool IsDeletingPost(int postId)
+    {
+        return _isDeleting == postId;
+    }
+
+    private string GetPostStatusText(BlogPost post)
+    {
+        return post.IsPublished ? "PUBLISHED" : "DRAFT";
+    }
+
+    private string GetPostStatusBadgeClass(BlogPost post)
+    {
+        return post.IsPublished ? PublishedStatusBadgeClass : DraftStatusBadgeClass;
+    }
+
+    private async Task<bool> ShouldDeletePostAsync()
+    {
+        if (_confirmModal is null)
+        {
+            return false;
+        }
+
+        return await _confirmModal.ShowAsync();
+    }
+
+    private void RemovePostFromCurrentList(int postId)
+    {
+        _posts?.RemoveAll(post => post.Id == postId);
     }
 
 }

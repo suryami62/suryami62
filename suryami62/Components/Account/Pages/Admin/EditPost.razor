@@ -9,10 +9,10 @@
 @inject IBlogPostService BlogPostService
 @inject NavigationManager NavigationManager
 
-<PageTitle>@(Id == null ? "New Post" : "Edit Post") - Surya Ramadhan</PageTitle>
+<PageTitle>@PageTitleText - Surya Ramadhan</PageTitle>
 
 <div class="flex flex-col gap-12 py-8">
-    <PageHeader Title="@(Id == null ? "New" : "Edit")" Highlight="Post"/>
+    <PageHeader Title="@PageActionText" Highlight="Post"/>
 
     <EditForm Model="@_post" OnValidSubmit="SavePostAsync" FormName="edit-post-form"
               class="neo-card flex flex-col gap-6 p-8">
@@ -73,7 +73,7 @@
         <div class="flex gap-4 mt-4">
             <button type="submit" disabled="@_isSubmitting"
                     class="@PrimaryButtonClass">
-                @(_isSubmitting ? "SAVING..." : "SAVE POST")
+                @SubmitButtonText
             </button>
             <a href="/Account/Admin/Posts"
                class="@SecondaryButtonClass">
@@ -90,7 +90,11 @@
     private const string PrimaryButtonClass = "neo-button bg-[#A3E635] px-8 py-3 text-xl text-black hover:bg-lime-400 disabled:opacity-50 dark:bg-lime-500 dark:text-black";
     private const string SecondaryButtonClass = "neo-button bg-gray-200 px-8 py-3 text-xl text-black hover:bg-gray-300 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700";
 
-    [Parameter] public int? Id { get; set; }
+    /// <summary>
+    ///     Gets the identifier of the post being edited, or <see langword="null" /> when creating a new post.
+    /// </summary>
+    [Parameter]
+    public int? Id { get; set; }
 
     private BlogPost _post = CreateNewPost();
     private string? _imageUrlText;
@@ -98,23 +102,29 @@
 
     private bool IsNewPost => Id is null;
 
+    private string PageActionText => IsNewPost ? "New" : "Edit";
+
+    private string PageTitleText => IsNewPost ? "New Post" : "Edit Post";
+
+    private string SubmitButtonText => _isSubmitting ? "SAVING..." : "SAVE POST";
+
+    /// <summary>
+    ///     Loads the requested post when the route changes, or resets the form for a new post.
+    /// </summary>
     protected override async Task OnParametersSetAsync()
     {
-        if (Id is null)
+        if (IsNewPost)
         {
-            _imageUrlText = _post.ImageUrl?.ToString();
+            ResetFormForNewPost();
             return;
         }
 
-        var post = await BlogPostService.GetPostByIdAsync(Id.Value);
-        if (post is not null)
-        {
-            _post = post;
-        }
-
-        _imageUrlText = _post.ImageUrl?.ToString();
+        await LoadExistingPostAsync(Id!.Value);
     }
 
+    /// <summary>
+    ///     Parses an optional absolute image URL from the free-form input field.
+    /// </summary>
     private static Uri? TryParseAbsoluteUri(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -125,6 +135,9 @@
         return Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
     }
 
+    /// <summary>
+    ///     Auto-generates a slug while creating a new post.
+    /// </summary>
     private void OnTitleChanged(ChangeEventArgs e)
     {
         if (!IsNewPost)
@@ -133,9 +146,14 @@
         }
 
         var title = e.Value?.ToString();
+
+        // Only auto-updating the slug for new posts avoids overwriting a slug that was curated during editing.
         _post.Slug = CreateSlug(title);
     }
 
+    /// <summary>
+    ///     Creates or updates the post, then returns to the admin post listing.
+    /// </summary>
     private async Task SavePostAsync()
     {
         if (_isSubmitting)
@@ -143,26 +161,17 @@
             return;
         }
 
-        _isSubmitting = true;
+        BeginSubmit();
 
         try
         {
-            _post.ImageUrl = TryParseAbsoluteUri(_imageUrlText);
-
-            if (IsNewPost)
-            {
-                await BlogPostService.CreatePostAsync(_post);
-            }
-            else
-            {
-                await BlogPostService.UpdatePostAsync(_post);
-            }
-
-            NavigationManager.NavigateTo("/Account/Admin/Posts");
+            ApplyImageUrlInputToPost();
+            await PersistPostAsync();
+            NavigateToPostList();
         }
         catch
         {
-            // Intentionally swallow to keep UX simple (button re-enabled in finally).
+            // Intentionally swallowing here keeps the page state intact so the user can correct input and retry.
         }
         finally
         {
@@ -170,11 +179,66 @@
         }
     }
 
+    private void ResetFormForNewPost()
+    {
+        _post = CreateNewPost();
+        SyncImageUrlTextFromPost();
+    }
+
+    private async Task LoadExistingPostAsync(int postId)
+    {
+        var existingPost = await BlogPostService.GetPostByIdAsync(postId);
+        if (existingPost is not null)
+        {
+            _post = existingPost;
+        }
+
+        SyncImageUrlTextFromPost();
+    }
+
+    private void SyncImageUrlTextFromPost()
+    {
+        _imageUrlText = _post.ImageUrl?.ToString();
+    }
+
+    private void BeginSubmit()
+    {
+        _isSubmitting = true;
+    }
+
+    private void ApplyImageUrlInputToPost()
+    {
+        _post.ImageUrl = TryParseAbsoluteUri(_imageUrlText);
+    }
+
+    private Task PersistPostAsync()
+    {
+        return IsNewPost
+            ? BlogPostService.CreatePostAsync(_post)
+            : UpdatePostAsync();
+    }
+
+    private async Task UpdatePostAsync()
+    {
+        await BlogPostService.UpdatePostAsync(_post);
+    }
+
+    private void NavigateToPostList()
+    {
+        NavigationManager.NavigateTo("/Account/Admin/Posts");
+    }
+
+    /// <summary>
+    ///     Creates a new post model with the default publication date used by the editor.
+    /// </summary>
     private static BlogPost CreateNewPost()
     {
         return new BlogPost { Date = DateTime.UtcNow };
     }
 
+    /// <summary>
+    ///     Converts a title into a predictable slug for the post route.
+    /// </summary>
     private static string CreateSlug(string? title)
     {
         if (string.IsNullOrWhiteSpace(title))

@@ -8,12 +8,12 @@
 @inject IProjectService ProjectService
 @inject NavigationManager NavigationManager
 
-<PageTitle>@(Id == null ? "New Project" : "Edit Project") - Surya Ramadhan</PageTitle>
+<PageTitle>@PageTitleText - Surya Ramadhan</PageTitle>
 
 <div class="flex flex-col gap-12 py-8">
-    <PageHeader Title="@(Id == null ? "New" : "Edit")" Highlight="Project"/>
+    <PageHeader Title="@PageActionText" Highlight="Project"/>
 
-    <EditForm Model="@_project" OnValidSubmit="SaveProject" FormName="edit-project-form" method="post"
+    <EditForm Model="@_project" OnValidSubmit="SaveProjectAsync" FormName="edit-project-form" method="post"
               class="neo-card flex flex-col gap-6 p-8">
         <DataAnnotationsValidator/>
         <ValidationSummary class="@ValidationSummaryClass"/>
@@ -67,7 +67,7 @@
         <div class="flex gap-4 mt-4">
             <button type="submit" disabled="@_isSubmitting"
                     class="@PrimaryButtonClass">
-                @(_isSubmitting ? "SAVING..." : "SAVE PROJECT")
+                @SubmitButtonText
             </button>
             <a href="/Account/Admin/Projects"
                class="@SecondaryButtonClass">
@@ -83,7 +83,11 @@
     private const string PrimaryButtonClass = "neo-button bg-[#FB923C] px-8 py-3 text-xl text-black hover:bg-orange-300 disabled:opacity-50 dark:bg-orange-400 dark:text-black";
     private const string SecondaryButtonClass = "neo-button bg-gray-200 px-8 py-3 text-xl text-black hover:bg-gray-300 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700";
 
-    [Parameter] public int? Id { get; set; }
+    /// <summary>
+    ///     Gets the identifier of the project being edited, or <see langword="null" /> when creating a new project.
+    /// </summary>
+    [Parameter]
+    public int? Id { get; set; }
 
     [SupplyParameterFromForm] private Project _project { get; set; } = default!;
     private string? _repoUrlText;
@@ -91,33 +95,64 @@
     private string? _imageUrlText;
     private bool _isSubmitting;
 
+    private bool IsNewProject => Id is null;
+
+    private string PageActionText => IsNewProject ? "New" : "Edit";
+
+    private string PageTitleText => IsNewProject ? "New Project" : "Edit Project";
+
+    private string SubmitButtonText => _isSubmitting ? "SAVING..." : "SAVE PROJECT";
+
+    /// <summary>
+    ///     Creates the initial form model used by the project editor.
+    /// </summary>
     protected override void OnInitialized()
     {
         _project ??= new Project();
-        SyncUrlTextFromModel();
+        SyncUrlTextFromProject();
     }
 
+    /// <summary>
+    ///     Loads the requested project when the route changes, or resets the editor for a new project.
+    /// </summary>
     protected override async Task OnParametersSetAsync()
     {
-        if (Id != null)
+        if (IsNewProject)
         {
-            var project = await ProjectService.GetProjectByIdAsync(Id.Value);
-            if (project != null)
-            {
-                _project = project;
-            }
+            ResetFormForNewProject();
+            return;
         }
 
-        SyncUrlTextFromModel();
+        await LoadExistingProjectAsync(Id!.Value);
     }
 
-    private void SyncUrlTextFromModel()
+    private void ResetFormForNewProject()
+    {
+        _project = new Project();
+        SyncUrlTextFromProject();
+    }
+
+    private async Task LoadExistingProjectAsync(int projectId)
+    {
+        var existingProject = await ProjectService.GetProjectByIdAsync(projectId);
+        if (existingProject is not null)
+        {
+            _project = existingProject;
+        }
+
+        SyncUrlTextFromProject();
+    }
+
+    private void SyncUrlTextFromProject()
     {
         _repoUrlText = _project.RepoUrl?.ToString();
         _demoUrlText = _project.DemoUrl?.ToString();
         _imageUrlText = _project.ImageUrl?.ToString();
     }
 
+    /// <summary>
+    ///     Parses an optional absolute URL from a free-form input field.
+    /// </summary>
     private static Uri? TryParseAbsoluteUri(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -128,32 +163,61 @@
         return Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
     }
 
-    private async Task SaveProject()
+    /// <summary>
+    ///     Creates or updates the project, then returns to the admin project listing.
+    /// </summary>
+    private async Task SaveProjectAsync()
     {
-        if (_isSubmitting) return;
-        _isSubmitting = true;
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        BeginSubmit();
 
         try
         {
-            _project.RepoUrl = TryParseAbsoluteUri(_repoUrlText);
-            _project.DemoUrl = TryParseAbsoluteUri(_demoUrlText);
-            _project.ImageUrl = TryParseAbsoluteUri(_imageUrlText);
-
-            if (Id == null)
-            {
-                await ProjectService.CreateProjectAsync(_project);
-            }
-            else
-            {
-                await ProjectService.UpdateProjectAsync(_project);
-            }
-
-            NavigationManager.NavigateTo("/Account/Admin/Projects");
+            ApplyUrlInputsToProject();
+            await PersistProjectAsync();
+            NavigateToProjectList();
         }
         catch
         {
+            // Keeping the current form state after a failed save gives the user a chance to correct and retry.
+        }
+        finally
+        {
             _isSubmitting = false;
         }
+    }
+
+    private void BeginSubmit()
+    {
+        _isSubmitting = true;
+    }
+
+    private void ApplyUrlInputsToProject()
+    {
+        _project.RepoUrl = TryParseAbsoluteUri(_repoUrlText);
+        _project.DemoUrl = TryParseAbsoluteUri(_demoUrlText);
+        _project.ImageUrl = TryParseAbsoluteUri(_imageUrlText);
+    }
+
+    private Task PersistProjectAsync()
+    {
+        return IsNewProject
+            ? ProjectService.CreateProjectAsync(_project)
+            : UpdateProjectAsync();
+    }
+
+    private async Task UpdateProjectAsync()
+    {
+        await ProjectService.UpdateProjectAsync(_project);
+    }
+
+    private void NavigateToProjectList()
+    {
+        NavigationManager.NavigateTo("/Account/Admin/Projects");
     }
 
 }

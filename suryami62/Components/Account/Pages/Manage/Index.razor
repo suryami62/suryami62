@@ -26,7 +26,7 @@
                 </div>
                 <div class="flex flex-col gap-2">
                     <dt class="text-sm font-black uppercase tracking-widest">Email</dt>
-                    <dd class="neo-input cursor-not-allowed bg-neutral-100 dark:bg-neutral-900">@(_user.Email ?? "No email configured")</dd>
+                    <dd class="neo-input cursor-not-allowed bg-neutral-100 dark:bg-neutral-900">@UserEmail</dd>
                 </div>
             </dl>
         </section>
@@ -43,6 +43,19 @@
 
 @code {
     private ApplicationUser? _user;
+
+    private string UserEmail
+    {
+        get
+        {
+            if (_user != null && !string.IsNullOrEmpty(_user.Email))
+            {
+                return _user.Email;
+            }
+
+            return "No email configured";
+        }
+    }
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 

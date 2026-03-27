@@ -15,7 +15,7 @@
         </ChildContent>
     </PageHeader>
 
-    @if (!string.IsNullOrWhiteSpace(_statusMessage))
+    @if (HasStatusMessage)
     {
         <div class="@StatusMessageClass">
             <p class="font-bold">@_statusMessage</p>
@@ -23,41 +23,44 @@
     }
 
     <section class="neo-card p-6">
-        <EditForm Model="Input" FormName="siteProfile" OnValidSubmit="OnValidSubmitAsync" method="post">
+        <EditForm Model="FormInput" FormName="siteProfile" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator/>
             <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
 
             <div class="mt-4 flex max-w-xl flex-col gap-4">
                 <div class="flex flex-col gap-2">
-                    <label for="Input.Instagram" class="text-sm font-black uppercase tracking-widest">Instagram</label>
-                    <InputText @bind-Value="Input.Instagram" id="Input.Instagram"
+                    <label for="FormInput.Instagram"
+                           class="text-sm font-black uppercase tracking-widest">Instagram</label>
+                    <InputText @bind-Value="FormInput.Instagram" id="FormInput.Instagram"
                                class="@InputClass"
                                placeholder="https://instagram.com/username"/>
-                    <ValidationMessage For="() => Input.Instagram"
+                    <ValidationMessage For="() => FormInput.Instagram"
                                        class="@ValidationMessageClass"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <label for="Input.Linkedin" class="text-sm font-black uppercase tracking-widest">LinkedIn</label>
-                    <InputText @bind-Value="Input.Linkedin" id="Input.Linkedin"
+                    <label for="FormInput.Linkedin"
+                           class="text-sm font-black uppercase tracking-widest">LinkedIn</label>
+                    <InputText @bind-Value="FormInput.Linkedin" id="FormInput.Linkedin"
                                class="@InputClass"
                                placeholder="https://linkedin.com/in/username"/>
-                    <ValidationMessage For="() => Input.Linkedin"
+                    <ValidationMessage For="() => FormInput.Linkedin"
                                        class="@ValidationMessageClass"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <label for="Input.Github" class="text-sm font-black uppercase tracking-widest">GitHub</label>
-                    <InputText @bind-Value="Input.Github" id="Input.Github"
+                    <label for="FormInput.Github" class="text-sm font-black uppercase tracking-widest">GitHub</label>
+                    <InputText @bind-Value="FormInput.Github" id="FormInput.Github"
                                class="@InputClass"
                                placeholder="https://github.com/username"/>
-                    <ValidationMessage For="() => Input.Github"
+                    <ValidationMessage For="() => FormInput.Github"
                                        class="@ValidationMessageClass"/>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Public Email</label>
-                    <InputText @bind-Value="Input.Email" id="Input.Email"
+                    <label for="FormInput.Email" class="text-sm font-black uppercase tracking-widest">Public
+                        Email</label>
+                    <InputText @bind-Value="FormInput.Email" id="FormInput.Email"
                                class="@InputClass"
                                placeholder="mailto:user@domain.com"/>
-                    <ValidationMessage For="() => Input.Email"
+                    <ValidationMessage For="() => FormInput.Email"
                                        class="@ValidationMessageClass"/>
                 </div>
                 <button type="submit" disabled="@_isSubmitting"
@@ -81,19 +84,22 @@
     private string? _statusMessage;
     private bool _isError;
 
-    [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
+    private bool HasStatusMessage => !string.IsNullOrWhiteSpace(_statusMessage);
 
+    [SupplyParameterFromForm] private InputModel FormInput { get; set; } = default!;
+
+    /// <summary>
+    ///     Loads the persisted public profile settings into the admin form.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        Input ??= new InputModel();
-
-        var siteProfile = await SiteProfileSettingsStore.GetAsync();
-        Input.Instagram ??= siteProfile.Instagram;
-        Input.Linkedin ??= siteProfile.Linkedin;
-        Input.Github ??= siteProfile.Github;
-        Input.Email ??= siteProfile.Email;
+        FormInput ??= new InputModel();
+        await LoadFormInputAsync();
     }
 
+    /// <summary>
+    ///     Persists the form values as public site profile settings.
+    /// </summary>
     private async Task OnValidSubmitAsync()
     {
         if (_isSubmitting)
@@ -101,24 +107,16 @@
             return;
         }
 
-        _isSubmitting = true;
-        _statusMessage = null;
-        _isError = false;
+        BeginSubmission();
 
         try
         {
-            await SiteProfileSettingsStore.SaveAsync(new SiteProfileSettings(
-                Input.Instagram ?? string.Empty,
-                Input.Linkedin ?? string.Empty,
-                Input.Github ?? string.Empty,
-                Input.Email ?? string.Empty));
-
-            _statusMessage = "Site profile updated successfully.";
+            await SaveSiteProfileAsync();
+            SetSuccessStatus("Site profile updated successfully.");
         }
         catch
         {
-            _statusMessage = "Failed to update site profile.";
-            _isError = true;
+            SetErrorStatus("Failed to update site profile.");
         }
         finally
         {
@@ -126,6 +124,64 @@
         }
     }
 
+    /// <summary>
+    ///     Loads the existing profile values so the form always starts from the current persisted state.
+    /// </summary>
+    private async Task LoadFormInputAsync()
+    {
+        var siteProfile = await SiteProfileSettingsStore.GetAsync();
+        ApplySiteProfileToForm(siteProfile);
+    }
+
+    private void ApplySiteProfileToForm(SiteProfileSettings siteProfile)
+    {
+        FormInput.Instagram ??= siteProfile.Instagram;
+        FormInput.Linkedin ??= siteProfile.Linkedin;
+        FormInput.Github ??= siteProfile.Github;
+        FormInput.Email ??= siteProfile.Email;
+    }
+
+    private void BeginSubmission()
+    {
+        _isSubmitting = true;
+        ClearStatus();
+    }
+
+    private void ClearStatus()
+    {
+        _statusMessage = null;
+        _isError = false;
+    }
+
+    private async Task SaveSiteProfileAsync()
+    {
+        await SiteProfileSettingsStore.SaveAsync(CreateSettingsFromForm());
+    }
+
+    private SiteProfileSettings CreateSettingsFromForm()
+    {
+        return new SiteProfileSettings(
+            FormInput.Instagram ?? string.Empty,
+            FormInput.Linkedin ?? string.Empty,
+            FormInput.Github ?? string.Empty,
+            FormInput.Email ?? string.Empty);
+    }
+
+    private void SetSuccessStatus(string message)
+    {
+        _statusMessage = message;
+        _isError = false;
+    }
+
+    private void SetErrorStatus(string message)
+    {
+        _statusMessage = message;
+        _isError = true;
+    }
+
+    /// <summary>
+    ///     Captures editable site profile values before they are persisted into the settings store.
+    /// </summary>
     private sealed class InputModel
     {
         [WebUrl] [Display(Name = "Instagram")] public string? Instagram { get; set; }
@@ -139,8 +195,18 @@
         public string? Email { get; set; }
     }
 
-    private sealed class WebUrlAttribute : ValidationAttribute
+    /// <summary>
+    ///     Validates absolute URLs and restricts the allowed schemes for profile fields.
+    /// </summary>
+    private abstract class AbsoluteUrlValidationAttribute : ValidationAttribute
     {
+        private readonly string[] _allowedSchemes;
+
+        protected AbsoluteUrlValidationAttribute(params string[] allowedSchemes)
+        {
+            _allowedSchemes = allowedSchemes;
+        }
+
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
             if (value is null)
@@ -163,39 +229,75 @@
                 return new ValidationResult("Must be a valid absolute URL.");
             }
 
-            return uri.Scheme is "http" or "https"
-                ? ValidationResult.Success
-                : new ValidationResult("URL must start with http:// or https://");
+            if (IsAllowedScheme(uri))
+            {
+                return ValidationResult.Success;
+            }
+
+            return new ValidationResult(BuildSchemeValidationMessage());
+        }
+
+        private bool IsAllowedScheme(Uri uri)
+        {
+            return _allowedSchemes.Contains(uri.Scheme, StringComparer.OrdinalIgnoreCase);
+        }
+
+        private string BuildSchemeValidationMessage()
+        {
+            var allowedSchemeLabels = _allowedSchemes
+                .Select(scheme => $"{scheme}://")
+                .ToArray();
+
+            if (allowedSchemeLabels.Length == 1)
+            {
+                return $"URL must start with {allowedSchemeLabels[0]}";
+            }
+
+            if (allowedSchemeLabels.Length == 2)
+            {
+                return $"URL must start with {allowedSchemeLabels[0]} or {allowedSchemeLabels[1]}";
+            }
+
+            var lastScheme = allowedSchemeLabels[^1];
+            var leadingSchemes = string.Join(", ", allowedSchemeLabels[..^1]);
+
+            return $"URL must start with {leadingSchemes}, or {lastScheme}";
         }
     }
 
-    private sealed class WebOrMailtoUrlAttribute : ValidationAttribute
+    /// <summary>
+    ///     Allows public social links that should resolve to standard web URLs.
+    /// </summary>
+    private sealed class WebUrlAttribute : AbsoluteUrlValidationAttribute
     {
+        public WebUrlAttribute() : base("http", "https")
+        {
+        }
+    }
+
+    /// <summary>
+    ///     Allows either a web URL or a mailto link for the public contact field.
+    /// </summary>
+    private sealed class WebOrMailtoUrlAttribute : AbsoluteUrlValidationAttribute
+    {
+        public WebOrMailtoUrlAttribute() : base("http", "https", "mailto")
+        {
+        }
+
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
-            if (value is null)
+            var baseResult = base.IsValid(value, validationContext);
+            if (baseResult == ValidationResult.Success)
             {
                 return ValidationResult.Success;
             }
 
-            if (value is not string text)
-            {
-                return new ValidationResult("Invalid value.");
-            }
-
-            if (string.IsNullOrWhiteSpace(text))
+            if (value is string text && text.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
             {
                 return ValidationResult.Success;
             }
 
-            if (!Uri.TryCreate(text, UriKind.Absolute, out var uri))
-            {
-                return new ValidationResult("Must be a valid absolute URL.");
-            }
-
-            return uri.Scheme is "http" or "https" or "mailto"
-                ? ValidationResult.Success
-                : new ValidationResult("URL must start with http://, https://, or mailto:");
+            return new ValidationResult("URL must start with http://, https://, or mailto:");
         }
     }
 

@@ -17,21 +17,21 @@
         </ChildContent>
     </PageHeader>
 
-    @if (showSuccessMessage)
+    @if (HasSuccessMessage)
     {
         <div class="@SuccessMessageClass">
             Settings saved successfully.
         </div>
     }
 
-    <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="seo-files-form" method="post">
+    <EditForm Model="FormInput" OnValidSubmit="OnValidSubmitAsync" FormName="seo-files-form" method="post">
         <DataAnnotationsValidator/>
         <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
 
         <div class="mt-4 flex max-w-xl flex-col gap-4">
             <div class="flex flex-col gap-2">
                 <label for="baseUrl" class="text-sm font-black tracking-widest uppercase">Base URL</label>
-                <InputText id="baseUrl" @bind-Value="Input.BaseUrl"
+                <InputText id="baseUrl" @bind-Value="FormInput.BaseUrl"
                            class="@InputClass"
                            placeholder="https://example.com"/>
                 <p class="text-sm font-bold text-neutral-600 dark:text-neutral-400">
@@ -40,14 +40,14 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <InputCheckbox id="enableSitemap" @bind-Value="Input.EnableSitemap"
+                <InputCheckbox id="enableSitemap" @bind-Value="FormInput.EnableSitemap"
                                class="@CheckboxClass"/>
                 <label for="enableSitemap" class="text-sm font-black tracking-widest uppercase">Enable
                     sitemap.xml</label>
             </div>
 
             <div class="flex items-center gap-2">
-                <InputCheckbox id="enableRobots" @bind-Value="Input.EnableRobots"
+                <InputCheckbox id="enableRobots" @bind-Value="FormInput.EnableRobots"
                                class="@CheckboxClass"/>
                 <label for="enableRobots" class="text-sm font-black tracking-widest uppercase">Enable robots.txt</label>
             </div>
@@ -55,7 +55,7 @@
             <div class="flex flex-col gap-2">
                 <label for="robotsDisallow" class="text-sm font-black tracking-widest uppercase">Robots Disallow (one
                     per line)</label>
-                <InputTextArea id="robotsDisallow" @bind-Value="Input.RobotsDisallow"
+                <InputTextArea id="robotsDisallow" @bind-Value="FormInput.RobotsDisallow"
                                class="@InputClass"
                                rows="5" placeholder="/Account"/>
             </div>
@@ -73,57 +73,148 @@
     private const string ValidationSummaryClass = "text-sm font-bold text-red-600 dark:text-red-400";
     private const string SuccessMessageClass = "neo-card mb-4 bg-green-400 px-4 py-3 font-bold text-black";
     private const string PrimaryButtonClass = "neo-button w-full text-center";
+    private const string SeoBaseUrlKey = "Seo:BaseUrl";
+    private const string SeoEnableSitemapKey = "Seo:EnableSitemap";
+    private const string SeoEnableRobotsKey = "Seo:EnableRobots";
+    private const string SeoRobotsDisallowKey = "Seo:RobotsDisallow";
+    private const string DefaultRobotsDisallowValue = "/Account";
+    private const string EnabledSettingValue = "true";
+    private const string DisabledSettingValue = "false";
 
-    private bool showSuccessMessage;
+    private static readonly string[] SeoSettingKeys =
+    [
+        SeoBaseUrlKey,
+        SeoEnableSitemapKey,
+        SeoEnableRobotsKey,
+        SeoRobotsDisallowKey
+    ];
 
-    [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
+    private bool HasSuccessMessage { get; set; }
 
+    [SupplyParameterFromForm] private InputModel FormInput { get; set; } = new();
+
+    /// <summary>
+    ///     Loads the persisted SEO settings into the form shown on the admin page.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        Input ??= new InputModel();
-
-        var baseUrlSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:BaseUrl");
-        var enableSitemapSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableSitemap");
-        var enableRobotsSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:EnableRobots");
-        var robotsDisallowSetting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == "Seo:RobotsDisallow");
-
-        Input.BaseUrl = baseUrlSetting?.Value ?? string.Empty;
-        Input.EnableSitemap = enableSitemapSetting?.Value != "false";
-        Input.EnableRobots = enableRobotsSetting?.Value != "false";
-        Input.RobotsDisallow = robotsDisallowSetting?.Value ?? "/Account";
+        await LoadFormInputAsync();
     }
 
+    /// <summary>
+    ///     Persists the current form values back into the settings table.
+    /// </summary>
     private async Task OnValidSubmitAsync()
     {
-        await SaveSettingAsync("Seo:BaseUrl", Input.BaseUrl ?? string.Empty);
-        await SaveSettingAsync("Seo:EnableSitemap", Input.EnableSitemap ? "true" : "false");
-        await SaveSettingAsync("Seo:EnableRobots", Input.EnableRobots ? "true" : "false");
-        await SaveSettingAsync("Seo:RobotsDisallow", Input.RobotsDisallow ?? string.Empty);
+        await SaveSeoSettingsAsync();
+        HasSuccessMessage = true;
+    }
 
+    /// <summary>
+    ///     Loads all SEO-related settings in one query and maps them into the form model.
+    /// </summary>
+    private async Task LoadFormInputAsync()
+    {
+        var settingsByKey = await LoadSeoSettingsByKeyAsync();
+        FormInput = CreateInputModel(settingsByKey);
+    }
+
+    private async Task<Dictionary<string, string>> LoadSeoSettingsByKeyAsync()
+    {
+        return await DbContext.Settings
+            .AsNoTracking()
+            .Where(setting => SeoSettingKeys.Contains(setting.Key))
+            .ToDictionaryAsync(setting => setting.Key, setting => setting.Value);
+    }
+
+    private static InputModel CreateInputModel(IReadOnlyDictionary<string, string> settingsByKey)
+    {
+        return new InputModel
+        {
+            BaseUrl = GetSettingValue(settingsByKey, SeoBaseUrlKey),
+            EnableSitemap = GetBooleanSettingValue(settingsByKey, SeoEnableSitemapKey, true),
+            EnableRobots = GetBooleanSettingValue(settingsByKey, SeoEnableRobotsKey, true),
+            RobotsDisallow = GetSettingValue(settingsByKey, SeoRobotsDisallowKey, DefaultRobotsDisallowValue)
+        };
+    }
+
+    private static string GetSettingValue(
+        IReadOnlyDictionary<string, string> settingsByKey,
+        string key,
+        string defaultValue = "")
+    {
+        return settingsByKey.TryGetValue(key, out var value)
+            ? value
+            : defaultValue;
+    }
+
+    private static bool GetBooleanSettingValue(
+        IReadOnlyDictionary<string, string> settingsByKey,
+        string key,
+        bool defaultValue)
+    {
+        if (!settingsByKey.TryGetValue(key, out var value))
+        {
+            return defaultValue;
+        }
+
+        return !string.Equals(value, DisabledSettingValue, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task SaveSeoSettingsAsync()
+    {
+        foreach (var (key, value) in CreateSettingsToPersist())
+        {
+            await SaveSettingAsync(key, value);
+        }
+
+        // Saving once after all updates avoids partial writes when one later setting fails.
         await DbContext.SaveChangesAsync();
-        showSuccessMessage = true;
+    }
+
+    private Dictionary<string, string> CreateSettingsToPersist()
+    {
+        return new Dictionary<string, string>
+        {
+            [SeoBaseUrlKey] = FormInput.BaseUrl ?? string.Empty,
+            [SeoEnableSitemapKey] = FormatBooleanSettingValue(FormInput.EnableSitemap),
+            [SeoEnableRobotsKey] = FormatBooleanSettingValue(FormInput.EnableRobots),
+            [SeoRobotsDisallowKey] = FormInput.RobotsDisallow ?? string.Empty
+        };
+    }
+
+    private static string FormatBooleanSettingValue(bool value)
+    {
+        return value ? EnabledSettingValue : DisabledSettingValue;
     }
 
     private async Task SaveSettingAsync(string key, string value)
     {
-        var setting = await DbContext.Settings.FirstOrDefaultAsync(s => s.Key == key);
-        if (setting == null)
+        var setting = await FindSettingAsync(key);
+        if (setting is null)
         {
             setting = new Setting { Key = key, Value = value };
             DbContext.Settings.Add(setting);
+            return;
         }
-        else
-        {
-            setting.Value = value;
-        }
+
+        setting.Value = value;
     }
 
+    private Task<Setting?> FindSettingAsync(string key)
+    {
+        return DbContext.Settings.FirstOrDefaultAsync(setting => setting.Key == key);
+    }
+
+    /// <summary>
+    ///     Captures the editable SEO settings before they are persisted as key/value rows.
+    /// </summary>
     private sealed class InputModel
     {
         public string? BaseUrl { get; set; }
         public bool EnableSitemap { get; set; } = true;
         public bool EnableRobots { get; set; } = true;
-        public string? RobotsDisallow { get; set; } = "/Account";
+        public string? RobotsDisallow { get; set; } = DefaultRobotsDisallowValue;
     }
 
 }

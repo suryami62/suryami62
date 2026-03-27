@@ -141,7 +141,10 @@
 
     private async Task WrapSelection(string prefix, string suffix)
     {
-        if (IsFormattingDisabled || _module is null) return;
+        if (IsFormattingDisabled || _module is null)
+        {
+            return;
+        }
 
         var newValue = await _module.InvokeAsync<string>("insertText", _textArea, prefix, suffix);
         Value = newValue;
