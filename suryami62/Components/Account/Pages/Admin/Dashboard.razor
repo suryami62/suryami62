@@ -21,9 +21,9 @@
             <div class="flex flex-col gap-4">
                 <div class="flex items-center justify-between">
                     <span>Registration:</span>
-                    <button @onclick="ToggleRegistration"
+                    <button @onclick="ToggleRegistrationAsync"
                             class="@RegistrationButtonClass">
-                        @(_registrationEnabled ? "ENABLED" : "DISABLED")
+                        @RegistrationStatusText
                     </button>
                 </div>
                 <p class="text-xs text-neutral-500">Enable or disable new user registration.</p>
@@ -118,8 +118,12 @@
 
 @code {
 
+    private const int CountOnlyTakeAll = 0;
+
     private string RegistrationButtonClass =>
         $"neo-button px-3 py-1 text-sm {(_registrationEnabled ? "bg-green-400 text-black hover:bg-green-500" : "bg-red-500 text-white hover:bg-red-600")}";
+
+    private string RegistrationStatusText => _registrationEnabled ? "ENABLED" : "DISABLED";
 
     private const string PostsButtonClass = "neo-button bg-[#A3E635] px-4 py-2 text-black hover:bg-lime-400 dark:bg-lime-500";
     private const string ProjectsButtonClass = "neo-button bg-[#FB923C] px-4 py-2 text-black hover:bg-orange-300 dark:bg-orange-400";
@@ -134,22 +138,62 @@
     private int _projectCount;
     private bool _registrationEnabled;
 
+    /// <summary>
+    ///     Loads the dashboard data required for the initial admin overview.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        var (_, postTotal) = await BlogPostService.GetPostsAsync(false, take: 0);
-        _postCount = postTotal;
-
-        var (_, projectTotal) = await ProjectService.GetProjectsAsync(take: 0);
-        _projectCount = projectTotal;
-
-        var settings = await ApplicationSettingsStore.GetAsync();
-        _registrationEnabled = settings.RegistrationEnabled;
+        await LoadDashboardAsync();
     }
 
-    private async Task ToggleRegistration()
+    /// <summary>
+    ///     Loads counters and switches shown on the admin landing page.
+    /// </summary>
+    private async Task LoadDashboardAsync()
     {
-        _registrationEnabled = !_registrationEnabled;
-        await ApplicationSettingsStore.SetRegistrationEnabledAsync(_registrationEnabled);
+        _postCount = await LoadPostCountAsync();
+        _projectCount = await LoadProjectCountAsync();
+        _registrationEnabled = await LoadRegistrationStateAsync();
+    }
+
+    /// <summary>
+    ///     Reads the total number of blog posts without loading a paged list into the UI.
+    /// </summary>
+    private async Task<int> LoadPostCountAsync()
+    {
+        var (_, totalPosts) = await BlogPostService.GetPostsAsync(false, take: CountOnlyTakeAll);
+        return totalPosts;
+    }
+
+    /// <summary>
+    ///     Reads the total number of projects for the dashboard summary card.
+    /// </summary>
+    private async Task<int> LoadProjectCountAsync()
+    {
+        var (_, totalProjects) = await ProjectService.GetProjectsAsync(take: CountOnlyTakeAll);
+        return totalProjects;
+    }
+
+    /// <summary>
+    ///     Loads the persisted registration switch so the dashboard reflects the current site behavior.
+    /// </summary>
+    private async Task<bool> LoadRegistrationStateAsync()
+    {
+        var settings = await ApplicationSettingsStore.GetAsync();
+        return settings.RegistrationEnabled;
+    }
+
+    /// <summary>
+    ///     Toggles public registration and persists the new state immediately.
+    /// </summary>
+    private async Task ToggleRegistrationAsync()
+    {
+        var nextRegistrationState = !_registrationEnabled;
+
+        // Updating local state first keeps the button responsive while persisting the same value to storage.
+        _registrationEnabled = nextRegistrationState;
+
+        await ApplicationSettingsStore.SetRegistrationEnabledAsync(nextRegistrationState);
     }
 
 }

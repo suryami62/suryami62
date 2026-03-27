@@ -19,22 +19,28 @@ public sealed class BlogPost
     /// <summary>
     ///     Gets or sets the display title of the post.
     /// </summary>
-    [Required] [StringLength(200)] public string Title { get; set; } = string.Empty;
+    [Required]
+    [StringLength(DomainModelConstraints.TitleMaxLength)]
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the URL-friendly slug used in the route.
     /// </summary>
-    [Required] [StringLength(250)] public string Slug { get; set; } = string.Empty;
+    [Required]
+    [StringLength(DomainModelConstraints.BlogPostSlugMaxLength)]
+    public string Slug { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the markdown or HTML content of the post.
     /// </summary>
-    [Required] public string Content { get; set; } = string.Empty;
+    [Required]
+    public string Content { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the category or label shown with the post.
     /// </summary>
-    [Required] public string Label { get; set; } = string.Empty;
+    [Required]
+    public string Label { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the publication date associated with the post.
@@ -44,7 +50,8 @@ public sealed class BlogPost
     /// <summary>
     ///     Gets or sets the short summary used in listings and previews.
     /// </summary>
-    [Required] public string Summary { get; set; } = string.Empty;
+    [Required]
+    public string Summary { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets a value indicating whether the post is publicly visible.

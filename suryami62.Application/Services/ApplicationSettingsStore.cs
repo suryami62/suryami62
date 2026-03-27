@@ -45,13 +45,11 @@ public sealed class ApplicationSettingsStore(ISettingsRepository repository)
     /// <returns>The resolved settings, including fallback defaults.</returns>
     public async Task<ApplicationSettings> GetAsync(CancellationToken cancellationToken = default)
     {
-        var value = await repository
+        var storedValue = await repository
             .GetValueAsync(ApplicationSettingKeys.RegistrationEnabled, cancellationToken)
             .ConfigureAwait(false);
 
-        var registrationEnabled = ParseBoolOrDefault(value, true);
-
-        return new ApplicationSettings(registrationEnabled);
+        return new ApplicationSettings(ResolveRegistrationEnabled(storedValue));
     }
 
     /// <summary>
@@ -62,9 +60,22 @@ public sealed class ApplicationSettingsStore(ISettingsRepository repository)
     public async Task SetRegistrationEnabledAsync(bool enabled, CancellationToken cancellationToken = default)
     {
         await repository
-            .UpsertAsync(ApplicationSettingKeys.RegistrationEnabled, enabled.ToString().ToUpperInvariant(),
+            .UpsertAsync(
+                ApplicationSettingKeys.RegistrationEnabled,
+                FormatBooleanForStorage(enabled),
                 cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    private static bool ResolveRegistrationEnabled(string? storedValue)
+    {
+        return ParseBoolOrDefault(storedValue, ApplicationSettings.Defaults.RegistrationEnabled);
+    }
+
+    private static string FormatBooleanForStorage(bool value)
+    {
+        // Keeping the persisted format stable avoids surprising diffs in existing settings rows and tests.
+        return value.ToString().ToUpperInvariant();
     }
 
     /// <summary>
@@ -77,6 +88,8 @@ public sealed class ApplicationSettingsStore(ISettingsRepository repository)
     {
         if (string.IsNullOrWhiteSpace(value)) return defaultValue;
 
-        return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
+        if (bool.TryParse(value, out var parsed)) return parsed;
+
+        return defaultValue;
     }
 }

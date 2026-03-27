@@ -61,15 +61,9 @@ public sealed class JourneySettingsStore(ISettingsRepository repository)
     /// <returns>The deserialized journey settings with safe fallbacks.</returns>
     public async Task<AboutJourneySettings> GetAsync(CancellationToken cancellationToken = default)
     {
-        var values = await repository.GetValuesAsync(
-            [JourneySettingKeys.Experience, JourneySettingKeys.Education],
-            cancellationToken).ConfigureAwait(false);
-
-        IReadOnlyList<JourneyEntry> defaultEntries = [];
-        var experiences = ReadEntries(values, JourneySettingKeys.Experience, defaultEntries);
-        var educations = ReadEntries(values, JourneySettingKeys.Education, defaultEntries);
-
-        return new AboutJourneySettings(experiences, educations);
+        return new AboutJourneySettings(
+            await LoadEntriesAsync(JourneySettingKeys.Experience, cancellationToken).ConfigureAwait(false),
+            await LoadEntriesAsync(JourneySettingKeys.Education, cancellationToken).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -79,12 +73,7 @@ public sealed class JourneySettingsStore(ISettingsRepository repository)
     /// <param name="cancellationToken">The token used to cancel the operation.</param>
     public async Task AddExperienceAsync(JourneyEntry entry, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(entry);
-
-        var settings = await GetAsync(cancellationToken).ConfigureAwait(false);
-        var updated = settings.Experiences.Concat([Sanitize(entry)]).ToList();
-
-        await SaveExperiencesAsync(updated, cancellationToken).ConfigureAwait(false);
+        await AddEntryAsync(JourneySettingKeys.Experience, entry, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -94,12 +83,7 @@ public sealed class JourneySettingsStore(ISettingsRepository repository)
     /// <param name="cancellationToken">The token used to cancel the operation.</param>
     public async Task AddEducationAsync(JourneyEntry entry, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(entry);
-
-        var settings = await GetAsync(cancellationToken).ConfigureAwait(false);
-        var updated = settings.Educations.Concat([Sanitize(entry)]).ToList();
-
-        await SaveEducationsAsync(updated, cancellationToken).ConfigureAwait(false);
+        await AddEntryAsync(JourneySettingKeys.Education, entry, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -109,14 +93,7 @@ public sealed class JourneySettingsStore(ISettingsRepository repository)
     /// <param name="cancellationToken">The token used to cancel the operation.</param>
     public async Task DeleteExperienceAsync(int index, CancellationToken cancellationToken = default)
     {
-        var settings = await GetAsync(cancellationToken).ConfigureAwait(false);
-        var updated = settings.Experiences.ToList();
-
-        if (index < 0 || index >= updated.Count) throw new ArgumentOutOfRangeException(nameof(index));
-
-        updated.RemoveAt(index);
-
-        await SaveExperiencesAsync(updated, cancellationToken).ConfigureAwait(false);
+        await DeleteEntryAsync(JourneySettingKeys.Experience, index, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -126,61 +103,83 @@ public sealed class JourneySettingsStore(ISettingsRepository repository)
     /// <param name="cancellationToken">The token used to cancel the operation.</param>
     public async Task DeleteEducationAsync(int index, CancellationToken cancellationToken = default)
     {
-        var settings = await GetAsync(cancellationToken).ConfigureAwait(false);
-        var updated = settings.Educations.ToList();
-
-        if (index < 0 || index >= updated.Count) throw new ArgumentOutOfRangeException(nameof(index));
-
-        updated.RemoveAt(index);
-
-        await SaveEducationsAsync(updated, cancellationToken).ConfigureAwait(false);
+        await DeleteEntryAsync(JourneySettingKeys.Education, index, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
-    ///     Deserializes a journey entry collection from the stored JSON payload for a specific setting key.
+    ///     Loads and deserializes one journey collection from storage.
     /// </summary>
-    /// <param name="values">The settings retrieved from persistence.</param>
     /// <param name="key">The key whose payload should be read.</param>
-    /// <param name="fallback">The fallback collection to return when the payload is missing or invalid.</param>
-    /// <returns>A sanitized list of journey entries, or <paramref name="fallback" /> when deserialization fails.</returns>
-    private static IReadOnlyList<JourneyEntry> ReadEntries(
-        IReadOnlyDictionary<string, string> values,
-        string key,
-        IReadOnlyList<JourneyEntry> fallback)
+    /// <param name="cancellationToken">The token used to cancel the operation.</param>
+    /// <returns>A sanitized list of journey entries, or an empty list when storage is missing or invalid.</returns>
+    private async Task<List<JourneyEntry>> LoadEntriesAsync(string key, CancellationToken cancellationToken)
     {
-        if (!values.TryGetValue(key, out var raw) || string.IsNullOrWhiteSpace(raw)) return fallback;
+        var rawValue = await repository.GetValueAsync(key, cancellationToken).ConfigureAwait(false);
+        return DeserializeEntries(rawValue);
+    }
+
+    private async Task AddEntryAsync(
+        string settingKey,
+        JourneyEntry entry,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+
+        var existingEntries = await LoadEntriesAsync(settingKey, cancellationToken).ConfigureAwait(false);
+        existingEntries.Add(Sanitize(entry));
+
+        await SaveEntriesAsync(settingKey, existingEntries, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task DeleteEntryAsync(
+        string settingKey,
+        int index,
+        CancellationToken cancellationToken)
+    {
+        var existingEntries = await LoadEntriesAsync(settingKey, cancellationToken).ConfigureAwait(false);
+        EnsureIndexExists(index, existingEntries.Count);
+
+        existingEntries.RemoveAt(index);
+        await SaveEntriesAsync(settingKey, existingEntries, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static List<JourneyEntry> DeserializeEntries(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue)) return [];
 
         try
         {
-            var parsed = JsonSerializer.Deserialize<List<JourneyEntry>>(raw, SerializerOptions);
-            return parsed is { Count: > 0 } ? parsed.Select(Sanitize).ToList() : [];
+            var parsedEntries = JsonSerializer.Deserialize<List<JourneyEntry>>(rawValue, SerializerOptions);
+
+            if (parsedEntries is null || parsedEntries.Count == 0) return [];
+
+            return parsedEntries.Select(Sanitize).ToList();
         }
         catch (JsonException)
         {
-            return fallback;
+            // Invalid admin JSON should not break the About page; returning an empty list keeps editing recoverable.
+            return [];
         }
     }
 
-    /// <summary>
-    ///     Persists the experience collection back to the settings repository as JSON.
-    /// </summary>
-    /// <param name="entries">The experience entries to store.</param>
-    /// <param name="cancellationToken">The token used to cancel the operation.</param>
-    private async Task SaveExperiencesAsync(IReadOnlyList<JourneyEntry> entries, CancellationToken cancellationToken)
+    private static void EnsureIndexExists(int index, int itemCount)
     {
-        var payload = JsonSerializer.Serialize(entries, SerializerOptions);
-        await repository.UpsertAsync(JourneySettingKeys.Experience, payload, cancellationToken).ConfigureAwait(false);
+        if (index < 0 || index >= itemCount) throw new ArgumentOutOfRangeException(nameof(index));
     }
 
     /// <summary>
-    ///     Persists the education collection back to the settings repository as JSON.
+    ///     Persists one journey collection back to the settings repository as JSON.
     /// </summary>
-    /// <param name="entries">The education entries to store.</param>
+    /// <param name="settingKey">The setting key that owns the collection.</param>
+    /// <param name="entries">The entries to store.</param>
     /// <param name="cancellationToken">The token used to cancel the operation.</param>
-    private async Task SaveEducationsAsync(IReadOnlyList<JourneyEntry> entries, CancellationToken cancellationToken)
+    private async Task SaveEntriesAsync(
+        string settingKey,
+        IReadOnlyList<JourneyEntry> entries,
+        CancellationToken cancellationToken)
     {
         var payload = JsonSerializer.Serialize(entries, SerializerOptions);
-        await repository.UpsertAsync(JourneySettingKeys.Education, payload, cancellationToken).ConfigureAwait(false);
+        await repository.UpsertAsync(settingKey, payload, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -190,22 +189,24 @@ public sealed class JourneySettingsStore(ISettingsRepository repository)
     /// <returns>A trimmed and validated journey entry.</returns>
     private static JourneyEntry Sanitize(JourneyEntry entry)
     {
-        var title = entry.Title?.Trim() ?? string.Empty;
-        var organization = entry.Organization?.Trim() ?? string.Empty;
-        var period = entry.Period?.Trim() ?? string.Empty;
+        var title = RequireTrimmedValue(entry.Title, nameof(entry), "Title is required.");
+        var organization = RequireTrimmedValue(entry.Organization, nameof(entry), "Organization is required.");
+        var period = RequireTrimmedValue(entry.Period, nameof(entry), "Period is required.");
         var summary = entry.Summary?.Trim() ?? string.Empty;
         var highlights = entry.Highlights
             .Select(item => item?.Trim() ?? string.Empty)
             .Where(item => !string.IsNullOrWhiteSpace(item))
             .ToList();
 
-        if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Title is required.", nameof(entry));
-
-        if (string.IsNullOrWhiteSpace(organization))
-            throw new ArgumentException("Organization is required.", nameof(entry));
-
-        if (string.IsNullOrWhiteSpace(period)) throw new ArgumentException("Period is required.", nameof(entry));
-
+        // Trimming once at the boundary keeps the rest of the application free from repeated cleanup logic.
         return new JourneyEntry(title, organization, period, summary, highlights);
+    }
+
+    private static string RequireTrimmedValue(string? value, string paramName, string errorMessage)
+    {
+        var trimmedValue = value?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(trimmedValue)) throw new ArgumentException(errorMessage, paramName);
+
+        return trimmedValue;
     }
 }

@@ -46,7 +46,14 @@
         {
             var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
             var result = await UserManager.ConfirmEmailAsync(user, code);
-            statusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
+            if (result.Succeeded)
+            {
+                statusMessage = "Thank you for confirming your email.";
+            }
+            else
+            {
+                statusMessage = "Error confirming your email.";
+            }
         }
     }
 

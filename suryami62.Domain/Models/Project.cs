@@ -19,17 +19,20 @@ public sealed class Project
     /// <summary>
     ///     Gets or sets the project title shown to visitors.
     /// </summary>
-    [Required] [StringLength(200)] public string Title { get; set; } = string.Empty;
+    [Required]
+    [StringLength(DomainModelConstraints.TitleMaxLength)]
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the descriptive text for the project.
     /// </summary>
-    [Required] public string Description { get; set; } = string.Empty;
+    [Required]
+    public string Description { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets a comma-separated list of project tags.
     /// </summary>
-    public string Tags { get; set; } = string.Empty; // Comma separated tags
+    public string Tags { get; set; } = string.Empty;
 
     /// <summary>
     ///     Gets or sets the optional source repository URL.

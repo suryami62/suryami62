@@ -37,7 +37,7 @@
             {
                 <div class="col-span-full text-center">Loading posts...</div>
             }
-            else if (!_posts.Any())
+            else if (_posts.Count == 0)
             {
                 <div class="col-span-full text-center">No posts found yet. Check back soon!</div>
             }

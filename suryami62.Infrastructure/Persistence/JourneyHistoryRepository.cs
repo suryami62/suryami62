@@ -17,12 +17,7 @@ public sealed class JourneyHistoryRepository(ApplicationDbContext context) : IJo
     /// <inheritdoc />
     public Task<List<JourneyHistory>> GetBySectionAsync(JourneySection section)
     {
-        return context.JourneyHistories
-            .AsNoTracking()
-            .Where(item => item.Section == section)
-            .OrderBy(item => item.DisplayOrder)
-            .ThenBy(item => item.Id)
-            .ToListAsync();
+        return GetOrderedSectionQuery(section).ToListAsync();
     }
 
     /// <inheritdoc />
@@ -30,13 +25,7 @@ public sealed class JourneyHistoryRepository(ApplicationDbContext context) : IJo
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        var maxOrder = await context.JourneyHistories
-            .Where(existing => existing.Section == item.Section)
-            .Select(existing => (int?)existing.DisplayOrder)
-            .MaxAsync()
-            .ConfigureAwait(false);
-
-        item.DisplayOrder = (maxOrder ?? 0) + 1;
+        item.DisplayOrder = await GetNextDisplayOrderAsync(item.Section).ConfigureAwait(false);
 
         context.JourneyHistories.Add(item);
         await context.SaveChangesAsync().ConfigureAwait(false);
@@ -52,5 +41,25 @@ public sealed class JourneyHistoryRepository(ApplicationDbContext context) : IJo
 
         context.JourneyHistories.Remove(item);
         await context.SaveChangesAsync().ConfigureAwait(false);
+    }
+
+    private IQueryable<JourneyHistory> GetOrderedSectionQuery(JourneySection section)
+    {
+        return context.JourneyHistories
+            .AsNoTracking()
+            .Where(item => item.Section == section)
+            .OrderBy(item => item.DisplayOrder)
+            .ThenBy(item => item.Id);
+    }
+
+    private async Task<int> GetNextDisplayOrderAsync(JourneySection section)
+    {
+        var maxOrder = await context.JourneyHistories
+            .Where(existing => existing.Section == section)
+            .Select(existing => (int?)existing.DisplayOrder)
+            .MaxAsync()
+            .ConfigureAwait(false);
+
+        return (maxOrder ?? 0) + 1;
     }
 }

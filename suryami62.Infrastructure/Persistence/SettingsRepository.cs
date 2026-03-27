@@ -17,13 +17,12 @@ public sealed class SettingsRepository(ApplicationDbContext context) : ISettings
     /// <inheritdoc />
     public async Task<string?> GetValueAsync(string key, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(key))
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(key));
+        EnsureKey(key);
 
         return await context.Settings
             .AsNoTracking()
-            .Where(s => s.Key == key)
-            .Select(s => s.Value)
+            .Where(setting => setting.Key == key)
+            .Select(setting => setting.Value)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -35,55 +34,87 @@ public sealed class SettingsRepository(ApplicationDbContext context) : ISettings
     {
         ArgumentNullException.ThrowIfNull(keys);
 
-        if (keys.Count == 0) return new Dictionary<string, string>(StringComparer.Ordinal);
+        if (keys.Count == 0) return CreateEmptyValues();
 
         return await context.Settings
             .AsNoTracking()
-            .Where(s => keys.Contains(s.Key))
-            .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.Ordinal, cancellationToken)
+            .Where(setting => keys.Contains(setting.Key))
+            .ToDictionaryAsync(setting => setting.Key, setting => setting.Value, StringComparer.Ordinal,
+                cancellationToken)
             .ConfigureAwait(false);
     }
 
-            /// <inheritdoc />
+    /// <inheritdoc />
     public async Task UpsertAsync(string key, string value, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(key))
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(key));
-
+        EnsureKey(key);
         ArgumentNullException.ThrowIfNull(value);
 
-        await UpsertManyAsync(new Dictionary<string, string>(StringComparer.Ordinal) { [key] = value },
-            cancellationToken).ConfigureAwait(false);
+        await UpsertManyAsync(CreateSingleValueMap(key, value), cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public async Task UpsertManyAsync(IReadOnlyDictionary<string, string> values,
+    public async Task UpsertManyAsync(
+        IReadOnlyDictionary<string, string> values,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(values);
 
         if (values.Count == 0) return;
 
-        var keys = values.Keys.ToArray();
-
-        var existing = await context.Settings
-            .Where(s => keys.Contains(s.Key))
-            .ToDictionaryAsync(s => s.Key, StringComparer.Ordinal, cancellationToken)
+        var existingSettingsByKey = await LoadExistingSettingsByKeyAsync(values.Keys, cancellationToken)
             .ConfigureAwait(false);
 
+        UpsertEachSetting(values, existingSettingsByKey);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private static Dictionary<string, string> CreateEmptyValues()
+    {
+        return new Dictionary<string, string>(StringComparer.Ordinal);
+    }
+
+    private static Dictionary<string, string> CreateSingleValueMap(string key, string value)
+    {
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [key] = value
+        };
+    }
+
+    private static void EnsureKey(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Key cannot be empty.", nameof(key));
+    }
+
+    private async Task<Dictionary<string, Setting>> LoadExistingSettingsByKeyAsync(
+        IEnumerable<string> keys,
+        CancellationToken cancellationToken)
+    {
+        var keyList = keys.ToArray();
+
+        return await context.Settings
+            .Where(setting => keyList.Contains(setting.Key))
+            .ToDictionaryAsync(setting => setting.Key, StringComparer.Ordinal, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private void UpsertEachSetting(
+        IReadOnlyDictionary<string, string> values,
+        Dictionary<string, Setting> existingSettingsByKey)
+    {
         foreach (var (key, value) in values)
         {
-            if (existing.TryGetValue(key, out var setting))
+            if (existingSettingsByKey.TryGetValue(key, out var setting))
             {
                 setting.Value = value;
                 continue;
             }
 
+            // Reusing the loaded dictionary lets one pass handle both updates and inserts without extra lookups.
             var created = new Setting { Key = key, Value = value };
             context.Settings.Add(created);
-            existing[key] = created;
+            existingSettingsByKey[key] = created;
         }
-
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

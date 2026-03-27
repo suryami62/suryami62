@@ -102,7 +102,10 @@
         email = await UserManager.GetEmailAsync(user);
         isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
 
-        Input.NewEmail ??= email;
+        if (Input.NewEmail == null)
+        {
+            Input.NewEmail = email;
+        }
     }
 
     private async Task OnValidSubmitAsync()

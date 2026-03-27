@@ -28,31 +28,30 @@
             </tr>
             </thead>
             <tbody class="divide-y-2 divide-black dark:divide-white">
-            @if (_projects == null)
+            @if (IsLoadingProjects)
             {
                 <tr>
                     <td colspan="4" class="p-4">Loading...</td>
                 </tr>
             }
-            else if (!_projects.Any())
+            else if (HasNoProjects)
             {
                 <tr>
                     <td colspan="4" class="p-4">No projects found.</td>
                 </tr>
             }
-            else
+            else if (_projects is { Count: > 0 } projects)
             {
-                foreach (var project in _projects)
+                foreach (var project in projects)
                 {
                     <tr class="hover:bg-gray-100 dark:hover:bg-gray-900">
                         <td class="p-4 font-bold">@project.DisplayOrder</td>
                         <td class="p-4 font-bold">@project.Title</td>
                         <td class="p-4">
                             <div class="flex flex-wrap gap-1">
-                                @foreach (var tag in project.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                @foreach (var tag in GetProjectTags(project))
                                 {
-                                    <span
-                                        class="bg-gray-200 border border-black px-1 text-[10px] font-bold">@tag.Trim()</span>
+                                    <span class="@ProjectTagBadgeClass">@tag</span>
                                 }
                             </div>
                         </td>
@@ -60,9 +59,9 @@
                             <a href="/Account/Admin/Projects/Edit/@project.Id"
                                class="@EditButtonClass">EDIT</a>
                             <button @onclick="() => DeleteProjectAsync(project.Id)"
-                                    disabled="@(_isDeleting == project.Id)"
+                                    disabled="@IsDeletingProject(project.Id)"
                                     class="@DeleteButtonClass">
-                                @(_isDeleting == project.Id ? "..." : "DELETE")
+                                @(IsDeletingProject(project.Id) ? "..." : "DELETE")
                             </button>
                         </td>
                     </tr>
@@ -72,17 +71,17 @@
         </table>
     </div>
 
-    @if (_total > _pageSize)
+    @if (ShouldShowPagination)
     {
         <div class="flex justify-center gap-4">
-            <button disabled="@(_page == 1)" @onclick="() => ChangePageAsync(_page - 1)"
+            <button disabled="@(!CanMoveToPreviousPage)" @onclick="GoToPreviousPageAsync"
                     class="@PagerPrevButtonClass">
                 PREV
             </button>
             <div class="flex items-center text-2xl font-black">
-                @_page / @(Math.Ceiling((double)_total / _pageSize))
+                @_page / @TotalPages
             </div>
-            <button disabled="@(_page * _pageSize >= _total)" @onclick="() => ChangePageAsync(_page + 1)"
+            <button disabled="@(!CanMoveToNextPage)" @onclick="GoToNextPageAsync"
                     class="@PagerNextButtonClass">
                 NEXT
             </button>
@@ -99,6 +98,7 @@
     private const string DeleteButtonClass = "neo-button-danger px-3 py-1 text-sm disabled:opacity-50";
     private const string PagerPrevButtonClass = "neo-button px-6 py-2 text-black disabled:opacity-50";
     private const string PagerNextButtonClass = "neo-button bg-[#FB923C] px-6 py-2 text-black hover:bg-orange-300 disabled:opacity-50 dark:bg-orange-400";
+    private const string ProjectTagBadgeClass = "bg-gray-200 border border-black px-1 text-[10px] font-bold";
 
     private List<Project>? _projects;
     private int _page = 1;
@@ -107,18 +107,41 @@
     private int? _isDeleting;
     private ConfirmModal? _confirmModal;
 
+    private bool IsLoadingProjects => _projects is null;
+
+    private bool HasNoProjects => _projects is { Count: 0 };
+
+    private bool ShouldShowPagination => _total > _pageSize;
+
+    private bool CanMoveToPreviousPage => _page > 1;
+
+    private bool CanMoveToNextPage => _page * _pageSize < _total;
+
+    private int TotalPages => (int)Math.Ceiling((double)_total / _pageSize);
+
+    /// <summary>
+    ///     Loads the first page of projects for the admin listing.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await LoadProjectsAsync();
     }
 
+    /// <summary>
+    ///     Reads the projects for the current page and refreshes the pager metadata.
+    /// </summary>
     private async Task LoadProjectsAsync()
     {
-        var (items, total) = await ProjectService.GetProjectsAsync((_page - 1) * _pageSize, _pageSize);
-        _projects = items;
-        _total = total;
+        var pageOffset = GetCurrentPageOffset();
+        var (projects, totalProjects) = await ProjectService.GetProjectsAsync(pageOffset, _pageSize);
+
+        _projects = projects;
+        _total = totalProjects;
     }
 
+    /// <summary>
+    ///     Moves the pager to a specific page and reloads the grid.
+    /// </summary>
     private async Task ChangePageAsync(int newPage)
     {
         if (newPage < 1)
@@ -130,23 +153,76 @@
         await LoadProjectsAsync();
     }
 
-    private async Task DeleteProjectAsync(int id)
+    /// <summary>
+    ///     Moves to the previous page when the pager allows it.
+    /// </summary>
+    private Task GoToPreviousPageAsync()
     {
-        if (_confirmModal == null) return;
+        return ChangePageAsync(_page - 1);
+    }
 
-        if (await _confirmModal.ShowAsync())
+    /// <summary>
+    ///     Moves to the next page when more projects are available.
+    /// </summary>
+    private Task GoToNextPageAsync()
+    {
+        return ChangePageAsync(_page + 1);
+    }
+
+    /// <summary>
+    ///     Deletes a project after user confirmation.
+    /// </summary>
+    private async Task DeleteProjectAsync(int projectId)
+    {
+        if (!await ShouldDeleteProjectAsync())
         {
-            _isDeleting = id;
-            try
-            {
-                await ProjectService.DeleteProjectAsync(id);
-                _projects?.RemoveAll(p => p.Id == id);
-            }
-            finally
-            {
-                _isDeleting = null;
-            }
+            return;
         }
+
+        _isDeleting = projectId;
+
+        try
+        {
+            await ProjectService.DeleteProjectAsync(projectId);
+            RemoveProjectFromCurrentList(projectId);
+        }
+        finally
+        {
+            // Resetting the busy flag in finally prevents the row button from staying disabled after a failed delete.
+            _isDeleting = null;
+        }
+    }
+
+    private int GetCurrentPageOffset()
+    {
+        return (_page - 1) * _pageSize;
+    }
+
+    private bool IsDeletingProject(int projectId)
+    {
+        return _isDeleting == projectId;
+    }
+
+    private IEnumerable<string> GetProjectTags(Project project)
+    {
+        return project.Tags
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(tag => tag.Trim());
+    }
+
+    private async Task<bool> ShouldDeleteProjectAsync()
+    {
+        if (_confirmModal is null)
+        {
+            return false;
+        }
+
+        return await _confirmModal.ShowAsync();
+    }
+
+    private void RemoveProjectFromCurrentList(int projectId)
+    {
+        _projects?.RemoveAll(project => project.Id == projectId);
     }
 
 }

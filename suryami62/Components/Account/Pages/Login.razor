@@ -107,7 +107,11 @@
 
     public async Task LoginUser()
     {
-        if (_isSubmitting) return;
+        if (_isSubmitting)
+        {
+            return;
+        }
+
         _isSubmitting = true;
 
         try

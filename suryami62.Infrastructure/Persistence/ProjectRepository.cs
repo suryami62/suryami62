@@ -17,16 +17,10 @@ public sealed class ProjectRepository(ApplicationDbContext context) : IProjectRe
     /// <inheritdoc />
     public async Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null)
     {
-        var query = context.Projects.AsNoTracking().AsQueryable();
-        var total = await query.CountAsync().ConfigureAwait(false);
-        var orderedQuery = query.OrderBy(p => p.DisplayOrder);
+        var projectsQuery = context.Projects.AsNoTracking();
+        var total = await projectsQuery.CountAsync().ConfigureAwait(false);
+        var items = await LoadPagedProjectsAsync(projectsQuery, skip, take).ConfigureAwait(false);
 
-        IQueryable<Project> itemsQuery = orderedQuery;
-        if (skip.HasValue) itemsQuery = itemsQuery.Skip(skip.Value);
-
-        if (take.HasValue) itemsQuery = itemsQuery.Take(take.Value);
-
-        var items = await itemsQuery.ToListAsync().ConfigureAwait(false);
         return (items, total);
     }
 
@@ -51,10 +45,7 @@ public sealed class ProjectRepository(ApplicationDbContext context) : IProjectRe
     {
         ArgumentNullException.ThrowIfNull(project);
 
-        var tracked = context.Projects.Local.FirstOrDefault(p => p.Id == project.Id);
-        if (tracked != null && !ReferenceEquals(tracked, project))
-            context.Entry(tracked).CurrentValues.SetValues(project);
-        else if (tracked == null) context.Entry(project).State = EntityState.Modified;
+        EfRepositoryHelpers.UpdateExistingOrAttachModified(context, context.Projects, project, item => item.Id);
 
         await context.SaveChangesAsync().ConfigureAwait(false);
     }
@@ -63,10 +54,19 @@ public sealed class ProjectRepository(ApplicationDbContext context) : IProjectRe
     public async Task DeleteAsync(int id)
     {
         var project = await context.Projects.FindAsync(id).ConfigureAwait(false);
-        if (project != null)
-        {
-            context.Projects.Remove(project);
-            await context.SaveChangesAsync().ConfigureAwait(false);
-        }
+        if (project is null) return;
+
+        context.Projects.Remove(project);
+        await context.SaveChangesAsync().ConfigureAwait(false);
+    }
+
+    private static Task<List<Project>> LoadPagedProjectsAsync(
+        IQueryable<Project> projectsQuery,
+        int? skip,
+        int? take)
+    {
+        var orderedProjects = projectsQuery.OrderBy(project => project.DisplayOrder);
+        var pagedProjects = EfRepositoryHelpers.ApplyOptionalPaging(orderedProjects, skip, take);
+        return pagedProjects.ToListAsync();
     }
 }

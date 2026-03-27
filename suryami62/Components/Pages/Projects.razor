@@ -34,7 +34,7 @@
                     <p class="text-2xl font-black uppercase">Loading projects...</p>
                 </div>
             }
-            else if (!_projects.Any())
+            else if (_projects.Count == 0)
             {
                 <div class="col-span-full border-4 border-dashed border-black py-12 text-center">
                     <p class="text-2xl font-black uppercase">No projects found yet.</p>

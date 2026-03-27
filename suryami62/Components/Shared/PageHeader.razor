@@ -1,7 +1,7 @@
 ﻿@* Reusable hero-style page header with highlighted title and supporting content. *@
 <section class="border-b-4 border-black pb-12 dark:border-white">
-    <div class="@(AsideContent is not null ? "grid gap-12 md:grid-cols-[1fr_auto] md:items-center" : "")">
-        <div class="@(AsideContent is not null ? "text-center md:text-left" : "")">
+    <div class="@GridContainerClass">
+        <div class="@TextAlignClass">
             <!-- Title -->
             <h1 class="text-5xl leading-none font-black tracking-tighter uppercase sm:text-6xl md:text-8xl">
                 @Title <br/>
@@ -9,8 +9,7 @@
             </h1>
 
             <!-- Description -->
-            <div
-                class="@(AsideContent is not null ? "mx-auto md:mx-0" : "") mt-6 max-w-2xl text-xl font-bold md:text-2xl">
+            <div class="@DescriptionClass">
                 @ChildContent
             </div>
 
@@ -41,4 +40,44 @@
     [Parameter] public RenderFragment? FooterContent { get; set; }
 
     [Parameter] public RenderFragment? AsideContent { get; set; }
+
+    private string GridContainerClass
+    {
+        get
+        {
+            if (AsideContent is not null)
+            {
+                return "grid gap-12 md:grid-cols-[1fr_auto] md:items-center";
+            }
+
+            return "";
+        }
+    }
+
+    private string TextAlignClass
+    {
+        get
+        {
+            if (AsideContent is not null)
+            {
+                return "text-center md:text-left";
+            }
+
+            return "";
+        }
+    }
+
+    private string DescriptionClass
+    {
+        get
+        {
+            if (AsideContent is not null)
+            {
+                return "mx-auto md:mx-0 mt-6 max-w-2xl text-xl font-bold md:text-2xl";
+            }
+
+            return "mt-6 max-w-2xl text-xl font-bold md:text-2xl";
+        }
+    }
+
 }
