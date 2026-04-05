@@ -73,6 +73,6 @@ internal sealed class RedisCacheService : IRedisCacheService, IDisposable
 
         await foreach (var key in server.KeysAsync(pattern: pattern).ConfigureAwait(false)) keyList.Add(key);
 
-        if (keyList.Count > 0) await _database.KeyDeleteAsync(keyList.ToArray()).ConfigureAwait(false);
+        if (keyList.Count != 0) await _database.KeyDeleteAsync(keyList.ToArray()).ConfigureAwait(false);
     }
 }
