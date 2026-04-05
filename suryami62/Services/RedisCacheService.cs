@@ -68,7 +68,7 @@ internal sealed class RedisCacheService : IRedisCacheService, IDisposable
     /// <inheritdoc />
     public async Task RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
     {
-        var server = _connection.GetServer(_connection.GetEndPoints().First());
+        var server = _connection.GetServer(_connection.GetEndPoints()[0]);
         var keyList = new List<RedisKey>();
 
         await foreach (var key in server.KeysAsync(pattern: pattern).ConfigureAwait(false)) keyList.Add(key);
