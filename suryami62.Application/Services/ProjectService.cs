@@ -48,37 +48,108 @@ public interface IProjectService
 }
 
 /// <summary>
-///     Implements project operations by delegating to the configured repository.
+///     Implements project operations with Redis caching support.
 /// </summary>
-public sealed class ProjectService(IProjectRepository repository) : IProjectService
+public sealed class ProjectService : IProjectService
 {
-    /// <inheritdoc />
-    public Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null)
+    private const string CacheKeyPrefix = "projects:";
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(15);
+    private readonly IRedisCacheService? _cacheService;
+
+    private readonly IProjectRepository _repository;
+
+    public ProjectService(IProjectRepository repository, IRedisCacheService? cacheService = null)
     {
-        return repository.GetProjectsAsync(skip, take);
+        _repository = repository;
+        _cacheService = cacheService;
     }
 
     /// <inheritdoc />
-    public Task<Project?> GetProjectByIdAsync(int id)
+    public async Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null)
     {
-        return repository.GetByIdAsync(id);
+        // Create cache key based on parameters
+        var cacheKey = $"{CacheKeyPrefix}list:{skip ?? 0}:{take ?? 0}";
+
+        // Try to get from cache first (cache-aside pattern)
+        if (_cacheService != null)
+        {
+            var cached = await _cacheService.GetAsync<CachedProjectList>(cacheKey).ConfigureAwait(false);
+            if (cached != null) return (cached.Items, cached.Total);
+        }
+
+        // Cache miss - fetch from database
+        var result = await _repository.GetProjectsAsync(skip, take).ConfigureAwait(false);
+
+        // Store in cache
+        if (_cacheService != null)
+            await _cacheService.SetAsync(cacheKey, new CachedProjectList(result.Items, result.Total), CacheExpiration)
+                .ConfigureAwait(false);
+
+        return result;
     }
 
     /// <inheritdoc />
-    public Task<Project> CreateProjectAsync(Project project)
+    public async Task<Project?> GetProjectByIdAsync(int id)
     {
-        return repository.CreateAsync(project);
+        var cacheKey = $"{CacheKeyPrefix}id:{id}";
+
+        // Try to get from cache first
+        if (_cacheService != null)
+        {
+            var cached = await _cacheService.GetAsync<Project>(cacheKey).ConfigureAwait(false);
+            if (cached != null) return cached;
+        }
+
+        // Cache miss - fetch from database
+        var project = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+
+        // Store in cache if found
+        if (_cacheService != null && project != null)
+            await _cacheService.SetAsync(cacheKey, project, CacheExpiration).ConfigureAwait(false);
+
+        return project;
     }
 
     /// <inheritdoc />
-    public Task UpdateProjectAsync(Project project)
+    public async Task<Project> CreateProjectAsync(Project project)
     {
-        return repository.UpdateAsync(project);
+        var result = await _repository.CreateAsync(project).ConfigureAwait(false);
+
+        // Invalidate list caches
+        if (_cacheService != null)
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+
+        return result;
     }
 
     /// <inheritdoc />
-    public Task DeleteProjectAsync(int id)
+    public async Task UpdateProjectAsync(Project project)
     {
-        return repository.DeleteAsync(id);
+        await _repository.UpdateAsync(project).ConfigureAwait(false);
+
+        // Invalidate related caches
+        if (_cacheService != null)
+        {
+            await _cacheService.RemoveAsync($"{CacheKeyPrefix}id:{project.Id}").ConfigureAwait(false);
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+        }
     }
+
+    /// <inheritdoc />
+    public async Task DeleteProjectAsync(int id)
+    {
+        await _repository.DeleteAsync(id).ConfigureAwait(false);
+
+        // Invalidate caches
+        if (_cacheService != null)
+        {
+            await _cacheService.RemoveAsync($"{CacheKeyPrefix}id:{id}").ConfigureAwait(false);
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    ///     Internal type for caching paginated lists.
+    /// </summary>
+    private sealed record CachedProjectList(List<Project> Items, int Total);
 }

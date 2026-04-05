@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 using suryami62.Application;
 using suryami62.Components.Account;
 using suryami62.Data;
@@ -60,6 +61,30 @@ internal static class WebServiceCollectionExtensions
         services.AddApplicationServices();
         services.AddScoped<IMediaService>(sp => new MediaService(sp.GetRequiredService<IWebHostEnvironment>()));
         services.AddScoped(_ => new MarkdownRenderer());
+
+        // Add Redis distributed cache
+        AddRedisServices(services);
+    }
+
+    private static void AddRedisServices(IServiceCollection services)
+    {
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var connectionString = configuration.GetConnectionString("RedisConnectionString") ??
+                                   throw new InvalidOperationException(
+                                       "Redis connection string 'RedisConnectionString' is not configured.");
+
+            var options = ConfigurationOptions.Parse(connectionString);
+            options.AbortOnConnectFail = false;
+            options.ConnectTimeout = 5000;
+            options.SyncTimeout = 5000;
+            options.AsyncTimeout = 5000;
+
+            return ConnectionMultiplexer.Connect(options);
+        });
+
+        services.AddScoped<IRedisCacheService, RedisCacheService>();
     }
 
     private static void AddSecurityServices(IServiceCollection services)

@@ -4,7 +4,7 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Policy = AdminAccessPolicy.Name)]
 @rendermode InteractiveServer
-@inject SiteProfileSettingsStore SiteProfileSettingsStore
+@inject ISiteProfileSettingsStore SiteProfileSettingsStore
 
 <PageTitle>Site Profile - Surya Ramadhan</PageTitle>
 

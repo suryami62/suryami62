@@ -52,14 +52,37 @@ public sealed record SiteProfileSettings(
 }
 
 /// <summary>
-///     Loads and persists the site's public profile settings.
+///     Defines the contract for site profile settings store.
+/// </summary>
+public interface ISiteProfileSettingsStore
+{
+    /// <summary>
+    ///     Loads the current site profile settings.
+    /// </summary>
+    /// <param name="cancellationToken">The token used to cancel the operation.</param>
+    /// <returns>The resolved profile settings with fallback defaults.</returns>
+    Task<SiteProfileSettings> GetAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Persists the site profile settings.
+    /// </summary>
+    /// <param name="settings">The settings to store.</param>
+    /// <param name="cancellationToken">The token used to cancel the operation.</param>
+    Task SaveAsync(SiteProfileSettings settings, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+///     Loads and persists the site's public profile settings with Redis caching.
 /// </summary>
 /// <remarks>
 ///     This store centralizes the public social and contact links rendered across the site's marketing surfaces
 ///     and edited from the admin profile settings page.
 /// </remarks>
-public sealed class SiteProfileSettingsStore(ISettingsRepository repository)
+public sealed class SiteProfileSettingsStore : ISiteProfileSettingsStore
 {
+    private const string CacheKey = "siteprofile:settings";
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(30);
+
     private static readonly string[] Keys =
     [
         SiteProfileSettingKeys.Instagram,
@@ -68,32 +91,52 @@ public sealed class SiteProfileSettingsStore(ISettingsRepository repository)
         SiteProfileSettingKeys.Email
     ];
 
-    /// <summary>
-    ///     Loads the current site profile settings.
-    /// </summary>
-    /// <param name="cancellationToken">The token used to cancel the operation.</param>
-    /// <returns>The resolved profile settings with fallback defaults.</returns>
-    public async Task<SiteProfileSettings> GetAsync(CancellationToken cancellationToken = default)
+    private readonly IRedisCacheService? _cacheService;
+
+    private readonly ISettingsRepository _repository;
+
+    public SiteProfileSettingsStore(ISettingsRepository repository, IRedisCacheService? cacheService = null)
     {
-        var storedValues = await LoadStoredValuesAsync(cancellationToken).ConfigureAwait(false);
-        return CreateSettings(storedValues);
+        _repository = repository;
+        _cacheService = cacheService;
     }
 
-    /// <summary>
-    ///     Persists the site profile settings.
-    /// </summary>
-    /// <param name="settings">The settings to store.</param>
-    /// <param name="cancellationToken">The token used to cancel the operation.</param>
+    /// <inheritdoc />
+    public async Task<SiteProfileSettings> GetAsync(CancellationToken cancellationToken = default)
+    {
+        // Try to get from cache first
+        if (_cacheService != null)
+        {
+            var cached = await _cacheService.GetAsync<SiteProfileSettings>(CacheKey, cancellationToken)
+                .ConfigureAwait(false);
+            if (cached != null) return cached;
+        }
+
+        // Cache miss - load from repository
+        var storedValues = await LoadStoredValuesAsync(cancellationToken).ConfigureAwait(false);
+        var settings = CreateSettings(storedValues);
+
+        // Store in cache
+        if (_cacheService != null)
+            await _cacheService.SetAsync(CacheKey, settings, CacheExpiration, cancellationToken).ConfigureAwait(false);
+
+        return settings;
+    }
+
+    /// <inheritdoc />
     public async Task SaveAsync(SiteProfileSettings settings, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        await repository.UpsertManyAsync(CreatePersistedValues(settings), cancellationToken).ConfigureAwait(false);
+        await _repository.UpsertManyAsync(CreatePersistedValues(settings), cancellationToken).ConfigureAwait(false);
+
+        // Invalidate cache
+        if (_cacheService != null) await _cacheService.RemoveAsync(CacheKey, cancellationToken).ConfigureAwait(false);
     }
 
     private Task<IReadOnlyDictionary<string, string>> LoadStoredValuesAsync(CancellationToken cancellationToken)
     {
-        return repository.GetValuesAsync(Keys, cancellationToken);
+        return _repository.GetValuesAsync(Keys, cancellationToken);
     }
 
     private static SiteProfileSettings CreateSettings(IReadOnlyDictionary<string, string> storedValues)

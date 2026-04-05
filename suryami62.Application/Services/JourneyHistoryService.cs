@@ -34,25 +34,62 @@ public interface IJourneyHistoryService
 }
 
 /// <summary>
-///     Implements journey item operations by delegating to the configured repository.
+///     Implements journey item operations with Redis caching support.
 /// </summary>
-public sealed class JourneyHistoryService(IJourneyHistoryRepository repository) : IJourneyHistoryService
+public sealed class JourneyHistoryService : IJourneyHistoryService
 {
-    /// <inheritdoc />
-    public Task<List<JourneyHistory>> GetBySectionAsync(JourneySection section)
+    private const string CacheKeyPrefix = "journey:";
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(15);
+    private readonly IRedisCacheService? _cacheService;
+
+    private readonly IJourneyHistoryRepository _repository;
+
+    public JourneyHistoryService(IJourneyHistoryRepository repository, IRedisCacheService? cacheService = null)
     {
-        return repository.GetBySectionAsync(section);
+        _repository = repository;
+        _cacheService = cacheService;
     }
 
     /// <inheritdoc />
-    public Task<JourneyHistory> CreateAsync(JourneyHistory item)
+    public async Task<List<JourneyHistory>> GetBySectionAsync(JourneySection section)
     {
-        return repository.CreateAsync(item);
+        var cacheKey = $"{CacheKeyPrefix}section:{section}";
+
+        // Try to get from cache first
+        if (_cacheService != null)
+        {
+            var cached = await _cacheService.GetAsync<List<JourneyHistory>>(cacheKey).ConfigureAwait(false);
+            if (cached != null) return cached;
+        }
+
+        // Cache miss - fetch from database
+        var items = await _repository.GetBySectionAsync(section).ConfigureAwait(false);
+
+        // Store in cache
+        if (_cacheService != null) await _cacheService.SetAsync(cacheKey, items, CacheExpiration).ConfigureAwait(false);
+
+        return items;
     }
 
     /// <inheritdoc />
-    public Task DeleteAsync(int id)
+    public async Task<JourneyHistory> CreateAsync(JourneyHistory item)
     {
-        return repository.DeleteAsync(id);
+        var result = await _repository.CreateAsync(item).ConfigureAwait(false);
+
+        // Invalidate section caches
+        if (_cacheService != null)
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*").ConfigureAwait(false);
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteAsync(int id)
+    {
+        await _repository.DeleteAsync(id).ConfigureAwait(false);
+
+        // Invalidate section caches
+        if (_cacheService != null)
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*").ConfigureAwait(false);
     }
 }

@@ -12,8 +12,11 @@
         depends_on:
             db:
                 condition: service_healthy
+            redis:
+                condition: service_healthy
         environment:
             ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+            ConnectionStrings__RedisConnectionString: Host=redis;Port=6379
             Security__CanonicalBaseUrl: ${CANONICAL_BASE_URL:-http://localhost:8080}
             Security__AdminAccess__AllowedUserNames__0: ${ADMIN_ACCESS_USERNAME_0:-}
             Security__AdminAccess__AllowedUserNames__1: ${ADMIN_ACCESS_USERNAME_1:-}
@@ -44,6 +47,20 @@
             timeout: 5s
             retries: 5
 
+    redis:
+        image: redis:8-alpine
+        container_name: suryami62_redis
+        restart: unless-stopped
+        volumes:
+            - suryami62-redis:/data
+        networks:
+            - backend
+        healthcheck:
+            test: [ "CMD", "redis-cli", "ping" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
 networks:
     backend:
         internal: true
@@ -51,3 +68,4 @@ networks:
 volumes:
     suryami62-db:
     suryami62-dpkeys:
+    suryami62-redis:

@@ -25,6 +25,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IJourneyHistoryService, JourneyHistoryService>();
         services.AddScoped<SiteProfileSettingsStore>();
+        services.AddScoped<ISiteProfileSettingsStore>(sp => sp.GetRequiredService<SiteProfileSettingsStore>());
         services.AddScoped<ApplicationSettingsStore>();
 
         return services;

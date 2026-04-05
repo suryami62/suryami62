@@ -58,47 +58,142 @@ public interface IBlogPostService
 }
 
 /// <summary>
-///     Implements blog post operations by delegating to the configured repository.
+///     Implements blog post operations with Redis caching support.
 /// </summary>
-public sealed class BlogPostService(IBlogPostRepository repository) : IBlogPostService
+public sealed class BlogPostService : IBlogPostService
 {
+    private const string CacheKeyPrefix = "blogposts:";
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(15);
+    private readonly IRedisCacheService? _cacheService;
+
+    private readonly IBlogPostRepository _repository;
+
+    public BlogPostService(IBlogPostRepository repository, IRedisCacheService? cacheService = null)
+    {
+        _repository = repository;
+        _cacheService = cacheService;
+    }
+
     /// <inheritdoc />
-    public Task<(List<BlogPost> Items, int Total)> GetPostsAsync(
+    public async Task<(List<BlogPost> Items, int Total)> GetPostsAsync(
         bool onlyPublished = true,
         int? skip = null,
         int? take = null,
         string? searchTerm = null)
     {
-        return repository.GetPostsAsync(onlyPublished, skip, take, searchTerm);
+        // Create cache key based on parameters
+        var cacheKey = $"{CacheKeyPrefix}list:{onlyPublished}:{skip ?? 0}:{take ?? 0}:{searchTerm ?? ""}";
+
+        // Try to get from cache first (cache-aside pattern)
+        if (_cacheService != null)
+        {
+            var cached = await _cacheService.GetAsync<CachedBlogPostList>(cacheKey).ConfigureAwait(false);
+            if (cached != null) return (cached.Items, cached.Total);
+        }
+
+        // Cache miss - fetch from database
+        var result = await _repository.GetPostsAsync(onlyPublished, skip, take, searchTerm).ConfigureAwait(false);
+
+        // Store in cache
+        if (_cacheService != null)
+            await _cacheService.SetAsync(cacheKey, new CachedBlogPostList(result.Items, result.Total), CacheExpiration)
+                .ConfigureAwait(false);
+
+        return result;
     }
 
     /// <inheritdoc />
-    public Task<BlogPost?> GetPostBySlugAsync(string slug)
+    public async Task<BlogPost?> GetPostBySlugAsync(string slug)
     {
-        return repository.GetBySlugAsync(slug);
+        if (string.IsNullOrWhiteSpace(slug)) return null;
+
+        var cacheKey = $"{CacheKeyPrefix}slug:{slug}";
+
+        // Try to get from cache first
+        if (_cacheService != null)
+        {
+            var cached = await _cacheService.GetAsync<BlogPost>(cacheKey).ConfigureAwait(false);
+            if (cached != null) return cached;
+        }
+
+        // Cache miss - fetch from database
+        var post = await _repository.GetBySlugAsync(slug).ConfigureAwait(false);
+
+        // Store in cache if found
+        if (_cacheService != null && post != null)
+            await _cacheService.SetAsync(cacheKey, post, CacheExpiration).ConfigureAwait(false);
+
+        return post;
     }
 
     /// <inheritdoc />
-    public Task<BlogPost?> GetPostByIdAsync(int id)
+    public async Task<BlogPost?> GetPostByIdAsync(int id)
     {
-        return repository.GetByIdAsync(id);
+        var cacheKey = $"{CacheKeyPrefix}id:{id}";
+
+        // Try to get from cache first
+        if (_cacheService != null)
+        {
+            var cached = await _cacheService.GetAsync<BlogPost>(cacheKey).ConfigureAwait(false);
+            if (cached != null) return cached;
+        }
+
+        // Cache miss - fetch from database
+        var post = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+
+        // Store in cache if found
+        if (_cacheService != null && post != null)
+            await _cacheService.SetAsync(cacheKey, post, CacheExpiration).ConfigureAwait(false);
+
+        return post;
     }
 
     /// <inheritdoc />
-    public Task<BlogPost> CreatePostAsync(BlogPost post)
+    public async Task<BlogPost> CreatePostAsync(BlogPost post)
     {
-        return repository.CreateAsync(post);
+        var result = await _repository.CreateAsync(post).ConfigureAwait(false);
+
+        // Invalidate list caches
+        if (_cacheService != null)
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+
+        return result;
     }
 
     /// <inheritdoc />
-    public Task UpdatePostAsync(BlogPost post)
+    public async Task UpdatePostAsync(BlogPost post)
     {
-        return repository.UpdateAsync(post);
+        await _repository.UpdateAsync(post).ConfigureAwait(false);
+
+        // Invalidate related caches
+        if (_cacheService != null)
+        {
+            await _cacheService.RemoveAsync($"{CacheKeyPrefix}slug:{post.Slug}").ConfigureAwait(false);
+            await _cacheService.RemoveAsync($"{CacheKeyPrefix}id:{post.Id}").ConfigureAwait(false);
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+        }
     }
 
     /// <inheritdoc />
-    public Task DeletePostAsync(int id)
+    public async Task DeletePostAsync(int id)
     {
-        return repository.DeleteAsync(id);
+        // Get post first for cache invalidation
+        var post = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+
+        await _repository.DeleteAsync(id).ConfigureAwait(false);
+
+        // Invalidate caches
+        if (_cacheService != null)
+        {
+            if (post != null)
+                await _cacheService.RemoveAsync($"{CacheKeyPrefix}slug:{post.Slug}").ConfigureAwait(false);
+            await _cacheService.RemoveAsync($"{CacheKeyPrefix}id:{id}").ConfigureAwait(false);
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+        }
     }
+
+    /// <summary>
+    ///     Internal type for caching paginated lists.
+    /// </summary>
+    private sealed record CachedBlogPostList(List<BlogPost> Items, int Total);
 }
