@@ -30,14 +30,14 @@
         <div class="grid gap-12 md:grid-cols-2">
             @if (_projects == null)
             {
-                <div class="col-span-full py-12 text-center">
-                    <p class="text-2xl font-black uppercase">Loading projects...</p>
+                <div class="neo-card col-span-full p-12 text-center">
+                    <p class="neo-title-md">Loading projects...</p>
                 </div>
             }
             else if (_projects.Count == 0)
             {
-                <div class="col-span-full border-4 border-dashed border-black py-12 text-center">
-                    <p class="text-2xl font-black uppercase">No projects found yet.</p>
+                <div class="neo-placeholder col-span-full border-4 border-dashed p-12 text-center">
+                    <p class="neo-title-md">No projects found yet.</p>
                 </div>
             }
             else

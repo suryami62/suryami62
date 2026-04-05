@@ -1,6 +1,5 @@
 ﻿@* Reusable summary card for a blog post in listing pages. *@
-<article
-    class="neo-card relative flex translate-x-0 translate-y-0 flex-col p-6 transition-all hover:bg-neutral-300 active:translate-x-1 active:translate-y-1 active:shadow-none dark:hover:bg-neutral-700">
+<article class="neo-card-interactive group p-6">
 
     <!-- Image -->
     @if (!string.IsNullOrEmpty(ImageUrl))
@@ -12,15 +11,12 @@
 
     <!-- Label and Date -->
     <div class="mb-4 flex items-center justify-between">
-        <span
-            class="bg-black px-3 py-1 text-sm font-bold text-white uppercase dark:bg-white dark:text-black">
-            @Label
-        </span>
-        <span class="font-mono font-bold">@Date</span>
+        <span class="neo-pill">@Label</span>
+        <span class="font-mono text-sm font-bold">@Date</span>
     </div>
 
     <!-- Title -->
-    <h3 class="mb-4 text-2xl leading-none font-black uppercase md:text-3xl">
+    <h3 class="neo-title-sm mb-4 leading-none">
         <a href="@Href" class="before:absolute before:inset-0">
             @Title
         </a>
@@ -32,9 +28,8 @@
     </p>
 
     <!-- Read More -->
-    <div
-        class="mt-auto flex items-center gap-2 font-black uppercase decoration-4 underline-offset-4 group-hover:underline">
-        Read Article
+    <div class="group-hover:neo-inline-link-sm mt-auto flex items-center gap-2 font-black uppercase">
+        <span class="underline decoration-4 underline-offset-4">Read Article</span>
         <i class="fa-solid fa-arrow-right"></i>
     </div>
 </article>

@@ -1,19 +1,17 @@
 ﻿@* Reusable confirmation modal for destructive or sensitive actions. *@
 @if (_isOpen)
 {
-    <div class="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-        <div
-            class="neo-card w-full max-w-md p-8">
-            <h2 class="mb-4 text-3xl font-black tracking-tighter uppercase">@Title</h2>
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div class="neo-card w-full max-w-md p-8">
+            <h2 class="neo-title-md mb-4">@Title</h2>
             <p class="mb-8 text-lg font-bold">@Message</p>
 
             <div class="flex justify-end gap-4">
                 <button @onclick="Cancel"
-                        class="neo-button bg-gray-200 font-black dark:bg-gray-200 dark:text-black">
+                        class="neo-button border-4 bg-neutral-200 font-black dark:bg-neutral-700 dark:text-white">
                     CANCEL
                 </button>
-                <button @onclick="Confirm"
-                        class="neo-button-danger">
+                <button @onclick="Confirm" class="neo-button-danger">
                     CONFIRM
                 </button>
             </div>

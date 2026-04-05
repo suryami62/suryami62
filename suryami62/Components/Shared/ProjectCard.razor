@@ -1,6 +1,5 @@
 ﻿@* Reusable summary card for portfolio projects with image and outbound links. *@
-<article
-    class="neo-card flex h-full flex-col p-6">
+<article class="neo-card flex h-full flex-col p-6">
 
     @if (!string.IsNullOrEmpty(ImageUrl))
     {
@@ -11,14 +10,11 @@
 
     <!-- Title & Header -->
     <div class="mb-4">
-        <h3 class="mb-2 text-3xl leading-none font-black uppercase">@Title</h3>
+        <h3 class="neo-title-md mb-2 leading-none">@Title</h3>
         <div class="flex flex-wrap gap-2">
             @foreach (var tag in Tags ?? [])
             {
-                <span
-                    class="border-2 border-black px-2 py-1 text-xs font-bold uppercase dark:border-white">
-                    @tag
-                </span>
+                <span class="neo-pill-outline">@tag</span>
             }
         </div>
     </div>
@@ -30,8 +26,7 @@
     <div class="mt-auto flex gap-4">
         @if (!string.IsNullOrEmpty(RepoUrl))
         {
-            <a href="@RepoUrl" target="_blank" rel="noopener noreferrer"
-               class="neo-button-inverse flex-1">
+            <a href="@RepoUrl" target="_blank" rel="noopener noreferrer" class="neo-button-inverse flex-1">
                 View Code
             </a>
         }

@@ -35,11 +35,15 @@
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             @if (_posts == null)
             {
-                <div class="col-span-full text-center">Loading posts...</div>
+                <div class="neo-card col-span-full p-12 text-center">
+                    <p class="neo-title-md">Loading posts...</p>
+                </div>
             }
             else if (_posts.Count == 0)
             {
-                <div class="col-span-full text-center">No posts found yet. Check back soon!</div>
+                <div class="neo-placeholder col-span-full border-4 border-dashed p-12 text-center">
+                    <p class="neo-title-md">No posts found yet. Check back soon!</p>
+                </div>
             }
             else
             {
