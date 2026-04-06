@@ -13,7 +13,7 @@
     <PageHeader Title="Media" Highlight="Manager"/>
 
     <div class="neo-card p-8">
-        <h3 class="text-2xl font-black uppercase mb-6">Upload New Image</h3>
+        <h3 class="mb-6 text-2xl font-black uppercase">Upload New Image</h3>
         <div class="flex flex-col gap-4">
             <InputFile OnChange="HandleFileSelectedAsync"
                        class="@FileInputClass"/>
@@ -22,7 +22,7 @@
             {
                 <div class="flex items-center gap-2">
                     <div
-                        class="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin dark:border-white dark:border-t-transparent"></div>
+                        class="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent dark:border-white dark:border-t-transparent"></div>
                     <p class="font-bold text-blue-600">Uploading...</p>
                 </div>
             }
@@ -40,13 +40,13 @@
         @if (IsLoadingGallery)
         {
             <div class="col-span-full py-12 text-center">
-                <p class="text-xl font-bold animate-pulse">Loading gallery...</p>
+                <p class="animate-pulse text-xl font-bold">Loading gallery...</p>
             </div>
         }
         else if (HasNoImages)
         {
             <div class="neo-card col-span-full border-dashed py-12 text-center">
-                <p class="text-gray-500 font-bold">No images uploaded yet.</p>
+                <p class="font-bold text-gray-500">No images uploaded yet.</p>
             </div>
         }
         else if (_imageFiles is { Count: > 0 } imageFiles)
@@ -55,12 +55,12 @@
             {
                 <div class="neo-card group relative overflow-hidden border-2">
                     <div
-                        class="aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden border-b-2 border-black dark:border-white">
+                        class="aspect-square overflow-hidden border-b-2 border-black bg-gray-100 dark:border-white dark:bg-gray-800">
                         <img src="@BuildImageSource(file)" alt="@file" loading="lazy"
-                             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"/>
+                             class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"/>
                     </div>
-                    <div class="p-3 flex flex-col gap-3">
-                        <p class="text-xs truncate font-bold" title="@file">@file</p>
+                    <div class="flex flex-col gap-3 p-3">
+                        <p class="truncate text-xs font-bold" title="@file">@file</p>
                         <div class="flex gap-2">
                             <button @onclick="() => CopyToClipboardAsync(file)"
                                     class="@CopyUrlButtonClass">
@@ -85,7 +85,7 @@
 
 @code {
     private const string FileInputClass = "neo-input p-4 italic";
-    private const string CopyUrlButtonClass = "neo-button flex-1 bg-blue-400 px-2 py-1 text-[10px] text-black hover:bg-blue-500 dark:bg-blue-500";
+    private const string CopyUrlButtonClass = "neo-button-blue px-2 py-1 text-[10px]";
     private const string DeleteButtonClass = "neo-button-danger px-2 py-1 text-[10px]";
 
     private string StatusMessageClass =>

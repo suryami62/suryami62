@@ -17,12 +17,10 @@ else
 {
     <div class="flex flex-col gap-6">
         <div>
-            <h3 class="text-3xl font-black uppercase tracking-tighter">Generate recovery codes</h3>
+            <h3 class="neo-title-md">Generate recovery codes</h3>
             <p class="mt-2 text-sm font-bold uppercase">Create a new set of 2FA recovery codes.</p>
         </div>
-        <div
-            class="border-4 border-black bg-yellow-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-yellow-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]"
-            role="alert">
+        <div class="neo-card bg-yellow-100 p-4 font-bold dark:bg-yellow-900/40" role="alert">
             <p>
                 <strong>Put these codes in a safe place.</strong>
             </p>
@@ -33,14 +31,13 @@ else
                 Generating new recovery codes does not change the keys used in authenticator apps. If you wish to change
                 the
                 key used in an authenticator app you should
-                <a class="underline decoration-4 underline-offset-4" href="Account/Manage/ResetAuthenticator">reset your
+                <a class="neo-inline-link-sm" href="Account/Manage/ResetAuthenticator">reset your
                     authenticator keys</a>.
             </p>
         </div>
         <form @formname="generate-recovery-codes" @onsubmit="OnSubmitAsync" method="post">
             <AntiforgeryToken/>
-            <button type="submit"
-                    class="translate-x-0 translate-y-0 border-2 border-black bg-red-600 px-4 py-2 text-sm font-bold uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-red-700 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-red-500 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+            <button type="submit" class="neo-button-danger text-sm">
                 Generate recovery codes
             </button>
         </form>

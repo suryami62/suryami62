@@ -58,13 +58,13 @@
                        class="@InputClass"/>
         </div>
 
-        <div class="flex flex-col gap-2 w-32">
+        <div class="flex w-32 flex-col gap-2">
             <label class="text-xl font-black uppercase">Order</label>
             <InputNumber @bind-Value="_project.DisplayOrder"
                          class="@InputClass"/>
         </div>
 
-        <div class="flex gap-4 mt-4">
+        <div class="mt-4 flex gap-4">
             <button type="submit" disabled="@_isSubmitting"
                     class="@PrimaryButtonClass">
                 @SubmitButtonText
@@ -80,8 +80,8 @@
 @code {
     private const string InputClass = "neo-input";
     private const string ValidationSummaryClass = "mb-4 font-bold text-red-600 dark:text-red-400";
-    private const string PrimaryButtonClass = "neo-button bg-[#FB923C] px-8 py-3 text-xl text-black hover:bg-orange-300 disabled:opacity-50 dark:bg-orange-400 dark:text-black";
-    private const string SecondaryButtonClass = "neo-button bg-gray-200 px-8 py-3 text-xl text-black hover:bg-gray-300 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700";
+    private const string PrimaryButtonClass = "neo-button-orange px-8 py-3 text-xl";
+    private const string SecondaryButtonClass = "neo-button bg-neutral-200 px-8 py-3 text-xl hover:bg-neutral-300 dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600";
 
     /// <summary>
     ///     Gets the identifier of the project being edited, or <see langword="null" /> when creating a new project.

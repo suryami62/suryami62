@@ -12,7 +12,7 @@
 
 <div class="flex flex-col gap-6">
     <div>
-        <h3 class="text-3xl font-black uppercase tracking-tighter">Two-factor authentication (2FA)</h3>
+        <h3 class="neo-title-md">Two-factor authentication (2FA)</h3>
         <p class="mt-2 text-sm font-bold uppercase">Manage your 2FA settings and recovery codes.</p>
     </div>
 
@@ -24,38 +24,35 @@
         {
             if (recoveryCodesLeft == 0)
             {
-                <div
-                    class="border-4 border-black bg-red-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-red-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+                <div class="neo-card bg-red-100 p-4 font-bold dark:bg-red-900/40">
                     <strong>You have no recovery codes left.</strong>
                     <p>
                         You must
-                        <a class="underline decoration-4 underline-offset-4"
-                           href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>
+                        <a class="neo-inline-link-sm" href="Account/Manage/GenerateRecoveryCodes">generate a new set of
+                            recovery codes</a>
                         before you can log in with a recovery code.
                     </p>
                 </div>
             }
             else if (recoveryCodesLeft == 1)
             {
-                <div
-                    class="border-4 border-black bg-red-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-red-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+                <div class="neo-card bg-red-100 p-4 font-bold dark:bg-red-900/40">
                     <strong>You have 1 recovery code left.</strong>
                     <p>
                         You can
-                        <a class="underline decoration-4 underline-offset-4"
-                           href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.
+                        <a class="neo-inline-link-sm" href="Account/Manage/GenerateRecoveryCodes">generate a new set of
+                            recovery codes</a>.
                     </p>
                 </div>
             }
             else if (recoveryCodesLeft <= 3)
             {
-                <div
-                    class="border-4 border-black bg-yellow-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-yellow-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+                <div class="neo-card bg-yellow-100 p-4 font-bold dark:bg-yellow-900/40">
                     <strong>You have @recoveryCodesLeft recovery codes left.</strong>
                     <p>
                         You should
-                        <a class="underline decoration-4 underline-offset-4"
-                           href="Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.
+                        <a class="neo-inline-link-sm" href="Account/Manage/GenerateRecoveryCodes">generate a new set of
+                            recovery codes</a>.
                     </p>
                 </div>
             }
@@ -73,34 +70,30 @@
                 }
 
                 <a href="Account/Manage/Disable2fa"
-                   class="translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-2 text-sm font-bold uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                   class="neo-button-inverse text-sm">
                     Disable 2FA
                 </a>
-                <a href="Account/Manage/GenerateRecoveryCodes"
-                   class="translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800">
+                <a href="Account/Manage/GenerateRecoveryCodes" class="neo-button-sm">
                     Reset recovery codes
                 </a>
             </div>
         }
 
         <div class="border-t-4 border-black pt-6 dark:border-white">
-            <h4 class="text-xl font-black uppercase tracking-tighter">Authenticator app</h4>
+            <h4 class="text-xl font-black tracking-tighter uppercase">Authenticator app</h4>
             <div class="mt-3 flex flex-wrap gap-3">
                 @if (!hasAuthenticator)
                 {
-                    <a href="Account/Manage/EnableAuthenticator"
-                       class="translate-x-0 translate-y-0 border-2 border-black bg-black px-4 py-2 text-sm font-bold uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-800 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-white dark:text-black dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-200">
+                    <a href="Account/Manage/EnableAuthenticator" class="neo-button-inverse text-sm">
                         Add authenticator app
                     </a>
                 }
                 else
                 {
-                    <a href="Account/Manage/EnableAuthenticator"
-                       class="translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800">
+                    <a href="Account/Manage/EnableAuthenticator" class="neo-button-sm">
                         Set up authenticator app
                     </a>
-                    <a href="Account/Manage/ResetAuthenticator"
-                       class="translate-x-0 translate-y-0 border-2 border-black bg-white px-4 py-2 text-sm font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-neutral-200 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-black dark:text-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] dark:hover:bg-neutral-800">
+                    <a href="Account/Manage/ResetAuthenticator" class="neo-button-sm">
                         Reset authenticator app
                     </a>
                 }
@@ -109,8 +102,7 @@
     }
     else
     {
-        <div
-            class="border-4 border-black bg-red-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-red-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+        <div class="neo-card bg-red-100 p-4 font-bold dark:bg-red-900/40">
             <strong>Privacy and cookie policy have not been accepted.</strong>
             <p>You must accept the policy before you can enable two factor authentication.</p>
         </div>

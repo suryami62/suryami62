@@ -16,7 +16,7 @@
 
 <div class="flex flex-col gap-6">
     <div>
-        <h3 class="text-3xl font-black uppercase tracking-tighter">Manage email</h3>
+        <h3 class="neo-title-md">Manage email</h3>
         <p class="mt-2 text-sm font-bold uppercase">Update or verify your email address.</p>
     </div>
 
@@ -30,24 +30,23 @@
     <EditForm Model="Input" FormName="change-email" OnValidSubmit="OnValidSubmitAsync" method="post">
         <DataAnnotationsValidator/>
         <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
-        <div class="mt-4 flex flex-col gap-4 max-w-xl">
+        <div class="mt-4 flex max-w-xl flex-col gap-4">
             @if (isEmailConfirmed)
             {
                 <div class="flex flex-col gap-2">
-                    <label for="email" class="text-sm font-black uppercase tracking-widest">Email</label>
+                    <label for="email" class="text-sm font-black tracking-widest uppercase">Email</label>
                     <div class="flex items-center gap-3">
                         <input type="text" value="@email" id="email"
                                class="@DisabledInputClass"
                                placeholder="Enter your email" disabled/>
-                        <span
-                            class="border-2 border-black bg-black px-3 py-2 text-xs font-black uppercase text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-white dark:text-black dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]">Verified</span>
+                        <span class="neo-pill text-xs">Verified</span>
                     </div>
                 </div>
             }
             else
             {
                 <div class="flex flex-col gap-2">
-                    <label for="email" class="text-sm font-black uppercase tracking-widest">Email</label>
+                    <label for="email" class="text-sm font-black tracking-widest uppercase">Email</label>
                     <input type="text" value="@email" id="email"
                            class="@DisabledInputClass"
                            placeholder="Enter your email" disabled/>
@@ -58,7 +57,7 @@
                 </div>
             }
             <div class="flex flex-col gap-2">
-                <label for="Input.NewEmail" class="text-sm font-black uppercase tracking-widest">New email</label>
+                <label for="Input.NewEmail" class="text-sm font-black tracking-widest uppercase">New email</label>
                 <InputText @bind-Value="Input.NewEmail" id="Input.NewEmail"
                            class="@InputClass"
                            autocomplete="email" aria-required="true" placeholder="Enter a new email"/>
