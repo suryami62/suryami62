@@ -98,12 +98,13 @@
         </div>
     </div>
 
-    <div class="grid @(Mode == EditorMode.Split ? "grid-cols-2" : "grid-cols-1") min-h-[400px]">
+    <div
+        class="grid @(Mode == EditorMode.Split ? "grid-cols-2" : "grid-cols-1") min-h-[400px]"> @* tailwindocd-ignore *@
         @if (Mode != EditorMode.Preview)
         {
             <textarea @ref="_textArea" value="@Value" @oninput="OnInput"
                       placeholder="Write your story in Markdown..."
-                      class="h-full min-h-100 w-full resize-none p-4 font-mono text-lg outline-none dark:bg-gray-900 @(Mode == EditorMode.Split ? "border-r-4 border-black dark:border-white" : "")"></textarea>
+                      class="h-full min-h-100 w-full resize-none p-4 font-mono text-lg outline-none dark:bg-gray-900 @(Mode == EditorMode.Split ? "border-r-4 border-black dark:border-white" : "")"></textarea> @* tailwindocd-ignore *@
         }
 
         @if (Mode != EditorMode.Edit)

@@ -15,8 +15,8 @@
 <PageTitle>Register</PageTitle>
 
 <div class="flex flex-col gap-8 py-8">
-    <header class="border-b-4 border-black pb-6 dark:border-white">
-        <h1 class="text-4xl font-black tracking-tighter uppercase md:text-5xl">Register</h1>
+    <header class="neo-section">
+        <h1 class="neo-title-lg">Register</h1>
         <p class="mt-2 text-lg font-bold">Create a new account.</p>
     </header>
 
@@ -31,32 +31,32 @@
                     <div class="mt-4 flex flex-col gap-4">
                         <div class="flex flex-col gap-2">
                             <label for="Input.UserName"
-                                   class="text-sm font-black uppercase tracking-widest">Username</label>
+                                   class="text-sm font-black tracking-widest uppercase">Username</label>
                             <InputText @bind-Value="Input.UserName" id="Input.UserName"
-                                       class="@InputClass"
+                                       class="neo-input"
                                        autocomplete="username" aria-required="true" placeholder="username"/>
                             <ValidationMessage For="() => Input.UserName"
                                                class="@ValidationMessageClass"/>
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="Input.Email" class="text-sm font-black uppercase tracking-widest">Email</label>
+                            <label for="Input.Email" class="text-sm font-black tracking-widest uppercase">Email</label>
                             <InputText @bind-Value="Input.Email" id="Input.Email"
-                                       class="@InputClass"
+                                       class="neo-input"
                                        autocomplete="email" aria-required="true" placeholder="name@example.com"/>
                             <ValidationMessage For="() => Input.Email"
                                                class="@ValidationMessageClass"/>
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="Input.Password"
-                                   class="text-sm font-black uppercase tracking-widest">Password</label>
+                                   class="text-sm font-black tracking-widest uppercase">Password</label>
                             <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
-                                       class="@InputClass"
+                                       class="neo-input"
                                        autocomplete="new-password" aria-required="true" placeholder="password"/>
                             <ValidationMessage For="() => Input.Password"
                                                class="@ValidationMessageClass"/>
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label for="Input.ConfirmPassword" class="text-sm font-black uppercase tracking-widest">Confirm
+                            <label for="Input.ConfirmPassword" class="text-sm font-black tracking-widest uppercase">Confirm
                                 Password</label>
                             <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword"
                                        class="@InputClass"

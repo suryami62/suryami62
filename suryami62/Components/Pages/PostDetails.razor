@@ -27,13 +27,15 @@
 
     @if (!_isLoaded)
     {
-        <div class="text-center text-xl font-bold">Loading post...</div>
+        <div class="neo-card p-12 text-center">
+            <p class="neo-title-md">Loading post...</p>
+        </div>
     }
     else if (_post is null)
     {
-        <div class="neo-card p-6 font-bold">
-            <h1 class="mb-2 text-3xl font-black uppercase">Post not found</h1>
-            <p class="text-lg">Post not found or not yet published.</p>
+        <div class="neo-card p-8">
+            <h1 class="neo-title-md mb-2">Post not found</h1>
+            <p class="text-lg font-bold">Post not found or not yet published.</p>
         </div>
     }
     else
@@ -41,13 +43,11 @@
         <article class="mx-auto w-full max-w-4xl">
             <header class="mb-8 border-b-4 border-black pb-6 dark:border-white">
                 <div class="mb-4 flex flex-wrap items-center gap-4">
-					<span class="neo-pill">
-						@_post.Label
-					</span>
-                    <span class="font-mono font-bold">@_post.Date.ToString("MMM dd, yyyy")</span>
+                    <span class="neo-pill">@_post.Label</span>
+                    <span class="font-mono text-sm font-bold">@_post.Date.ToString("MMM dd, yyyy")</span>
                 </div>
 
-                <h1 class="text-4xl font-black tracking-tighter uppercase md:text-6xl">@_post.Title</h1>
+                <h1 class="neo-title-lg">@_post.Title</h1>
 
                 @if (!string.IsNullOrWhiteSpace(_post.Summary))
                 {

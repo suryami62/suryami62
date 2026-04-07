@@ -1,10 +1,8 @@
 ﻿@* Reusable status banner that displays transient account-related messages. *@
 @if (!string.IsNullOrEmpty(DisplayMessage))
 {
-    <div
-        class="border-4 bg-white p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:bg-black dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] @StatusMessageClass"
-        role="alert">
-        @DisplayMessage
+    <div class="neo-card @StatusMessageClass mb-4" role="alert">
+        <p class="font-bold">@DisplayMessage</p>
     </div>
 }
 

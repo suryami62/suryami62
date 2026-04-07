@@ -12,14 +12,12 @@
 
 <div class="flex flex-col gap-6">
     <div>
-        <h3 class="text-3xl font-black uppercase tracking-tighter">Reset authenticator key</h3>
+        <h3 class="neo-title-md">Reset authenticator key</h3>
         <p class="mt-2 text-sm font-bold uppercase">Regenerate your 2FA key.</p>
     </div>
 
     <StatusMessage/>
-    <div
-        class="border-4 border-black bg-yellow-100 p-4 font-bold shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-yellow-900/40 dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]"
-        role="alert">
+    <div class="neo-card bg-yellow-100 p-4 font-bold dark:bg-yellow-900/40" role="alert">
         <p>
             <strong>If you reset your authenticator key your authenticator app will not work until you reconfigure
                 it.</strong>
@@ -31,8 +29,7 @@
     </div>
     <form @formname="reset-authenticator" @onsubmit="OnSubmitAsync" method="post">
         <AntiforgeryToken/>
-        <button type="submit"
-                class="translate-x-0 translate-y-0 border-2 border-black bg-red-600 px-4 py-2 text-sm font-bold uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:bg-red-700 active:translate-x-1 active:translate-y-1 active:shadow-none dark:border-white dark:bg-red-500 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+        <button type="submit" class="neo-button-danger text-sm">
             Reset authenticator key
         </button>
     </form>

@@ -121,18 +121,18 @@
     private const int CountOnlyTakeAll = 0;
 
     private string RegistrationButtonClass =>
-        $"neo-button px-3 py-1 text-sm {(_registrationEnabled ? "bg-green-400 text-black hover:bg-green-500" : "bg-red-500 text-white hover:bg-red-600")}";
+        _registrationEnabled ? "neo-button-green px-3 py-1 text-sm w-full text-center" : "neo-button-danger px-3 py-1 text-sm w-full text-center";
 
     private string RegistrationStatusText => _registrationEnabled ? "ENABLED" : "DISABLED";
 
-    private const string PostsButtonClass = "neo-button bg-[#A3E635] px-4 py-2 text-black hover:bg-lime-400 dark:bg-lime-500";
-    private const string ProjectsButtonClass = "neo-button bg-[#FB923C] px-4 py-2 text-black hover:bg-orange-300 dark:bg-orange-400";
-    private const string MediaButtonClass = "neo-button bg-[#A855F7] px-4 py-2 text-white hover:bg-purple-600 dark:bg-purple-500";
-    private const string JourneyButtonClass = "neo-button bg-[#60A5FA] px-4 py-2 text-black hover:bg-blue-500 dark:bg-blue-400";
-    private const string SiteProfileButtonClass = "neo-button bg-[#FDE047] px-4 py-2 text-black hover:bg-yellow-300 dark:bg-yellow-400";
-    private const string SeoButtonClass = "neo-button bg-[#F472B6] px-4 py-2 text-black hover:bg-pink-400 dark:bg-pink-400";
-    private const string SettingsButtonClass = "neo-button bg-[#60A5FA] px-4 py-2 text-black hover:bg-blue-500 dark:bg-blue-400";
-    private const string LogoutButtonClass = "neo-button-danger w-full px-4 py-2";
+    private const string PostsButtonClass = "neo-button-lime w-full px-4 py-2 text-center";
+    private const string ProjectsButtonClass = "neo-button-orange w-full px-4 py-2 text-center";
+    private const string MediaButtonClass = "neo-button-purple w-full px-4 py-2 text-center";
+    private const string JourneyButtonClass = "neo-button-blue w-full px-4 py-2 text-center";
+    private const string SiteProfileButtonClass = "neo-button-yellow w-full px-4 py-2 text-center";
+    private const string SeoButtonClass = "neo-button-pink w-full px-4 py-2 text-center";
+    private const string SettingsButtonClass = "neo-button-blue w-full px-4 py-2 text-center";
+    private const string LogoutButtonClass = "neo-button-danger w-full px-4 py-2 text-center";
 
     private int _postCount;
     private int _projectCount;
