@@ -27,6 +27,8 @@ public sealed partial class CachedSettingsRepository : ISettingsRepository
         _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        LogRepositoryInitialized(CacheDuration);
     }
 
     /// <inheritdoc />
@@ -150,4 +152,7 @@ public sealed partial class CachedSettingsRepository : ISettingsRepository
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Cache INVALIDATED for setting '{SettingKey}'")]
     private partial void LogCacheInvalidated(string settingKey);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "CachedSettingsRepository initialized with cache duration: {CacheDuration}")]
+    private partial void LogRepositoryInitialized(TimeSpan cacheDuration);
 }

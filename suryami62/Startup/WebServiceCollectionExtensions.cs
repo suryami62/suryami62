@@ -76,7 +76,7 @@ internal static class WebServiceCollectionExtensions
         services.AddScoped(_ => new MarkdownRenderer());
 
         // Add caching services (memory + distributed + output)
-        AddCachingServices(services, configuration);
+        AddCachingServices(services);
 
         // Add Redis distributed cache
         AddRedisServices(services);
@@ -218,7 +218,7 @@ internal static class WebServiceCollectionExtensions
     /// <summary>
     ///     Adds caching services: In-Memory Cache, Output Cache, and Response Caching.
     /// </summary>
-    private static void AddCachingServices(IServiceCollection services, IConfiguration configuration)
+    private static void AddCachingServices(IServiceCollection services)
     {
         // Add memory cache for frequently accessed, rarely-changing data
         services.AddMemoryCache();

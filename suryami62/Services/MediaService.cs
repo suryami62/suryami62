@@ -68,7 +68,7 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
             var destinationPath = Path.Combine(_uploadsDirectory, storedFileName);
 
             // Process and optimize image before saving
-            var processResult = await ProcessAndSaveImageAsync(stream, destinationPath, maxAllowedSize, contentType)
+            var processResult = await ProcessAndSaveImageAsync(stream, destinationPath, maxAllowedSize)
                 .ConfigureAwait(false);
 
             return processResult.Success
@@ -184,8 +184,7 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
     private static async Task<(bool Success, string Message)> ProcessAndSaveImageAsync(
         Stream source,
         string destinationPath,
-        long maxAllowedSize,
-        string contentType)
+        long maxAllowedSize)
     {
         // Check size limit first using a memory buffer
         using var memoryStream = new MemoryStream();
