@@ -2,6 +2,9 @@
 
 using System.Globalization;
 using System.Text;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
 
 #endregion
 
@@ -63,11 +66,14 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
 
             var storedFileName = GetUniqueFileName(validationResult.SafeFileName!);
             var destinationPath = Path.Combine(_uploadsDirectory, storedFileName);
-            var copyResult = await SaveFileAsync(stream, destinationPath, maxAllowedSize).ConfigureAwait(false);
 
-            return copyResult.Success
+            // Process and optimize image before saving
+            var processResult = await ProcessAndSaveImageAsync(stream, destinationPath, maxAllowedSize)
+                .ConfigureAwait(false);
+
+            return processResult.Success
                 ? new UploadResult(true, $"Successfully uploaded {storedFileName}", storedFileName)
-                : new UploadResult(false, copyResult.Message);
+                : new UploadResult(false, processResult.Message);
         }
         catch (IOException)
         {
@@ -76,6 +82,10 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         catch (UnauthorizedAccessException)
         {
             return new UploadResult(false, "An error occurred while uploading the file (Access denied).");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new UploadResult(false, $"Image processing error: {ex.Message}");
         }
     }
 
@@ -165,6 +175,71 @@ internal sealed class MediaService(IWebHostEnvironment webHostEnvironment) : IMe
         catch (UnauthorizedAccessException)
         {
             // Cleanup is best-effort; preserve the original upload failure when deletion also fails.
+        }
+    }
+
+    /// <summary>
+    ///     Processes the uploaded image by resizing if too large and converting to WebP for optimal compression.
+    /// </summary>
+    private static async Task<(bool Success, string Message)> ProcessAndSaveImageAsync(
+        Stream source,
+        string destinationPath,
+        long maxAllowedSize)
+    {
+        // Check size limit first using a memory buffer
+        using var memoryStream = new MemoryStream();
+        await source.CopyToAsync(memoryStream).ConfigureAwait(false);
+
+        if (memoryStream.Length > maxAllowedSize)
+            return (false, $"File is too large. Max allowed size is {maxAllowedSize} bytes.");
+
+        memoryStream.Position = 0;
+
+        try
+        {
+            using var image = await Image.LoadAsync(memoryStream).ConfigureAwait(false);
+
+            // Resize if image is too large (max 1920px on longest side)
+            const int maxDimension = 1920;
+            if (image.Width > maxDimension || image.Height > maxDimension)
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(maxDimension, maxDimension)
+                }));
+
+            // Auto-orient based on EXIF data
+            image.Mutate(x => x.AutoOrient());
+
+            // Determine output format based on content type
+            var extension = Path.GetExtension(destinationPath).ToUpperInvariant();
+
+            // Convert to WebP for better compression (unless already WebP)
+            string outputPath;
+            if (extension != ".WEBP")
+                outputPath = Path.ChangeExtension(destinationPath, ".webp");
+            else
+                outputPath = destinationPath;
+
+            // Save as WebP with quality 85 (good balance between quality and size)
+            var webpEncoder = new WebpEncoder
+            {
+                Quality = 85,
+                FileFormat = WebpFileFormatType.Lossy
+            };
+
+            await image.SaveAsync(outputPath, webpEncoder).ConfigureAwait(false);
+
+            // If we converted to WebP, delete the original path reference
+            if (outputPath != destinationPath && File.Exists(destinationPath)) File.Delete(destinationPath);
+
+            return (true, string.Empty);
+        }
+        catch (UnknownImageFormatException)
+        {
+            // If image processing fails, fall back to direct save
+            memoryStream.Position = 0;
+            return await SaveFileAsync(memoryStream, destinationPath, maxAllowedSize).ConfigureAwait(false);
         }
     }
 

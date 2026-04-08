@@ -163,6 +163,7 @@ public sealed class BlogPostService : IBlogPostService
     /// <inheritdoc />
     public async Task UpdatePostAsync(BlogPost post)
     {
+        ArgumentNullException.ThrowIfNull(post);
         await _repository.UpdateAsync(post).ConfigureAwait(false);
 
         // Invalidate related caches

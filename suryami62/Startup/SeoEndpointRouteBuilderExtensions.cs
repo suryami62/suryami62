@@ -100,7 +100,7 @@ internal static class SeoEndpointRouteBuilderExtensions
 
     private static string BuildSitemapXml(string canonicalBaseUrl, IEnumerable<BlogPost> posts)
     {
-        var sb = new StringBuilder();
+        var sb = new StringBuilder(4096); // Pre-allocate typical capacity
         sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         sb.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
 
@@ -138,7 +138,7 @@ internal static class SeoEndpointRouteBuilderExtensions
 
     private static string BuildRobotsText(string canonicalBaseUrl, string? disallowList)
     {
-        var sb = new StringBuilder();
+        var sb = new StringBuilder(512); // Pre-allocate typical capacity
         sb.AppendLine("User-agent: *");
         sb.AppendLine("Allow: /");
 
@@ -153,11 +153,11 @@ internal static class SeoEndpointRouteBuilderExtensions
     {
         if (string.IsNullOrWhiteSpace(disallowList)) yield break;
 
-        var lines = disallowList.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
-        foreach (var line in lines)
+        foreach (var line in disallowList.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
         {
-            var trimmedLine = line.Trim();
-            if (!string.IsNullOrWhiteSpace(trimmedLine)) yield return trimmedLine;
+            var trimmed = line.Trim();
+            if (!string.IsNullOrWhiteSpace(trimmed))
+                yield return trimmed;
         }
     }
 }

@@ -91,13 +91,14 @@
 
     private bool HasSuccessMessage { get; set; }
 
-    [SupplyParameterFromForm] private InputModel FormInput { get; set; } = new();
+    [SupplyParameterFromForm] private InputModel FormInput { get; set; } = null!;
 
     /// <summary>
     ///     Loads the persisted SEO settings into the form shown on the admin page.
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        FormInput ??= new InputModel();
         await LoadFormInputAsync();
     }
 

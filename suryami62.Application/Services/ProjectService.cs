@@ -125,6 +125,7 @@ public sealed class ProjectService : IProjectService
     /// <inheritdoc />
     public async Task UpdateProjectAsync(Project project)
     {
+        ArgumentNullException.ThrowIfNull(project);
         await _repository.UpdateAsync(project).ConfigureAwait(false);
 
         // Invalidate related caches

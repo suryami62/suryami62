@@ -187,4 +187,42 @@ public class ProjectRepositoryTests
 
         Assert.Null(exception);
     }
+
+    [Fact]
+    public async Task GetProjectsAsyncWithSkipAndTakeReturnsCorrectPage()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        for (var i = 1; i <= 10; i++) context.Projects.Add(CreateProject($"Project {i}", i));
+        await context.SaveChangesAsync();
+
+        var repository = new ProjectRepository(context);
+        var (items, total) = await repository.GetProjectsAsync(2, 3);
+
+        Assert.Equal(3, items.Count);
+        Assert.Equal(10, total);
+        Assert.Equal("Project 3", items[0].Title);
+        Assert.Equal("Project 4", items[1].Title);
+        Assert.Equal("Project 5", items[2].Title);
+    }
+
+    [Fact]
+    public async Task CreateAsyncWithUrlsPersistsUrls()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        var repository = new ProjectRepository(context);
+        var project = new Project
+        {
+            Title = "Web Project",
+            Description = "A web project",
+            Tags = "Blazor",
+            DisplayOrder = 1,
+            RepoUrl = new Uri("https://github.com/example/repo"),
+            DemoUrl = new Uri("https://example.com")
+        };
+
+        var created = await repository.CreateAsync(project);
+
+        Assert.NotNull(created.RepoUrl);
+        Assert.NotNull(created.DemoUrl);
+    }
 }

@@ -10,7 +10,7 @@ namespace suryami62.Services;
 /// <summary>
 ///     Redis-backed distributed cache service implementation.
 /// </summary>
-internal sealed class RedisCacheService : IRedisCacheService, IDisposable
+public sealed class RedisCacheService : IRedisCacheService, IDisposable
 {
     private readonly IConnectionMultiplexer _connection;
     private readonly IDatabase _database;
