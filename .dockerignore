@@ -33,5 +33,6 @@ uploads/
 **/obj/
 **/secrets.dev.yaml
 **/values.dev.yaml
+**/qodana.yaml
 LICENSE
 README.md

@@ -76,6 +76,35 @@ public class BlogPostServiceTests
     }
 
     [Fact]
+    public async Task CreatePostAsyncWhenCalledDelegatesToRepositoryAndReturnsCreatedItem()
+    {
+        var post = new BlogPost { Title = "New Post", Slug = "new-post" };
+        _repositoryMock
+            .Setup(r => r.CreateAsync(post))
+            .ReturnsAsync(post);
+
+        var result = await _service.CreatePostAsync(post);
+
+        _repositoryMock.Verify(r => r.CreateAsync(post), Times.Once);
+        Assert.Equal(post, result);
+    }
+
+    [Fact]
+    public async Task DeletePostAsyncWhenCalledDelegatesToRepository()
+    {
+        _repositoryMock
+            .Setup(r => r.GetByIdAsync(1))
+            .ReturnsAsync(new BlogPost { Id = 1, Slug = "test-post" });
+        _repositoryMock
+            .Setup(r => r.DeleteAsync(1))
+            .Returns(Task.CompletedTask);
+
+        await _service.DeletePostAsync(1);
+
+        _repositoryMock.Verify(r => r.DeleteAsync(1), Times.Once);
+    }
+
+    [Fact]
     public async Task GetPostByIdAsyncWithExistingIdReturnsPost()
     {
         var post = new BlogPost { Id = 1, Title = "Found Post" };
@@ -102,20 +131,6 @@ public class BlogPostServiceTests
     }
 
     [Fact]
-    public async Task CreatePostAsyncWhenCalledDelegatesToRepositoryAndReturnsCreatedPost()
-    {
-        var post = new BlogPost { Title = "New Post", Slug = "new-post" };
-        _repositoryMock
-            .Setup(r => r.CreateAsync(post))
-            .ReturnsAsync(post);
-
-        var result = await _service.CreatePostAsync(post);
-
-        _repositoryMock.Verify(r => r.CreateAsync(post), Times.Once);
-        Assert.Equal(post, result);
-    }
-
-    [Fact]
     public async Task UpdatePostAsyncWhenCalledDelegatesToRepository()
     {
         var post = new BlogPost { Id = 2, Title = "Updated Post" };
@@ -129,14 +144,17 @@ public class BlogPostServiceTests
     }
 
     [Fact]
-    public async Task DeletePostAsyncWhenCalledDelegatesToRepository()
+    public async Task DeletePostAsyncWithNonExistentIdDoesNotThrow()
     {
         _repositoryMock
-            .Setup(r => r.DeleteAsync(5))
+            .Setup(r => r.GetByIdAsync(999))
+            .ReturnsAsync((BlogPost?)null);
+        _repositoryMock
+            .Setup(r => r.DeleteAsync(999))
             .Returns(Task.CompletedTask);
 
-        await _service.DeletePostAsync(5);
+        await _service.DeletePostAsync(999);
 
-        _repositoryMock.Verify(r => r.DeleteAsync(5), Times.Once);
+        _repositoryMock.Verify(r => r.DeleteAsync(999), Times.Once);
     }
 }

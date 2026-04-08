@@ -68,3 +68,21 @@ indent_size = 2
 indent_style = space
 indent_size = 4
 tab_width = 4
+
+# Test files - allow underscores in method names (CA1707 is a common pattern in tests)
+[**Tests**.cs]
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA1303.severity = none
+dotnet_diagnostic.CA5394.severity = none
+
+# Benchmark files - allow underscores in method names
+[**Benchmarks**.cs]
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA1303.severity = none
+dotnet_diagnostic.CA5394.severity = none
+
+# suryami62 Services - public for DI registration, not for external API use
+[**/suryami62/Services/*.cs]
+dotnet_diagnostic.CA1515.severity = none

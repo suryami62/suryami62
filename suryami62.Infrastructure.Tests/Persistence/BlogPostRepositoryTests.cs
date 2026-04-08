@@ -254,4 +254,64 @@ public class BlogPostRepositoryTests
 
         Assert.Null(exception);
     }
+
+    [Fact]
+    public async Task GetPostsAsyncWithEmptySearchTermReturnsAllPublishedPosts()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        context.BlogPosts.AddRange(
+            CreatePost("Post 1", "post-1"),
+            CreatePost("Post 2", "post-2"));
+        await context.SaveChangesAsync();
+
+        var repository = new BlogPostRepository(context);
+        var (items, total) = await repository.GetPostsAsync(searchTerm: "");
+
+        Assert.Equal(2, items.Count);
+        Assert.Equal(2, total);
+    }
+
+    [Fact]
+    public async Task GetPostsAsyncSearchTermIsCaseSensitive()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        context.BlogPosts.Add(new BlogPost
+        {
+            Title = "DotNet Core", Slug = "dotnet", Content = "x", Label = "dev",
+            Summary = "Learn DOTNET", IsPublished = true
+        });
+        await context.SaveChangesAsync();
+
+        var repository = new BlogPostRepository(context);
+        var (items, _) = await repository.GetPostsAsync(searchTerm: "dotnet");
+
+        Assert.Empty(items);
+    }
+
+    [Fact]
+    public async Task GetPostsAsyncWithSkipBeyondTotalReturnsEmptyList()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        context.BlogPosts.Add(CreatePost("Post 1", "post-1"));
+        await context.SaveChangesAsync();
+
+        var repository = new BlogPostRepository(context);
+        var (items, total) = await repository.GetPostsAsync(skip: 100, take: 10);
+
+        Assert.Empty(items);
+        Assert.Equal(1, total);
+    }
+
+    [Fact]
+    public async Task CreateAsyncWithUnpublishedPostPersistsCorrectly()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        var repository = new BlogPostRepository(context);
+        var post = CreatePost("Draft Post", "draft-post", false);
+
+        var created = await repository.CreateAsync(post);
+
+        Assert.NotEqual(0, created.Id);
+        Assert.False(created.IsPublished);
+    }
 }

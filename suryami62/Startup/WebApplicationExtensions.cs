@@ -15,6 +15,17 @@ namespace suryami62.Startup;
 /// </summary>
 internal static partial class WebApplicationExtensions
 {
+    // Pre-computed security headers for efficiency - avoid rebuilding on every request
+    private const string ContentSecurityPolicyValue =
+        "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; " +
+        "img-src 'self' data: https:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; " +
+        "script-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:; form-action 'self'";
+
+    private const string ReferrerPolicyValue = "strict-origin-when-cross-origin";
+    private const string XContentTypeOptionsValue = "nosniff";
+    private const string XFrameOptionsValue = "DENY";
+    private const string PermissionsPolicyValue = "camera=(), microphone=(), geolocation=()";
+
     /// <summary>
     ///     Applies the middleware pipeline used by the web application.
     /// </summary>
@@ -29,8 +40,19 @@ internal static partial class WebApplicationExtensions
         app.UseForwardedHeaders();
         app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
         app.UseHttpsRedirection();
+
+        // Add response compression early in the pipeline (before static files)
+        app.UseResponseCompression();
+
         app.UseSecurityHeaders();
         app.UseRateLimiter();
+
+        // Add response caching middleware (for static files and API responses)
+        app.UseResponseCaching();
+
+        // Add output caching middleware (for Blazor pages - better than response caching for UI)
+        app.UseOutputCache();
+
         app.UseStaticUploads();
         app.UseAntiforgery();
 
@@ -104,11 +126,11 @@ internal static partial class WebApplicationExtensions
             context.Response.OnStarting(() =>
             {
                 var headers = context.Response.Headers;
-                headers["Content-Security-Policy"] = BuildContentSecurityPolicy();
-                headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-                headers["X-Content-Type-Options"] = "nosniff";
-                headers["X-Frame-Options"] = "DENY";
-                headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+                headers["Content-Security-Policy"] = ContentSecurityPolicyValue;
+                headers["Referrer-Policy"] = ReferrerPolicyValue;
+                headers["X-Content-Type-Options"] = XContentTypeOptionsValue;
+                headers["X-Frame-Options"] = XFrameOptionsValue;
+                headers["Permissions-Policy"] = PermissionsPolicyValue;
                 return Task.CompletedTask;
             });
 
@@ -121,26 +143,19 @@ internal static partial class WebApplicationExtensions
         var uploadsPath = Path.Combine(app.Environment.WebRootPath, "img", "uploads");
         Directory.CreateDirectory(uploadsPath);
 
+        // Static files with aggressive caching (images rarely change)
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(uploadsPath),
-            RequestPath = "/img/uploads"
+            RequestPath = "/img/uploads",
+            OnPrepareResponse = ctx =>
+            {
+                // Cache images for 7 days - they rarely change
+                const int maxAgeSeconds = 604800; // 7 days
+                ctx.Context.Response.Headers.CacheControl =
+                    $"public,max-age={maxAgeSeconds},immutable";
+            }
         });
-    }
-
-    private static string BuildContentSecurityPolicy()
-    {
-        return string.Join("; ",
-            "default-src 'self'",
-            "base-uri 'self'",
-            "object-src 'none'",
-            "frame-ancestors 'none'",
-            "img-src 'self' data: https:",
-            "font-src 'self' data:",
-            "style-src 'self' 'unsafe-inline'",
-            "script-src 'self' 'unsafe-inline'",
-            "connect-src 'self' ws: wss:",
-            "form-action 'self'");
     }
 
     /// <summary>

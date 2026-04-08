@@ -1,5 +1,7 @@
 #region
 
+using System.IO.Compression;
+using System.Net;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -26,6 +29,16 @@ namespace suryami62.Startup;
 /// </summary>
 internal static class WebServiceCollectionExtensions
 {
+    private static readonly SlidingWindowRateLimiterOptions AuthRateLimiterOptions = new()
+    {
+        PermitLimit = 5,
+        Window = TimeSpan.FromMinutes(1),
+        SegmentsPerWindow = 6,
+        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+        QueueLimit = 0,
+        AutoReplenishment = true
+    };
+
     /// <summary>
     ///     Adds the presentation, security, and persistence services used by the web project.
     /// </summary>
@@ -39,14 +52,14 @@ internal static class WebServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        AddPresentationServices(services);
+        AddPresentationServices(services, configuration);
         AddSecurityServices(services);
         AddPersistenceServices(services, configuration);
 
         return services;
     }
 
-    private static void AddPresentationServices(IServiceCollection services)
+    private static void AddPresentationServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddRazorComponents()
             .AddInteractiveServerComponents();
@@ -62,6 +75,9 @@ internal static class WebServiceCollectionExtensions
         services.AddScoped<IMediaService>(sp => new MediaService(sp.GetRequiredService<IWebHostEnvironment>()));
         services.AddScoped(_ => new MarkdownRenderer());
 
+        // Add caching services (memory + distributed + output)
+        AddCachingServices(services, configuration);
+
         // Add Redis distributed cache
         AddRedisServices(services);
     }
@@ -75,16 +91,79 @@ internal static class WebServiceCollectionExtensions
                                    throw new InvalidOperationException(
                                        "Redis connection string 'RedisConnectionString' is not configured.");
 
-            var options = ConfigurationOptions.Parse(connectionString);
+            var options = ParseRedisConnectionString(connectionString);
             options.AbortOnConnectFail = false;
-            options.ConnectTimeout = 5000;
-            options.SyncTimeout = 5000;
-            options.AsyncTimeout = 5000;
 
             return ConnectionMultiplexer.Connect(options);
         });
 
         services.AddScoped<IRedisCacheService, RedisCacheService>();
+    }
+
+    /// <summary>
+    ///     Parses a Redis connection string in the format:
+    ///     Host=[HOST];Port=[PORT];Username=[USERNAME];Password=[PASSWORD]
+    ///     into StackExchange.Redis ConfigurationOptions.
+    /// </summary>
+    private static ConfigurationOptions ParseRedisConnectionString(string connectionString)
+    {
+        var options = new ConfigurationOptions();
+        string? host = null;
+        int? port = null;
+
+        foreach (var part in connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var keyValue = part.Split('=', 2);
+            if (keyValue.Length != 2) continue;
+
+            var key = keyValue[0].Trim().ToUpperInvariant();
+            var value = keyValue[1].Trim();
+
+            switch (key)
+            {
+                case "HOST" when !string.IsNullOrEmpty(value):
+                    host = value;
+                    break;
+                case "PORT" when int.TryParse(value, out var parsedPort):
+                    port = parsedPort;
+                    break;
+                case "USERNAME":
+                    options.User = value;
+                    break;
+                case "PASSWORD":
+                    options.Password = value;
+                    break;
+                case "DEFAULTDATABASE" when int.TryParse(value, out var db):
+                    options.DefaultDatabase = db;
+                    break;
+                case "ABORTCONNECTFAIL" or "ABORTCONNECT" when bool.TryParse(value, out var abortConnect):
+                    options.AbortOnConnectFail = abortConnect;
+                    break;
+                case "CONNECTTIMEOUT" when int.TryParse(value, out var connectTimeout):
+                    options.ConnectTimeout = connectTimeout;
+                    break;
+                case "SYNCTIMEOUT" when int.TryParse(value, out var syncTimeout):
+                    options.SyncTimeout = syncTimeout;
+                    break;
+                case "CONNECTRETRY" when int.TryParse(value, out var connectRetry):
+                    options.ConnectRetry = connectRetry;
+                    break;
+                case "ssl" or "usessl" when bool.TryParse(value, out var ssl):
+                    options.Ssl = ssl;
+                    break;
+            }
+        }
+
+        if (string.IsNullOrEmpty(host))
+            throw new InvalidOperationException(
+                "No Redis endpoint specified. Connection string must contain at least a 'Host' parameter.");
+
+        if (port.HasValue)
+            options.EndPoints.Add(new DnsEndPoint(host, port.Value));
+        else
+            options.EndPoints.Add(host);
+
+        return options;
     }
 
     private static void AddSecurityServices(IServiceCollection services)
@@ -125,11 +204,54 @@ internal static class WebServiceCollectionExtensions
 
         services.AddDbContext<ApplicationDbContext>(options =>
         {
-            options.UseNpgsql(connectionString, npgsqlOptions => { npgsqlOptions.EnableRetryOnFailure(); });
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.EnableRetryOnFailure(3);
+                npgsqlOptions.CommandTimeout(30);
+            });
         });
 
         services.AddInfrastructureServices();
         services.AddDatabaseDeveloperPageExceptionFilter();
+    }
+
+    /// <summary>
+    ///     Adds caching services: In-Memory Cache, Output Cache, and Response Caching.
+    /// </summary>
+    private static void AddCachingServices(IServiceCollection services, IConfiguration configuration)
+    {
+        // Add memory cache for frequently accessed, rarely-changing data
+        services.AddMemoryCache();
+
+        // Add output caching for Blazor pages (better than response caching for UI apps)
+        services.AddOutputCache(options =>
+        {
+            // Base policy: 60 seconds for most content
+            options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromSeconds(60)));
+
+            // Named policies for different cache durations
+            options.AddPolicy("Short", builder => builder.Expire(TimeSpan.FromSeconds(10)));
+            options.AddPolicy("Medium", builder => builder.Expire(TimeSpan.FromMinutes(5)));
+            options.AddPolicy("Long", builder => builder.Expire(TimeSpan.FromHours(1)));
+            options.AddPolicy("Static", builder => builder.Expire(TimeSpan.FromHours(24)));
+        });
+
+        // Add response caching middleware for static files and API responses
+        services.AddResponseCaching();
+
+        // Add response compression for text-based content
+        services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.Providers.Add<BrotliCompressionProvider>();
+            options.Providers.Add<GzipCompressionProvider>();
+            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                ["application/javascript", "application/css", "text/css", "text/javascript", "image/svg+xml"]);
+        });
+
+        services.Configure<BrotliCompressionProviderOptions>(options => { options.Level = CompressionLevel.Optimal; });
+
+        services.Configure<GzipCompressionProviderOptions>(options => { options.Level = CompressionLevel.Optimal; });
     }
 
     private static void ConfigureForwardedHeaders(ForwardedHeadersOptions options)
@@ -156,32 +278,27 @@ internal static class WebServiceCollectionExtensions
 
     private static RateLimitPartition<string> BuildAuthenticationRateLimitPartition(HttpContext httpContext)
     {
-        if (!IsSensitiveAuthRequest(httpContext.Request)) return RateLimitPartition.GetNoLimiter("default");
+        var request = httpContext.Request;
+
+        // Inline path check to avoid method call overhead in hot path
+        if (!HttpMethods.IsPost(request.Method))
+            return RateLimitPartition.GetNoLimiter("default");
+
+        var path = request.Path.Value;
+        if (path is null)
+            return RateLimitPartition.GetNoLimiter("default");
+
+        // Fast path check using Span-based comparison
+        var pathSpan = path.AsSpan();
+        if (!pathSpan.Equals("/Account/Login", StringComparison.OrdinalIgnoreCase) &&
+            !pathSpan.Equals("/Account/Register", StringComparison.OrdinalIgnoreCase) &&
+            !pathSpan.Equals("/Account/ForgotPassword", StringComparison.OrdinalIgnoreCase) &&
+            !pathSpan.Equals("/Account/ResendEmailConfirmation", StringComparison.OrdinalIgnoreCase))
+            return RateLimitPartition.GetNoLimiter("default");
 
         var clientAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        var partitionKey = $"{clientAddress}:{httpContext.Request.Path.Value}";
+        var partitionKey = $"{clientAddress}:{path}";
 
-        return RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey,
-            _ => new SlidingWindowRateLimiterOptions
-            {
-                PermitLimit = 5,
-                Window = TimeSpan.FromMinutes(1),
-                SegmentsPerWindow = 6,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0,
-                AutoReplenishment = true
-            });
-    }
-
-    private static bool IsSensitiveAuthRequest(HttpRequest request)
-    {
-        if (!HttpMethods.IsPost(request.Method)) return false;
-
-        var path = request.Path;
-        return path.Equals("/Account/Login", StringComparison.OrdinalIgnoreCase)
-               || path.Equals("/Account/Register", StringComparison.OrdinalIgnoreCase)
-               || path.Equals("/Account/ForgotPassword", StringComparison.OrdinalIgnoreCase)
-               || path.Equals("/Account/ResendEmailConfirmation", StringComparison.OrdinalIgnoreCase);
+        return RateLimitPartition.GetSlidingWindowLimiter(partitionKey, _ => AuthRateLimiterOptions);
     }
 }
