@@ -153,6 +153,7 @@ public sealed partial class CachedSettingsRepository : ISettingsRepository
     [LoggerMessage(Level = LogLevel.Debug, Message = "Cache INVALIDATED for setting '{SettingKey}'")]
     private partial void LogCacheInvalidated(string settingKey);
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "CachedSettingsRepository initialized with cache duration: {CacheDuration}")]
+    [LoggerMessage(Level = LogLevel.Debug,
+        Message = "CachedSettingsRepository initialized with cache duration: {CacheDuration}")]
     private partial void LogRepositoryInitialized(TimeSpan cacheDuration);
 }

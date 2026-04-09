@@ -35,7 +35,14 @@ public interface IJourneyHistoryService
 
 /// <summary>
 ///     Implements journey item operations with Redis caching support.
+///     Includes stampede protection to prevent multiple concurrent requests
+///     from executing the same expensive operation when cache expires.
 /// </summary>
+/// <remarks>
+///     Cache-aside pattern with stampede protection ensures optimal performance
+///     during high traffic scenarios when cache entries expire.
+///     See: https://learn.microsoft.com/aspnet/core/performance/caching/overview?view=aspnetcore-10.0#hybridcache
+/// </remarks>
 public sealed class JourneyHistoryService : IJourneyHistoryService
 {
     private const string CacheKeyPrefix = "journey:";
@@ -43,11 +50,16 @@ public sealed class JourneyHistoryService : IJourneyHistoryService
     private readonly IRedisCacheService? _cacheService;
 
     private readonly IJourneyHistoryRepository _repository;
+    private readonly CacheStampedeProtection? _stampedeProtection;
 
-    public JourneyHistoryService(IJourneyHistoryRepository repository, IRedisCacheService? cacheService = null)
+    public JourneyHistoryService(
+        IJourneyHistoryRepository repository,
+        IRedisCacheService? cacheService = null,
+        CacheStampedeProtection? stampedeProtection = null)
     {
         _repository = repository;
         _cacheService = cacheService;
+        _stampedeProtection = stampedeProtection;
     }
 
     /// <inheritdoc />
@@ -55,20 +67,38 @@ public sealed class JourneyHistoryService : IJourneyHistoryService
     {
         var cacheKey = $"{CacheKeyPrefix}section:{section}";
 
-        // Try to get from cache first
+        // Try to get from cache first (cache-aside pattern)
         if (_cacheService != null)
         {
             var cached = await _cacheService.GetAsync<List<JourneyHistory>>(cacheKey).ConfigureAwait(false);
             if (cached != null) return cached;
         }
 
-        // Cache miss - fetch from database
-        var items = await _repository.GetBySectionAsync(section).ConfigureAwait(false);
+        // Cache miss - fetch from database with stampede protection
+        // This prevents multiple concurrent requests from executing the same expensive operation
+        if (_stampedeProtection != null && _cacheService != null)
+            return await _stampedeProtection.ExecuteAsync(cacheKey, async () =>
+            {
+                // Double-check cache after acquiring lock (another thread might have populated it)
+                var doubleCheck = await _cacheService.GetAsync<List<JourneyHistory>>(cacheKey).ConfigureAwait(false);
+                if (doubleCheck != null) return doubleCheck;
 
-        // Store in cache
-        if (_cacheService != null) await _cacheService.SetAsync(cacheKey, items, CacheExpiration).ConfigureAwait(false);
+                // Fetch from database
+                var items = await _repository.GetBySectionAsync(section).ConfigureAwait(false);
 
-        return items;
+                // Store in cache
+                await _cacheService.SetAsync(cacheKey, items, CacheExpiration).ConfigureAwait(false);
+
+                return items;
+            }).ConfigureAwait(false);
+
+        // Fallback without stampede protection (when not configured)
+        var fallbackItems = await _repository.GetBySectionAsync(section).ConfigureAwait(false);
+
+        if (_cacheService != null)
+            await _cacheService.SetAsync(cacheKey, fallbackItems, CacheExpiration).ConfigureAwait(false);
+
+        return fallbackItems;
     }
 
     /// <inheritdoc />

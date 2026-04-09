@@ -28,11 +28,11 @@ public interface IRedisCacheService
         where T : class;
 
     /// <summary>
-    ///     Removes a value from the cache.
+    ///     Removes a value from the cache by key.
     /// </summary>
     /// <param name="key">The cache key.</param>
     /// <param name="cancellationToken">The token to cancel the operation.</param>
-    Task RemoveAsync(string key, CancellationToken cancellationToken = default);
+    Task RemoveEntryAsync(string key, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Removes multiple values from the cache by pattern.

@@ -74,7 +74,7 @@ public class ImageProcessingBenchmarks
     public async Task<long> ProcessAndSave_WebP()
     {
         using var stream = new MemoryStream(_largeImageBytes);
-        using var image = await Image.LoadAsync(stream);
+        using var image = await Image.LoadAsync(stream).ConfigureAwait(false);
 
         // Resize
         image.Mutate(x => x.Resize(new ResizeOptions
@@ -84,7 +84,7 @@ public class ImageProcessingBenchmarks
         }));
 
         // Save as WebP
-        await image.SaveAsync(_outputPath, new WebpEncoder { Quality = 85 });
+        await image.SaveAsync(_outputPath, new WebpEncoder { Quality = 85 }).ConfigureAwait(false);
 
         return new FileInfo(_outputPath).Length;
     }
@@ -94,7 +94,7 @@ public class ImageProcessingBenchmarks
     {
         var jpegPath = Path.ChangeExtension(_outputPath, ".jpg");
         using var stream = new MemoryStream(_largeImageBytes);
-        using var image = await Image.LoadAsync(stream);
+        using var image = await Image.LoadAsync(stream).ConfigureAwait(false);
 
         image.Mutate(x => x.Resize(new ResizeOptions
         {
@@ -102,7 +102,7 @@ public class ImageProcessingBenchmarks
             Size = new Size(TargetWidth, TargetWidth)
         }));
 
-        await image.SaveAsync(jpegPath, new JpegEncoder { Quality = 85 });
+        await image.SaveAsync(jpegPath, new JpegEncoder { Quality = 85 }).ConfigureAwait(false);
 
         var size = new FileInfo(jpegPath).Length;
         File.Delete(jpegPath);
@@ -114,7 +114,7 @@ public class ImageProcessingBenchmarks
     {
         var pngPath = Path.ChangeExtension(_outputPath, ".png");
         using var stream = new MemoryStream(_largeImageBytes);
-        using var image = await Image.LoadAsync(stream);
+        using var image = await Image.LoadAsync(stream).ConfigureAwait(false);
 
         image.Mutate(x => x.Resize(new ResizeOptions
         {
@@ -122,7 +122,7 @@ public class ImageProcessingBenchmarks
             Size = new Size(TargetWidth, TargetWidth)
         }));
 
-        await image.SaveAsync(pngPath, new PngEncoder());
+        await image.SaveAsync(pngPath, new PngEncoder()).ConfigureAwait(false);
 
         var size = new FileInfo(pngPath).Length;
         File.Delete(pngPath);
@@ -133,7 +133,7 @@ public class ImageProcessingBenchmarks
     public async Task<long> Resize_Lanczos3()
     {
         using var stream = new MemoryStream(_largeImageBytes);
-        using var image = await Image.LoadAsync(stream);
+        using var image = await Image.LoadAsync(stream).ConfigureAwait(false);
 
         image.Mutate(x => x.Resize(new ResizeOptions
         {
@@ -142,7 +142,7 @@ public class ImageProcessingBenchmarks
             Sampler = KnownResamplers.Lanczos3
         }));
 
-        await image.SaveAsync(_outputPath, new WebpEncoder { Quality = 85 });
+        await image.SaveAsync(_outputPath, new WebpEncoder { Quality = 85 }).ConfigureAwait(false);
         return new FileInfo(_outputPath).Length;
     }
 
@@ -150,7 +150,7 @@ public class ImageProcessingBenchmarks
     public async Task<long> Resize_Bicubic()
     {
         using var stream = new MemoryStream(_largeImageBytes);
-        using var image = await Image.LoadAsync(stream);
+        using var image = await Image.LoadAsync(stream).ConfigureAwait(false);
 
         image.Mutate(x => x.Resize(new ResizeOptions
         {
@@ -159,7 +159,7 @@ public class ImageProcessingBenchmarks
             Sampler = KnownResamplers.Bicubic
         }));
 
-        await image.SaveAsync(_outputPath, new WebpEncoder { Quality = 85 });
+        await image.SaveAsync(_outputPath, new WebpEncoder { Quality = 85 }).ConfigureAwait(false);
         return new FileInfo(_outputPath).Length;
     }
 }

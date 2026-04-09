@@ -49,7 +49,14 @@ public interface IProjectService
 
 /// <summary>
 ///     Implements project operations with Redis caching support.
+///     Includes stampede protection to prevent multiple concurrent requests
+///     from executing the same expensive operation when cache expires.
 /// </summary>
+/// <remarks>
+///     Cache-aside pattern with stampede protection ensures optimal performance
+///     during high traffic scenarios when cache entries expire.
+///     See: https://learn.microsoft.com/aspnet/core/performance/caching/overview?view=aspnetcore-10.0#hybridcache
+/// </remarks>
 public sealed class ProjectService : IProjectService
 {
     private const string CacheKeyPrefix = "projects:";
@@ -57,11 +64,16 @@ public sealed class ProjectService : IProjectService
     private readonly IRedisCacheService? _cacheService;
 
     private readonly IProjectRepository _repository;
+    private readonly CacheStampedeProtection? _stampedeProtection;
 
-    public ProjectService(IProjectRepository repository, IRedisCacheService? cacheService = null)
+    public ProjectService(
+        IProjectRepository repository,
+        IRedisCacheService? cacheService = null,
+        CacheStampedeProtection? stampedeProtection = null)
     {
         _repository = repository;
         _cacheService = cacheService;
+        _stampedeProtection = stampedeProtection;
     }
 
     /// <inheritdoc />
@@ -77,15 +89,39 @@ public sealed class ProjectService : IProjectService
             if (cached != null) return (cached.Items, cached.Total);
         }
 
-        // Cache miss - fetch from database
-        var result = await _repository.GetProjectsAsync(skip, take).ConfigureAwait(false);
+        // Cache miss - fetch from database with stampede protection
+        // This prevents multiple concurrent requests from executing the same expensive operation
+        if (_stampedeProtection != null && _cacheService != null)
+        {
+            var result = await _stampedeProtection.ExecuteAsync(cacheKey, async () =>
+            {
+                // Double-check cache after acquiring lock (another thread might have populated it)
+                var doubleCheck = await _cacheService.GetAsync<CachedProjectList>(cacheKey).ConfigureAwait(false);
+                if (doubleCheck != null) return (doubleCheck.Items, doubleCheck.Total);
 
-        // Store in cache
+                // Fetch from database
+                var dbResult = await _repository.GetProjectsAsync(skip, take).ConfigureAwait(false);
+
+                // Store in cache
+                await _cacheService.SetAsync(cacheKey, new CachedProjectList(dbResult.Items, dbResult.Total),
+                        CacheExpiration)
+                    .ConfigureAwait(false);
+
+                return dbResult;
+            }).ConfigureAwait(false);
+
+            return result;
+        }
+
+        // Fallback without stampede protection (when not configured)
+        var fallbackResult = await _repository.GetProjectsAsync(skip, take).ConfigureAwait(false);
+
         if (_cacheService != null)
-            await _cacheService.SetAsync(cacheKey, new CachedProjectList(result.Items, result.Total), CacheExpiration)
+            await _cacheService.SetAsync(cacheKey, new CachedProjectList(fallbackResult.Items, fallbackResult.Total),
+                    CacheExpiration)
                 .ConfigureAwait(false);
 
-        return result;
+        return fallbackResult;
     }
 
     /// <inheritdoc />
@@ -100,14 +136,31 @@ public sealed class ProjectService : IProjectService
             if (cached != null) return cached;
         }
 
-        // Cache miss - fetch from database
-        var project = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+        // Cache miss - fetch from database with stampede protection
+        if (_stampedeProtection != null && _cacheService != null)
+            return await _stampedeProtection.ExecuteAsync(cacheKey, async () =>
+            {
+                // Double-check cache after acquiring lock
+                var doubleCheck = await _cacheService.GetAsync<Project>(cacheKey).ConfigureAwait(false);
+                if (doubleCheck != null) return doubleCheck;
 
-        // Store in cache if found
-        if (_cacheService != null && project != null)
-            await _cacheService.SetAsync(cacheKey, project, CacheExpiration).ConfigureAwait(false);
+                // Fetch from database
+                var project = await _repository.GetByIdAsync(id).ConfigureAwait(false);
 
-        return project;
+                // Store in cache if found
+                if (project != null)
+                    await _cacheService.SetAsync(cacheKey, project, CacheExpiration).ConfigureAwait(false);
+
+                return project;
+            }).ConfigureAwait(false);
+
+        // Fallback without stampede protection (when not configured)
+        var fallbackProject = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+
+        if (_cacheService != null && fallbackProject != null)
+            await _cacheService.SetAsync(cacheKey, fallbackProject, CacheExpiration).ConfigureAwait(false);
+
+        return fallbackProject;
     }
 
     /// <inheritdoc />
@@ -131,7 +184,7 @@ public sealed class ProjectService : IProjectService
         // Invalidate related caches
         if (_cacheService != null)
         {
-            await _cacheService.RemoveAsync($"{CacheKeyPrefix}id:{project.Id}").ConfigureAwait(false);
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{project.Id}").ConfigureAwait(false);
             await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
         }
     }
@@ -144,7 +197,7 @@ public sealed class ProjectService : IProjectService
         // Invalidate caches
         if (_cacheService != null)
         {
-            await _cacheService.RemoveAsync($"{CacheKeyPrefix}id:{id}").ConfigureAwait(false);
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}").ConfigureAwait(false);
             await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
         }
     }

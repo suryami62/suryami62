@@ -16,6 +16,7 @@ public class ProjectServiceTests
 
     public ProjectServiceTests()
     {
+        // Service instantiated without caching/stampede protection for unit tests
         _service = new ProjectService(_repositoryMock.Object);
     }
 
