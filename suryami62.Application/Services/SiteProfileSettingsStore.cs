@@ -77,6 +77,7 @@ public interface ISiteProfileSettingsStore
 /// <remarks>
 ///     This store centralizes the public social and contact links rendered across the site's marketing surfaces
 ///     and edited from the admin profile settings page.
+///     Includes stampede protection for consistent high-load performance across all services.
 /// </remarks>
 public sealed class SiteProfileSettingsStore : ISiteProfileSettingsStore
 {
@@ -94,17 +95,22 @@ public sealed class SiteProfileSettingsStore : ISiteProfileSettingsStore
     private readonly IRedisCacheService? _cacheService;
 
     private readonly ISettingsRepository _repository;
+    private readonly CacheStampedeProtection? _stampedeProtection;
 
-    public SiteProfileSettingsStore(ISettingsRepository repository, IRedisCacheService? cacheService = null)
+    public SiteProfileSettingsStore(
+        ISettingsRepository repository,
+        IRedisCacheService? cacheService = null,
+        CacheStampedeProtection? stampedeProtection = null)
     {
         _repository = repository;
         _cacheService = cacheService;
+        _stampedeProtection = stampedeProtection;
     }
 
     /// <inheritdoc />
     public async Task<SiteProfileSettings> GetAsync(CancellationToken cancellationToken = default)
     {
-        // Try to get from cache first
+        // Try to get from cache first (cache-aside pattern)
         if (_cacheService != null)
         {
             var cached = await _cacheService.GetAsync<SiteProfileSettings>(CacheKey, cancellationToken)
@@ -112,15 +118,36 @@ public sealed class SiteProfileSettingsStore : ISiteProfileSettingsStore
             if (cached != null) return cached;
         }
 
-        // Cache miss - load from repository
-        var storedValues = await LoadStoredValuesAsync(cancellationToken).ConfigureAwait(false);
-        var settings = CreateSettings(storedValues);
+        // Cache miss - load from repository with stampede protection
+        // This prevents multiple concurrent requests from executing the same expensive operation
+        if (_stampedeProtection != null && _cacheService != null)
+            return await _stampedeProtection.ExecuteAsync(CacheKey, async () =>
+            {
+                // Double-check cache after acquiring lock (another thread might have populated it)
+                var doubleCheck = await _cacheService.GetAsync<SiteProfileSettings>(CacheKey, cancellationToken)
+                    .ConfigureAwait(false);
+                if (doubleCheck != null) return doubleCheck;
 
-        // Store in cache
+                // Fetch from repository
+                var storedValues = await LoadStoredValuesAsync(cancellationToken).ConfigureAwait(false);
+                var settings = CreateSettings(storedValues);
+
+                // Store in cache
+                await _cacheService.SetAsync(CacheKey, settings, CacheExpiration, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return settings;
+            }).ConfigureAwait(false);
+
+        // Fallback without stampede protection (when not configured)
+        var fallbackStoredValues = await LoadStoredValuesAsync(cancellationToken).ConfigureAwait(false);
+        var fallbackSettings = CreateSettings(fallbackStoredValues);
+
         if (_cacheService != null)
-            await _cacheService.SetAsync(CacheKey, settings, CacheExpiration, cancellationToken).ConfigureAwait(false);
+            await _cacheService.SetAsync(CacheKey, fallbackSettings, CacheExpiration, cancellationToken)
+                .ConfigureAwait(false);
 
-        return settings;
+        return fallbackSettings;
     }
 
     /// <inheritdoc />
@@ -131,7 +158,8 @@ public sealed class SiteProfileSettingsStore : ISiteProfileSettingsStore
         await _repository.UpsertManyAsync(CreatePersistedValues(settings), cancellationToken).ConfigureAwait(false);
 
         // Invalidate cache
-        if (_cacheService != null) await _cacheService.RemoveAsync(CacheKey, cancellationToken).ConfigureAwait(false);
+        if (_cacheService != null)
+            await _cacheService.RemoveEntryAsync(CacheKey, cancellationToken).ConfigureAwait(false);
     }
 
     private Task<IReadOnlyDictionary<string, string>> LoadStoredValuesAsync(CancellationToken cancellationToken)

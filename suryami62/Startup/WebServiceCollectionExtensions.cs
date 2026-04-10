@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using suryami62.Application;
@@ -84,6 +85,8 @@ internal static class WebServiceCollectionExtensions
 
     private static void AddRedisServices(IServiceCollection services)
     {
+        // Register IConnectionMultiplexer as Singleton per Microsoft best practices
+        // https://learn.microsoft.com/azure/redis/best-practices-connection#using-forcereconnect-with-stackexchangeredis
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
             var configuration = sp.GetRequiredService<IConfiguration>();
@@ -97,7 +100,20 @@ internal static class WebServiceCollectionExtensions
             return ConnectionMultiplexer.Connect(options);
         });
 
+        // Register RedisCacheService as both IRedisCacheService and IDistributedCache
+        // This allows:
+        // 1. Direct use of IRedisCacheService for advanced operations (pattern-based invalidation)
+        // 2. ASP.NET Core standard IDistributedCache compatibility (sessions, output caching, etc.)
         services.AddScoped<IRedisCacheService, RedisCacheService>();
+        services.AddScoped<IDistributedCache>(sp => sp.GetRequiredService<IRedisCacheService>() as RedisCacheService
+                                                    ?? throw new InvalidOperationException(
+                                                        "RedisCacheService must implement IDistributedCache"));
+
+        // Register stampede protection for cache-aside pattern
+        // Prevents multiple concurrent requests from executing the same expensive operation
+        // https://learn.microsoft.com/aspnet/core/performance/caching/overview?view=aspnetcore-10.0#hybridcache
+        // Note: CacheStampedeProtection is defined in suryami62.Application.Services namespace
+        services.AddSingleton<CacheStampedeProtection>();
     }
 
     /// <summary>

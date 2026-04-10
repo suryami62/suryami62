@@ -59,7 +59,14 @@ public interface IBlogPostService
 
 /// <summary>
 ///     Implements blog post operations with Redis caching support.
+///     Includes stampede protection to prevent multiple concurrent requests
+///     from executing the same expensive operation when cache expires.
 /// </summary>
+/// <remarks>
+///     Cache-aside pattern with stampede protection ensures optimal performance
+///     during high traffic scenarios when cache entries expire.
+///     See: https://learn.microsoft.com/aspnet/core/performance/caching/overview?view=aspnetcore-10.0#hybridcache
+/// </remarks>
 public sealed class BlogPostService : IBlogPostService
 {
     private const string CacheKeyPrefix = "blogposts:";
@@ -67,11 +74,16 @@ public sealed class BlogPostService : IBlogPostService
     private readonly IRedisCacheService? _cacheService;
 
     private readonly IBlogPostRepository _repository;
+    private readonly CacheStampedeProtection? _stampedeProtection;
 
-    public BlogPostService(IBlogPostRepository repository, IRedisCacheService? cacheService = null)
+    public BlogPostService(
+        IBlogPostRepository repository,
+        IRedisCacheService? cacheService = null,
+        CacheStampedeProtection? stampedeProtection = null)
     {
         _repository = repository;
         _cacheService = cacheService;
+        _stampedeProtection = stampedeProtection;
     }
 
     /// <inheritdoc />
@@ -91,15 +103,41 @@ public sealed class BlogPostService : IBlogPostService
             if (cached != null) return (cached.Items, cached.Total);
         }
 
-        // Cache miss - fetch from database
-        var result = await _repository.GetPostsAsync(onlyPublished, skip, take, searchTerm).ConfigureAwait(false);
+        // Cache miss - fetch from database with stampede protection
+        // This prevents multiple concurrent requests from executing the same expensive operation
+        if (_stampedeProtection != null && _cacheService != null)
+        {
+            var result = await _stampedeProtection.ExecuteAsync(cacheKey, async () =>
+            {
+                // Double-check cache after acquiring lock (another thread might have populated it)
+                var doubleCheck = await _cacheService.GetAsync<CachedBlogPostList>(cacheKey).ConfigureAwait(false);
+                if (doubleCheck != null) return (doubleCheck.Items, doubleCheck.Total);
 
-        // Store in cache
+                // Fetch from database
+                var dbResult = await _repository.GetPostsAsync(onlyPublished, skip, take, searchTerm)
+                    .ConfigureAwait(false);
+
+                // Store in cache
+                await _cacheService.SetAsync(cacheKey, new CachedBlogPostList(dbResult.Items, dbResult.Total),
+                        CacheExpiration)
+                    .ConfigureAwait(false);
+
+                return dbResult;
+            }).ConfigureAwait(false);
+
+            return result;
+        }
+
+        // Fallback without stampede protection (when not configured)
+        var fallbackResult =
+            await _repository.GetPostsAsync(onlyPublished, skip, take, searchTerm).ConfigureAwait(false);
+
         if (_cacheService != null)
-            await _cacheService.SetAsync(cacheKey, new CachedBlogPostList(result.Items, result.Total), CacheExpiration)
+            await _cacheService.SetAsync(cacheKey, new CachedBlogPostList(fallbackResult.Items, fallbackResult.Total),
+                    CacheExpiration)
                 .ConfigureAwait(false);
 
-        return result;
+        return fallbackResult;
     }
 
     /// <inheritdoc />
@@ -169,8 +207,8 @@ public sealed class BlogPostService : IBlogPostService
         // Invalidate related caches
         if (_cacheService != null)
         {
-            await _cacheService.RemoveAsync($"{CacheKeyPrefix}slug:{post.Slug}").ConfigureAwait(false);
-            await _cacheService.RemoveAsync($"{CacheKeyPrefix}id:{post.Id}").ConfigureAwait(false);
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}").ConfigureAwait(false);
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{post.Id}").ConfigureAwait(false);
             await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
         }
     }
@@ -187,8 +225,8 @@ public sealed class BlogPostService : IBlogPostService
         if (_cacheService != null)
         {
             if (post != null)
-                await _cacheService.RemoveAsync($"{CacheKeyPrefix}slug:{post.Slug}").ConfigureAwait(false);
-            await _cacheService.RemoveAsync($"{CacheKeyPrefix}id:{id}").ConfigureAwait(false);
+                await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}").ConfigureAwait(false);
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}").ConfigureAwait(false);
             await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
         }
     }

@@ -19,12 +19,18 @@ namespace suryami62.Tests.Benchmarks;
 [MemoryDiagnoser]
 [MarkdownExporter]
 [HtmlExporter]
-public class CachingBenchmarks
+public sealed class CachingBenchmarks : IDisposable
 {
     private CachedSettingsRepository _cachedRepo = null!;
     private ISettingsRepository _directRepo = null!;
-    private IMemoryCache _memoryCache = null!;
+    private MemoryCache _memoryCache = null!;
     private Mock<ISettingsRepository> _mockInner = null!;
+
+    public void Dispose()
+    {
+        _memoryCache?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     [GlobalSetup]
     public void Setup()
@@ -36,14 +42,14 @@ public class CachingBenchmarks
         _mockInner.Setup(m => m.GetValueAsync("test-key", It.IsAny<CancellationToken>()))
             .Returns(async (string key, CancellationToken ct) =>
             {
-                await Task.Delay(1, ct); // Simulate 1ms DB latency
+                await Task.Delay(1, ct).ConfigureAwait(false); // Simulate 1ms DB latency
                 return "test-value";
             });
 
         _mockInner.Setup(m => m.GetValuesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .Returns(async (IReadOnlyCollection<string> keys, CancellationToken ct) =>
             {
-                await Task.Delay(1, ct); // Simulate 1ms DB latency
+                await Task.Delay(1, ct).ConfigureAwait(false); // Simulate 1ms DB latency
                 return keys.ToDictionary(k => k, k => "test-value");
             });
 
@@ -55,22 +61,22 @@ public class CachingBenchmarks
     [GlobalCleanup]
     public void Cleanup()
     {
-        _memoryCache.Dispose();
+        _memoryCache?.Dispose();
     }
 
     [Benchmark(Baseline = true, Description = "Direct repository call (no caching)")]
     public async Task<string?> GetValue_Direct()
     {
-        return await _directRepo.GetValueAsync("test-key");
+        return await _directRepo.GetValueAsync("test-key").ConfigureAwait(false);
     }
 
     [Benchmark(Description = "Cached repository (warm cache - memory hit)")]
     public async Task<string?> GetValue_Cached_Warm()
     {
         // First call to populate cache
-        _ = await _cachedRepo.GetValueAsync("test-key");
+        _ = await _cachedRepo.GetValueAsync("test-key").ConfigureAwait(false);
         // Second call should hit cache
-        return await _cachedRepo.GetValueAsync("test-key");
+        return await _cachedRepo.GetValueAsync("test-key").ConfigureAwait(false);
     }
 
     [Benchmark(Description = "Cached repository (cold cache - DB call + populate)")]
@@ -78,14 +84,14 @@ public class CachingBenchmarks
     {
         // Clear cache before each iteration
         _memoryCache.Remove("setting:test-key");
-        return await _cachedRepo.GetValueAsync("test-key");
+        return await _cachedRepo.GetValueAsync("test-key").ConfigureAwait(false);
     }
 
     [Benchmark(Description = "Batch get - 5 keys (direct)")]
     public async Task<IReadOnlyDictionary<string, string>> GetValues_Batch_Direct()
     {
         var keys = new[] { "key1", "key2", "key3", "key4", "key5" };
-        return await _directRepo.GetValuesAsync(keys);
+        return await _directRepo.GetValuesAsync(keys).ConfigureAwait(false);
     }
 
     [Benchmark(Description = "Batch get - 5 keys (cached)")]
@@ -93,13 +99,13 @@ public class CachingBenchmarks
     {
         // Populate cache first
         var keys = new[] { "key1", "key2", "key3", "key4", "key5" };
-        _ = await _cachedRepo.GetValuesAsync(keys);
+        _ = await _cachedRepo.GetValuesAsync(keys).ConfigureAwait(false);
 
         // Clear one key to simulate partial cache miss
         _memoryCache.Remove("setting:key3");
 
         // This call should hit cache for 4 keys, DB for 1
-        return await _cachedRepo.GetValuesAsync(keys);
+        return await _cachedRepo.GetValuesAsync(keys).ConfigureAwait(false);
     }
 }
 
@@ -110,9 +116,15 @@ public class CachingBenchmarks
 [MemoryDiagnoser]
 [MarkdownExporter]
 [HtmlExporter]
-public class MemoryCacheBenchmarks
+public sealed class MemoryCacheBenchmarks : IDisposable
 {
-    private IMemoryCache _memoryCache = null!;
+    private MemoryCache _memoryCache = null!;
+
+    public void Dispose()
+    {
+        _memoryCache?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     [GlobalSetup]
     public void Setup()
@@ -126,7 +138,7 @@ public class MemoryCacheBenchmarks
     [GlobalCleanup]
     public void Cleanup()
     {
-        _memoryCache.Dispose();
+        _memoryCache?.Dispose();
     }
 
     [Benchmark(Baseline = true, Description = "Cache read (hit)")]
