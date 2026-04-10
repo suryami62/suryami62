@@ -75,8 +75,7 @@ public sealed class RedisCacheService : IRedisCacheService, IDistributedCache
             keyList.Add(key);
         }
 
-        if (keyList.Count > 0)
-            await _database.KeyDeleteAsync(keyList.ToArray()).ConfigureAwait(false);
+        await _database.KeyDeleteAsync(keyList.ToArray()).ConfigureAwait(false);
     }
 
     /// <inheritdoc cref="IRedisCacheService.RemoveEntryAsync" />
