@@ -1,19 +1,39 @@
-﻿@* Reusable framed panel for presenting error messages and related content. *@
+﻿@* Error Panel Component - A styled container for error content.
+   Used on the Error and NotFound pages.
+*@
 <div class="neo-frame p-6 md:p-10">
 
-    <!-- Title -->
-    @if (!string.IsNullOrWhiteSpace(Title))
+    <!-- Optional Title -->
+    @if (HasTitle())
     {
         <h3 class="neo-title-sm mb-6">
             @Title
         </h3>
     }
 
+    <!-- Content (error details, buttons, etc.) -->
     @ChildContent
 </div>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* Optional title for the error panel *@
     [Parameter] public string? Title { get; set; }
 
+    @* The main content of the panel *@
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Check if a title was provided and is not just whitespace *@
+    private bool HasTitle()
+    {
+        return !string.IsNullOrWhiteSpace(Title);
+    }
+
 }

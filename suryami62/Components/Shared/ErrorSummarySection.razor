@@ -1,35 +1,58 @@
-﻿@* Reusable section that summarizes error context and recovery guidance. *@
+﻿@* Error Summary Section - A structured error message block.
+   Used on error pages (404, 500) to explain what happened
+   and provide a way to navigate back.
+*@
 <div class="flex flex-col gap-6">
-    <!-- Title -->
+    <!-- Section Title -->
     <h3 class="text-2xl font-black tracking-tighter uppercase underline decoration-4 underline-offset-4">
         @Title
     </h3>
 
-    <!-- Description -->
+    <!-- Error Description -->
     <p class="text-lg leading-relaxed font-medium">
         @Description
     </p>
 
-    <!-- Body Content -->
-    @if (BodyContent is not null)
+    <!-- Optional Extra Content (like request ID, details) -->
+    @if (HasBodyContent())
     {
         @BodyContent
     }
 
-    <!-- Button -->
+    <!-- Navigation Button -->
     <div class="mt-4">
         <NavButton Href="@ButtonHref" Text="@ButtonText"/>
     </div>
 </div>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* The title of this error section (e.g., "Core Exception") *@
     [Parameter] [EditorRequired] public string Title { get; set; } = "";
 
+    @* Description of what happened *@
     [Parameter] [EditorRequired] public string Description { get; set; } = "";
 
+    @* Optional additional content (like request ID box) *@
     [Parameter] public RenderFragment? BodyContent { get; set; }
 
+    @* Where the button should navigate to. Default: home page. *@
     [Parameter] public string ButtonHref { get; set; } = "/";
 
+    @* Text on the button. Default: "Back to Reality". *@
     [Parameter] public string ButtonText { get; set; } = "Back to Reality";
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Check if extra body content was provided *@
+    private bool HasBodyContent()
+    {
+        return BodyContent is not null;
+    }
+
 }

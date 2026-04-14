@@ -1,13 +1,21 @@
-﻿@* Public landing page that introduces the profile and highlights featured content. *@
+﻿@* This is the home page of the blog website.
+   It shows the author's profile and latest blog posts.
+   @page "/" tells Blazor this component handles the root URL.
+*@
 @page "/"
 @using suryami62.Domain.Models
+
+@* Import the BlogPost model so we can use it in this file *@
+
+@* Inject services we need - these are like tools we can use *@
 @inject ISiteProfileSettingsStore SiteProfileSettingsStore
 @inject IBlogPostService BlogPostService
 @inject NavigationManager NavigationManager
 
+@* This sets the browser tab title *@
 <PageTitle>My Personal Blog | suryami62</PageTitle>
 
-<!-- Meta Section -->
+<!-- Meta tags for social media sharing (Facebook, Twitter, etc.) -->
 <HeadContent>
     <MetaOpenGraphCard Title="My Personal Blog | suryami62"
                        Description="Hi, I'm Surya Ramadhan. A .NET Developer and Physics Teacher sharing insights on minimal design, coding, and learning."
@@ -15,8 +23,10 @@
                        Url="@NavigationManager.Uri"/>
 </HeadContent>
 
+<!-- Main page content -->
 <div class="flex flex-col gap-12 py-8">
-    <!-- Header Section -->
+
+    <!-- Header Section: Shows the author's name and social links -->
     <PageHeader Title="My Personal" Highlight="Blog">
         <ChildContent>
             Hi, I'm
@@ -26,17 +36,19 @@
             sharing insights on minimal design, coding, and learning.
         </ChildContent>
         <FooterContent>
+            @* Loop through each social link and create a button for it *@
             @foreach (var social in Socials)
             {
                 <SocialButton Href="@social.Href" IconClass="@social.IconClass"/>
             }
         </FooterContent>
         <AsideContent>
+            @* Show the author's photo *@
             <Avatar AvatarUrl="@Assets["img/photo.webp"]" Alt="Surya Ramadhan"/>
         </AsideContent>
     </PageHeader>
 
-    <!-- Latest Post Section -->
+    <!-- Blog Posts Section: Shows the 3 most recent posts -->
     <section>
         <div class="neo-section-header">
             <h2 class="neo-title-lg">Latest Writings</h2>
@@ -45,22 +57,31 @@
             </a>
         </div>
 
+        @* Grid layout for blog post cards *@
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+
+            @* CASE 1: Still loading - show loading message *@
             @if (_posts == null)
             {
                 <div class="col-span-full text-center">Loading posts...</div>
             }
+            @* CASE 2: Loaded but no posts found - show empty message *@
             else if (_posts.Count == 0)
             {
                 <div class="col-span-full text-center">No posts found yet. Check back soon!</div>
             }
+            @* CASE 3: Posts loaded - display each one *@
             else
             {
                 @foreach (var post in _posts)
                 {
-                    <PostCard Label="@post.Label" Date="@post.Date.ToString("MMM dd, yyyy")" Title="@post.Title"
-                              Href="@($"/posts/{post.Slug}")" Summary="@post.Summary"
-                              ImageUrl="@post.ImageUrl?.ToString()"/>
+                    @* Create a card for each blog post *@
+                    <PostCard Label="@post.Label"
+                              Date="@post.Date.ToString("MMM dd, yyyy")"
+                              Title="@post.Title"
+                              Href="@($"/posts/{post.Slug}")"
+                              Summary="@post.Summary"
+                              ImageUrl="@GetImageUrl(post.ImageUrl)"/>
                 }
             }
         </div>
@@ -68,32 +89,100 @@
 </div>
 
 @code {
+    // ============================================================
+    // DATA CLASSES
+    // ============================================================
 
-    private record Social(string Href, string IconClass);
-
-    private List<Social> Socials { get; set; } = [];
-
-    private List<BlogPost>? _posts;
-
-    protected override async Task OnInitializedAsync()
+    @* Simple class to hold social media link information.
+       We use a class instead of 'record' because classes
+       are more familiar to beginners.*@
+    private class Social
     {
-        var userInfo = await SiteProfileSettingsStore.GetAsync();
+        public string Href { get; } = "";
+        public string IconClass { get; } = "";
 
-        Socials =
-        [
-            new Social(NormalizeHref(userInfo.Instagram), "fa-brands fa-instagram"),
-            new Social(NormalizeHref(userInfo.Linkedin), "fa-brands fa-linkedin"),
-            new Social(NormalizeHref(userInfo.Github), "fa-brands fa-github"),
-            new Social(NormalizeHref(userInfo.Email), "fa-regular fa-envelope")
-        ];
-
-        var (items, _) = await BlogPostService.GetPostsAsync(true, 0, 3);
-        _posts = items;
+        public Social(string href, string iconClass)
+        {
+            Href = href;
+            IconClass = iconClass;
+        }
     }
 
-    private static string NormalizeHref(string? href)
+    // ============================================================
+    // FIELDS (variables that store data for this page)
+    // ============================================================
+
+    @* List of social media links to display *@
+    private List<Social> Socials = new();
+
+    @* List of blog posts. The ? means it can be null (not loaded yet) *@
+    private List<BlogPost>? _posts;
+
+    // ============================================================
+    // PAGE LIFECYCLE METHODS
+    // ============================================================
+
+    @* This method runs automatically when the page first loads.
+       'async' means it can do things that take time (like loading from database)
+       without freezing the page.*@
+    protected override async Task OnInitializedAsync()
     {
-        return string.IsNullOrWhiteSpace(href) ? "#" : href.Trim();
+        // Step 1: Load the user's profile info from database
+        var userInfo = await SiteProfileSettingsStore.GetAsync();
+
+        // Step 2: Create social media links
+        // We use a helper method GetSafeUrl() to handle empty URLs
+        Socials = new List<Social>
+        {
+            new(GetSafeUrl(userInfo.Instagram), "fa-brands fa-instagram"),
+            new(GetSafeUrl(userInfo.Linkedin), "fa-brands fa-linkedin"),
+            new(GetSafeUrl(userInfo.Github), "fa-brands fa-github"),
+            new(GetSafeUrl(userInfo.Email), "fa-regular fa-envelope")
+        };
+
+        // Step 3: Load blog posts from the service
+        // true = only published posts, 0 = start from first post, 3 = get 3 posts
+        var result = await BlogPostService.GetPostsAsync(
+            true,
+            0,
+            3
+        );
+
+        // The result has two parts: Items (the posts) and Total
+        // We only need the Items for this page
+        _posts = result.Items;
+    }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Converts an image URL object to a string.
+       The ?. means "if null, return null" - this is called "null conditional" *@
+    private string? GetImageUrl(Uri? imageUrl)
+    {
+        if (imageUrl == null)
+        {
+            return null;
+        }
+
+        return imageUrl.ToString();
+    }
+
+    @* Helper method: Returns "#" if url is empty or null.
+       This prevents broken links when user hasn't set their social URLs yet.
+       The ? after string means "this can be null".*@
+    private static string GetSafeUrl(string? url)
+    {
+        // Check if URL is null, empty, or only whitespace
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            // Return "#" which means "go nowhere" (safe default)
+            return "#";
+        }
+
+        // URL is valid - return it trimmed of extra spaces
+        return url.Trim();
     }
 
 }

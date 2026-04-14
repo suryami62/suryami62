@@ -1,23 +1,46 @@
-﻿@* Reusable icon-and-content card for short informational highlights. *@
+﻿@* Info Card Component - A card with icon, title, and content.
+   Used on the About page for the Developer and Teacher role cards.
+*@
 <div class="neo-card-sm p-6">
 
-    <!-- Header -->
+    <!-- Header: Icon + Title -->
     <div class="mb-4 flex items-center gap-4">
-        @if (!string.IsNullOrEmpty(IconClass))
+        @* Font Awesome icon (only if provided) *@
+        @if (HasIcon())
         {
             <i class="@IconClass text-4xl"></i>
         }
         <h2 class="neo-title-md">@Title</h2>
     </div>
 
-    <!-- Content -->
+    <!-- Content Area -->
     <div class="text-lg leading-relaxed font-medium">
         @ChildContent
     </div>
 </div>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* Font Awesome icon CSS class (e.g., "fa-solid fa-code") *@
     [Parameter] public string? IconClass { get; set; }
+
+    @* The card title *@
     [Parameter] public string? Title { get; set; }
+
+    @* The main content (passed from parent) *@
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Check if an icon class was provided *@
+    private bool HasIcon()
+    {
+        return !string.IsNullOrEmpty(IconClass);
+    }
+
 }

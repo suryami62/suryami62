@@ -1,15 +1,37 @@
-﻿@* Interactive markdown editor with formatting tools and live preview support. *@
+﻿@* Markdown Editor Component - A text editor with Markdown formatting tools.
+
+   Features:
+   - Formatting toolbar (headings, bold, italic, lists, etc.)
+   - Three view modes: Edit, Split, Preview
+   - Live preview that renders Markdown to HTML
+   - JavaScript interop for text selection manipulation
+
+   Used in the Admin area for creating and editing blog posts.
+*@
+
+@*
+   @implements IAsyncDisposable means this component needs
+   async cleanup (disposing the JavaScript module).
+   This is needed for JavaScript interop.
+*@
 @implements IAsyncDisposable
+
+@* Services we need *@
 @inject IJSRuntime JSRuntime
 @inject MarkdownRenderer MarkdownRenderer
 
-<div
-    class="neo-card flex flex-col">
+<div class="neo-card flex flex-col">
+
+    <!-- Toolbar: Formatting buttons and view mode switcher -->
     <div class="flex flex-wrap gap-2 border-b-4 border-black bg-gray-50 p-2 dark:border-white dark:bg-gray-900/50">
+
+        <!-- Heading Buttons (H1-H6) -->
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             @foreach (var i in Enumerable.Range(1, 6))
             {
-                <button type="button" @onclick='() => WrapSelection(new string((char)35, i) + " ", "")'
+                @* (char)35 is '#', so H1 = "# ", H2 = "## ", etc. *@
+                <button type="button"
+                        @onclick='() => WrapSelection(new string((char)35, i) + " ", "")'
                         disabled="@IsFormattingDisabled"
                         title="@($"Heading {i}")"
                         class="md-toolbar-btn font-black">
@@ -18,98 +40,133 @@
             }
         </div>
 
+        <!-- Text Formatting: Bold, Italic -->
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
-            <button type="button" @onclick='() => WrapSelection("**", "**")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("**", "**")'
+                    disabled="@IsFormattingDisabled"
                     title="Bold"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-bold"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("*", "*")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("*", "*")'
+                    disabled="@IsFormattingDisabled"
                     title="Italic"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-italic"></i>
             </button>
         </div>
 
+        <!-- List and Block Formatting -->
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
-            <button type="button" @onclick='() => WrapSelection("- ", "")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("- ", "")'
+                    disabled="@IsFormattingDisabled"
                     title="Unordered List"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-list"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("1. ", "")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("1. ", "")'
+                    disabled="@IsFormattingDisabled"
                     title="Ordered List"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-list-ol"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("> ", "")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("> ", "")'
+                    disabled="@IsFormattingDisabled"
                     title="Blockquote"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-quote-left"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("\n---\n", "")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("\n---\n", "")'
+                    disabled="@IsFormattingDisabled"
                     title="Horizontal Rule"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-minus"></i>
             </button>
         </div>
 
+        <!-- Code Formatting -->
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
-            <button type="button" @onclick='() => WrapSelection("`", "`")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("`", "`")'
+                    disabled="@IsFormattingDisabled"
                     title="Inline Code"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-terminal"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("```\n", "\n```")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("```\n", "\n```")'
+                    disabled="@IsFormattingDisabled"
                     title="Code Block"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-code"></i>
             </button>
         </div>
 
+        <!-- Links and Images -->
         <div class="flex gap-1">
-            <button type="button" @onclick='() => WrapSelection("[", "](url)")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("[", "](url)")'
+                    disabled="@IsFormattingDisabled"
                     title="Link"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-link"></i>
             </button>
-            <button type="button" @onclick='() => WrapSelection("![](", ")")' disabled="@IsFormattingDisabled"
+            <button type="button"
+                    @onclick='() => WrapSelection("![](", ")")'
+                    disabled="@IsFormattingDisabled"
                     title="Image"
                     class="md-toolbar-btn">
                 <i class="fa-solid fa-image"></i>
             </button>
         </div>
 
+        @* Spacer to push mode buttons to the right *@
         <div class="grow"></div>
 
+        <!-- View Mode Buttons: Edit / Split / Preview -->
         <div class="flex h-10 border-2 border-black dark:border-white">
-            <button type="button" @onclick="() => SetMode(EditorMode.Edit)"
-                    class='@(Mode == EditorMode.Edit ? "bg-black dark:bg-white" : "hover:bg-gray-100 dark:hover:bg-gray-800") md-mode-btn'>
+            <button type="button"
+                    @onclick="() => SetMode(EditorMode.Edit)"
+                    class="@(GetActiveClass(EditorMode.Edit)) md-mode-btn">
                 EDIT
             </button>
-            <button type="button" @onclick="() => SetMode(EditorMode.Split)"
-                    class='@(Mode == EditorMode.Split ? "bg-black dark:bg-white" : "hover:bg-gray-100 dark:hover:bg-gray-800") md-mode-btn border-l-2 border-black dark:border-white'>
+            <button type="button"
+                    @onclick="() => SetMode(EditorMode.Split)"
+                    class="@(GetActiveClass(EditorMode.Split)) md-mode-btn border-l-2 border-black dark:border-white">
                 SPLIT
             </button>
-            <button type="button" @onclick="() => SetMode(EditorMode.Preview)"
-                    class='@(Mode == EditorMode.Preview ? "bg-black dark:bg-white" : "hover:bg-gray-100 dark:hover:bg-gray-800") md-mode-btn border-l-2 border-black dark:border-white'>
+            <button type="button"
+                    @onclick="() => SetMode(EditorMode.Preview)"
+                    class="@(GetActiveClass(EditorMode.Preview)) md-mode-btn border-l-2 border-black dark:border-white">
                 PREVIEW
             </button>
         </div>
     </div>
 
-    <div
-        class="grid @(Mode == EditorMode.Split ? "grid-cols-2" : "grid-cols-1") min-h-[400px]"> @* tailwindocd-ignore *@
+    <!-- Editor Area -->
+    <div class="grid @(GetGridClass()) min-h-[400px]">
+
+        <!-- Text Editor (shown in Edit and Split modes) -->
         @if (Mode != EditorMode.Preview)
         {
-            <textarea @ref="_textArea" value="@Value" @oninput="OnInput"
+            <textarea @ref="_textArea"
+                      value="@Value"
+                      @oninput="OnInput"
                       placeholder="Write your story in Markdown..."
-                      class="h-full min-h-100 w-full resize-none p-4 font-mono text-lg outline-none dark:bg-gray-900 @(Mode == EditorMode.Split ? "border-r-4 border-black dark:border-white" : "")"></textarea> @* tailwindocd-ignore *@
+                      class="@GetTextAreaClass()"></textarea>
         }
 
+        <!-- Preview Panel (shown in Split and Preview modes) -->
         @if (Mode != EditorMode.Edit)
         {
             <div class="prose prose-lg h-full min-h-100 max-w-none overflow-auto p-4 dark:prose-invert">
+                @* PreviewMarkup is the rendered HTML from Markdown *@
                 @PreviewMarkup
             </div>
         }
@@ -117,54 +174,64 @@
 </div>
 
 @code {
+    // ============================================================
+    // PARAMETERS (Data Binding)
+    // ============================================================
+
+    @* The text content of the editor (two-way binding with @bind-Value) *@
     [Parameter] public string? Value { get; set; }
+
+    @* Event callback for two-way binding - notifies parent when text changes *@
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
 
+    // ============================================================
+    // FIELDS
+    // ============================================================
+
+    @* Reference to the HTML <textarea> element for JS interop *@
     private ElementReference _textArea;
+
+    @* Reference to the imported JavaScript module *@
     private IJSObjectReference? _module;
+
+    @* Current view mode (Edit, Split, or Preview) *@
     private EditorMode Mode { get; set; } = EditorMode.Edit;
-    private bool IsFormattingDisabled => Mode == EditorMode.Preview || _module is null;
 
-    private MarkupString PreviewMarkup => MarkdownRenderer.Render(Value);
+    // ============================================================
+    // COMPUTED PROPERTIES
+    // ============================================================
 
+    @* True if formatting should be disabled (Preview mode or JS not loaded) *@
+    private bool IsFormattingDisabled =>
+        Mode == EditorMode.Preview || _module is null;
+
+    @* The rendered Markdown preview as HTML (MarkupString is raw HTML) *@
+    private MarkupString PreviewMarkup =>
+        MarkdownRenderer.Render(Value);
+
+    // ============================================================
+    // LIFECYCLE METHODS
+    // ============================================================
+
+    @* Runs after the component renders.
+       FirstRender = true only the first time.*@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/js/markdown-editor.js");
+            // Load the JavaScript module for text manipulation
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import",
+                "/js/markdown-editor.js"
+            );
+
+            // Tell Blazor to re-render now that JS is loaded
+            // (enables the formatting buttons)
+            StateHasChanged();
         }
     }
 
-    private void SetMode(EditorMode mode)
-    {
-        Mode = mode;
-    }
-
-    private async Task WrapSelection(string prefix, string suffix)
-    {
-        if (IsFormattingDisabled || _module is null)
-        {
-            return;
-        }
-
-        var newValue = await _module.InvokeAsync<string>("insertText", _textArea, prefix, suffix);
-        Value = newValue;
-        await ValueChanged.InvokeAsync(Value);
-    }
-
-    private enum EditorMode
-    {
-        Edit,
-        Split,
-        Preview
-    }
-
-    private async Task OnInput(ChangeEventArgs e)
-    {
-        Value = e.Value?.ToString();
-        await ValueChanged.InvokeAsync(Value);
-    }
-
+    @* Cleanup: Dispose the JavaScript module when component is removed *@
     public async ValueTask DisposeAsync()
     {
         if (_module is not null)
@@ -175,8 +242,99 @@
             }
             catch (JSDisconnectedException)
             {
+                // Ignore if browser already disconnected
             }
         }
+    }
+
+    // ============================================================
+    // EVENT HANDLERS
+    // ============================================================
+
+    @* Called when user types in the textarea *@
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString();
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    @* Change the view mode (Edit, Split, Preview) *@
+    private void SetMode(EditorMode mode)
+    {
+        Mode = mode;
+    }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Wrap selected text with prefix and suffix.
+       Example: WrapSelection("**", "**") on "text" produces "**text**" *@
+    private async Task WrapSelection(string prefix, string suffix)
+    {
+        // Don't format if in preview mode or JS not ready
+        if (IsFormattingDisabled || _module is null)
+        {
+            return;
+        }
+
+        // Call JavaScript to insert text at cursor/selection
+        var newValue = await _module.InvokeAsync<string>(
+            "insertText",
+            _textArea,
+            prefix,
+            suffix
+        );
+
+        // Update the value and notify parent
+        Value = newValue;
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    @* Get CSS class for grid layout based on mode *@
+    private string GetGridClass()
+    {
+        // Split mode: 2 columns side by side
+        // Other modes: 1 column (full width)
+        return Mode == EditorMode.Split
+            ? "grid-cols-2"
+            : "grid-cols-1";
+    }
+
+    @* Get CSS class for the active mode button *@
+    private string GetActiveClass(EditorMode mode)
+    {
+        // Active button: black background (white in dark mode)
+        // Inactive button: gray hover effect
+        return Mode == mode
+            ? "bg-black dark:bg-white"
+            : "hover:bg-gray-100 dark:hover:bg-gray-800";
+    }
+
+    @* Get CSS class for the textarea based on mode *@
+    private string GetTextAreaClass()
+    {
+        var baseClass = "h-full min-h-100 w-full resize-none p-4 font-mono text-lg outline-none dark:bg-gray-900";
+
+        // Add border on right side in split mode
+        if (Mode == EditorMode.Split)
+        {
+            baseClass += " border-r-4 border-black dark:border-white";
+        }
+
+        return baseClass;
+    }
+
+    // ============================================================
+    // ENUMS
+    // ============================================================
+
+    @* The three view modes for the editor *@
+    private enum EditorMode
+    {
+        Edit, // Text editor only
+        Split, // Editor and preview side by side
+        Preview // Rendered preview only
     }
 
 }

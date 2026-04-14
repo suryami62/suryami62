@@ -1,33 +1,41 @@
-﻿@* Reusable summary card for a blog post in listing pages. *@
+﻿@* Post Card Component - Displays a blog post summary card.
+   Used on the posts list page to show each blog post.
+   Includes: image, category label, date, title, summary, and link.
+*@
 <article class="neo-card-interactive group p-6">
 
-    <!-- Image -->
-    @if (!string.IsNullOrEmpty(ImageUrl))
+    <!-- Featured Image (optional) -->
+    @if (HasImage())
     {
         <div class="mb-6 overflow-hidden border-4 border-black bg-gray-100 dark:border-white">
-            <img src="@ImageUrl" alt="@Title" class="aspect-video w-full object-cover"/>
+            <img src="@ImageUrl"
+                 alt="@Title"
+                 class="aspect-video w-full object-cover"/>
         </div>
     }
 
-    <!-- Label and Date -->
+    <!-- Meta Row: Category Label + Publication Date -->
     <div class="mb-4 flex items-center justify-between">
         <span class="neo-pill">@Label</span>
         <span class="font-mono text-sm font-bold">@Date</span>
     </div>
 
-    <!-- Title -->
+    <!-- Title with Link -->
     <h3 class="neo-title-sm mb-4 leading-none">
+        @* The "before:absolute before:inset-0" trick makes the whole card clickable
+           even though only the title is the actual link text. *@
         <a href="@Href" class="before:absolute before:inset-0">
             @Title
         </a>
     </h3>
 
-    <!-- Summary -->
+    <!-- Article Summary/Excerpt -->
     <p class="mb-6 text-justify font-medium text-gray-700 dark:text-gray-300">
         @Summary
     </p>
 
-    <!-- Read More -->
+    <!-- Read More Link -->
+    @* group-hover applies styles when parent (.group) is hovered *@
     <div class="group-hover:neo-inline-link-sm mt-auto flex items-center gap-2 font-black uppercase">
         <span class="underline decoration-4 underline-offset-4">Read Article</span>
         <i class="fa-solid fa-arrow-right"></i>
@@ -35,15 +43,36 @@
 </article>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* Category label (e.g., "Tutorial", "News") *@
     [Parameter] public string? Label { get; set; }
 
+    @* Publication date (e.g., "Jan 15, 2024") *@
     [Parameter] public string? Date { get; set; }
 
+    @* URL to the full blog post *@
     [Parameter] public string? Href { get; set; }
 
+    @* Article title *@
     [Parameter] public string? Title { get; set; }
 
+    @* Short summary of the article *@
     [Parameter] public string? Summary { get; set; }
 
+    @* URL to the featured image (null if no image) *@
     [Parameter] public string? ImageUrl { get; set; }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Check if we have an image URL to display *@
+    private bool HasImage()
+    {
+        return !string.IsNullOrEmpty(ImageUrl);
+    }
+
 }

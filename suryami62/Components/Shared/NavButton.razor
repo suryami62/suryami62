@@ -1,12 +1,20 @@
-﻿@* Reusable styled navigation link button component. *@
-<NavLink
-    class="neo-button"
-    href="@Href">
+﻿@* Nav Button Component - A styled navigation link button.
+   Uses NavLink (from Blazor) which automatically adds
+   "active" class when the link matches current URL.
+*@
+<NavLink class="neo-button"
+         href="@Href">
     @Text
 </NavLink>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* The URL to navigate to (e.g., "/posts", "/about") *@
     [Parameter] public string? Href { get; set; }
 
+    @* The text displayed on the button *@
     [Parameter] public string? Text { get; set; }
 }

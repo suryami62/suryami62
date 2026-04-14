@@ -1,19 +1,33 @@
-﻿@* Top-level site navigation header used throughout the public application. *@
+﻿@* Navigation Menu - appears at the top of every page.
+   Shows the site logo/brand and navigation links.
+*@
 <header class="neo-header">
     <nav class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
+
         <!-- Brand / Logo Area -->
         <div
             class="neo-frame-sm -rotate-2 transform bg-black px-3 py-1 text-2xl font-black tracking-tighter text-white uppercase select-none dark:bg-white dark:text-black">
+            @* The Brand component displays the site logo/name *@
             <Brand/>
         </div>
 
+        <!-- Navigation Links -->
         <ul class="flex flex-wrap justify-center gap-4">
+
+            @* Loop through each navigation link and create a button *@
             @foreach (var link in Links)
             {
                 <li>
+                    @* NavButton is a custom component for navigation buttons *@
                     <NavButton Href="@link.Href" Text="@link.Text"/>
                 </li>
             }
+
+            @*
+               AuthorizeView only shows content if user meets the policy.
+               AdminAccessPolicy.Name = "AdminAccess" (defined elsewhere).
+               This link only appears for logged-in admin users.
+            *@
             <AuthorizeView Policy="@AdminAccessPolicy.Name">
                 <li>
                     <NavButton Href="/Account/Admin" Text="admin"/>
@@ -24,15 +38,51 @@
 </header>
 
 @code {
+    // ============================================================
+    // DATA CLASSES
+    // ============================================================
 
-    private record NavItem(string Href, string Text);
+    @* This class holds one navigation link.
+       We use a class (not 'record') for beginner familiarity.*@
+    private class NavItem
+    {
+        @* The URL path for this link (e.g., "posts", "about") *@
+        public string Href { get; } = "";
 
-    private List<NavItem> Links { get; } =
-    [
-        new("", "home"),
-        new("posts", "posts"),
-        new("projects", "projects"),
-        new("about", "about")
-    ];
+        @* The text displayed on the button (e.g., "home", "posts") *@
+        public string Text { get; } = "";
+
+        @* Constructor - creates a new NavItem with the given values *@
+        public NavItem(string href, string text)
+        {
+            Href = href;
+            Text = text;
+        }
+    }
+
+    // ============================================================
+    // FIELDS
+    // ============================================================
+
+    @*
+       List of navigation links to display.
+       The { get; } means it can only be set here (read-only).
+
+       Links:
+       - "" (empty) = home page (root URL /)
+       - "posts" = blog posts page
+       - "projects" = projects portfolio page
+       - "about" = about/bio page
+
+
+
+    *@
+    private List<NavItem> Links { get; } = new()
+    {
+        new NavItem("", "home"),
+        new NavItem("posts", "posts"),
+        new NavItem("projects", "projects"),
+        new NavItem("about", "about")
+    };
 
 }

@@ -1,36 +1,50 @@
-﻿@* Public blog post detail page for rendering a single article by slug. *@
+﻿@* This page displays a single blog post (the full article).
+   @page "/posts/{Slug}" handles URLs like /posts/my-article-name.
+   The {Slug} is a parameter from the URL.
+*@
 @page "/posts/{Slug}"
 @using suryami62.Domain.Models
+
+@* Import the BlogPost model *@
+
+@* Inject services we need *@
 @inject IBlogPostService BlogPostService
-@rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @inject MarkdownRenderer MarkdownRenderer
 
-<PageTitle>@PostPageTitle</PageTitle>
+@* Enable interactive features *@
+@rendermode InteractiveServer
 
-<!-- Meta Section -->
+@* Set browser tab title - use helper method *@
+<PageTitle>@GetPageTitle()</PageTitle>
+
+<!-- Meta tags for social media sharing -->
 <HeadContent>
-    <MetaOpenGraphCard Title="@PostPageTitle"
-                       Description="@(_post?.Summary ?? string.Empty)"
+    <MetaOpenGraphCard Title="@GetPageTitle()"
+                       Description="@GetMetaDescription()"
                        Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
                        Url="@NavigationManager.Uri"/>
 </HeadContent>
 
+<!-- Main content area -->
 <div class="flex flex-col gap-8 py-8">
+
+    <!-- Back Button -->
     <div>
-        <a href="/posts"
-           class="neo-inline-link">
+        <a href="/posts" class="neo-inline-link">
             <i class="fa-solid fa-arrow-left"></i>
             Back
         </a>
     </div>
 
+    @* CASE 1: Still loading from server *@
     @if (!_isLoaded)
     {
         <div class="neo-card p-12 text-center">
             <p class="neo-title-md">Loading post...</p>
         </div>
     }
+    @* CASE 2: Post not found or not published *@
     else if (_post is null)
     {
         <div class="neo-card p-8">
@@ -38,79 +52,157 @@
             <p class="text-lg font-bold">Post not found or not yet published.</p>
         </div>
     }
+    @* CASE 3: Display the blog post *@
     else
     {
         <article class="mx-auto w-full max-w-4xl">
+
+            <!-- Post Header: Label, Date, Title, Summary -->
             <header class="mb-8 border-b-4 border-black pb-6 dark:border-white">
                 <div class="mb-4 flex flex-wrap items-center gap-4">
+                    @* Category label (e.g., "Tutorial", "News") *@
                     <span class="neo-pill">@_post.Label</span>
-                    <span class="font-mono text-sm font-bold">@_post.Date.ToString("MMM dd, yyyy")</span>
+
+                    @* Publication date *@
+                    <span class="font-mono text-sm font-bold">@FormatDate(_post.Date)</span>
                 </div>
 
+                @* Article title *@
                 <h1 class="neo-title-lg">@_post.Title</h1>
 
-                @if (!string.IsNullOrWhiteSpace(_post.Summary))
+                @* Summary/subtitle - only show if it exists *@
+                @if (HasContent(_post.Summary))
                 {
                     <p class="mt-4 text-xl font-bold text-gray-700 dark:text-gray-300">@_post.Summary</p>
                 }
             </header>
 
-            @if (_post.ImageUrl is not null)
+            @* Featured image - only show if post has one *@
+            @if (HasImage(_post.ImageUrl))
             {
                 <div class="neo-card mb-8 p-2">
-                    <img src="@_post.ImageUrl" alt="@_post.Title" class="h-auto w-full" loading="lazy"/>
+                    <img src="@_post.ImageUrl"
+                         alt="@_post.Title"
+                         class="h-auto w-full"
+                         loading="lazy"/>
                 </div>
             }
 
+            <!-- Article Content (rendered from Markdown) -->
             <div class="prose prose-lg max-w-none text-justify dark:prose-invert">
-                @MarkdownRenderer.Render(_post.Content)
+                @RenderContent(_post.Content)
             </div>
         </article>
     }
 </div>
 
-
-
 @code {
+    // ============================================================
+    // FIELDS
+    // ============================================================
+
+    @* This gets the slug from the URL.
+       [Parameter] tells Blazor to read this from the URL.
+       Example: /posts/hello-world → Slug = "hello-world".*@
     [Parameter] public string? Slug { get; set; }
 
+    @* The blog post data. The ? means it can be null (not found or loading).*@
     private BlogPost? _post;
+
+    @* Tracks whether we've finished loading the post.
+       This prevents showing "not found" while still loading.*@
     private bool _isLoaded;
 
-    // Builds the page title from the post's title, or falls back to a generic label.
-    private string PostPageTitle
-    {
-        get
-        {
-            if (_post != null && !string.IsNullOrEmpty(_post.Title))
-            {
-                return $"{_post.Title} | suryami62";
-            }
+    // ============================================================
+    // PAGE LIFECYCLE
+    // ============================================================
 
-            return "Post | suryami62";
-        }
-    }
-
+    @* This runs when the page loads or when the URL changes.
+       It fetches the blog post from the database using the slug.*@
     protected override async Task OnParametersSetAsync()
     {
+        // Reset state before loading
         _isLoaded = false;
         _post = null;
 
+        // Check if slug is missing from URL
         if (string.IsNullOrWhiteSpace(Slug))
         {
             _isLoaded = true;
-            return;
+            return; // Nothing to load
         }
 
+        // Fetch post from database
         var post = await BlogPostService.GetPostBySlugAsync(Slug);
 
-        // Only show the post if it has been published.
+        // Only display if post exists AND is published
         if (post != null && post.IsPublished)
         {
             _post = post;
         }
 
+        // Mark loading as complete
         _isLoaded = true;
+    }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Gets the page title for the browser tab.
+       If post loaded, use "Post Title | suryami62".
+       Otherwise, use "Post | suryami62".*@
+    private string GetPageTitle()
+    {
+        if (_post != null && !string.IsNullOrEmpty(_post.Title))
+        {
+            return $"{_post.Title} | suryami62";
+        }
+
+        return "Post | suryami62";
+    }
+
+    @* Gets the description for social media sharing (meta tags).
+       If no post loaded, return empty string.*@
+    private string GetMetaDescription()
+    {
+        if (_post == null)
+        {
+            return string.Empty;
+        }
+
+        return _post.Summary ?? string.Empty;
+    }
+
+    @* Formats a DateTime into a readable string.
+       Example: "Jan 15, 2024"*@
+    private string FormatDate(DateTime date)
+    {
+        return date.ToString("MMM dd, yyyy");
+    }
+
+    @* Checks if a text string has content (not null or empty).*@
+    private bool HasContent(string? text)
+    {
+        return !string.IsNullOrWhiteSpace(text);
+    }
+
+    @* Checks if an image URL exists (not null).*@
+    private bool HasImage(Uri? imageUrl)
+    {
+        return imageUrl != null;
+    }
+
+    @* Renders the Markdown content to HTML.
+       Markdown is a simple text format that converts to HTML.*@
+    private MarkupString RenderContent(string? markdownContent)
+    {
+        if (string.IsNullOrWhiteSpace(markdownContent))
+        {
+            return new MarkupString("");
+        }
+
+        return MarkdownRenderer.Render(markdownContent);
     }
 
 }

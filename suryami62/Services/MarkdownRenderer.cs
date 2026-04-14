@@ -1,37 +1,64 @@
+// ============================================================================
+// MARKDOWN RENDERER SERVICE
+// ============================================================================
+// This service converts Markdown text into safe HTML for display in the browser.
+//
+// WHAT IS MARKDOWN?
+// Markdown is a simple way to format text using plain text characters.
+// Examples:
+//   **bold** → <strong>bold</strong>
+//   # Heading → <h1>Heading</h1>
+//   [link](url) → <a href="url">link</a>
+//
+// WHAT IS SANITIZATION?
+// Sanitization removes dangerous HTML (like <script> tags) that could
+// be used for attacks. We use HtmlSanitizer library for this.
+// ============================================================================
+
 #region
 
-using Ganss.Xss;
-using Markdig;
-using Microsoft.AspNetCore.Components;
+using Ganss.Xss; // For sanitizing HTML (removing dangerous tags)
+using Markdig; // For converting Markdown to HTML
+using Microsoft.AspNetCore.Components; // For MarkupString type
 
 #endregion
 
 namespace suryami62.Services;
 
 /// <summary>
-///     Converts markdown content into sanitized HTML for safe rendering in public and admin Blazor pages.
+///     Converts Markdown text into safe HTML that can be displayed in the browser.
 /// </summary>
-/// <remarks>
-///     The renderer applies the shared Markdig pipeline first and then sanitizes the generated HTML so rich text
-///     content can be displayed without allowing unsafe markup into the component tree.
-/// </remarks>
 internal sealed class MarkdownRenderer
 {
+    // HtmlSanitizer removes dangerous HTML tags and attributes
+    // This prevents security attacks like XSS (Cross-Site Scripting)
     private readonly HtmlSanitizer _htmlSanitizer = new();
 
+    // MarkdownPipeline is the configuration for how to convert Markdown
+    // .UseAdvancedExtensions() enables extra features like tables, footnotes
     private readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
-        .UseAdvancedExtensions()
-        .Build();
+        .UseAdvancedExtensions() // Enable tables, task lists, footnotes, etc.
+        .Build(); // Create the pipeline
 
     /// <summary>
-    ///     Renders persisted markdown text as sanitized markup ready for Blazor output.
+    ///     Converts Markdown text to safe HTML.
     /// </summary>
-    /// <param name="markdown">The markdown content to render.</param>
-    /// <returns>A <see cref="MarkupString" /> containing sanitized HTML.</returns>
+    /// <param name="markdown">The Markdown text (can be null if empty).</param>
+    /// <returns>A MarkupString containing safe HTML ready for display.</returns>
     public MarkupString Render(string? markdown)
     {
-        var html = Markdown.ToHtml(markdown ?? string.Empty, _pipeline);
-        var sanitizedHtml = _htmlSanitizer.Sanitize(html);
-        return new MarkupString(sanitizedHtml);
+        // Step 1: Handle null input - if null, use empty string instead
+        var safeMarkdown = markdown ?? string.Empty;
+
+        // Step 2: Convert Markdown to HTML using Markdig
+        // Example: "**hello**" → "<strong>hello</strong>"
+        var html = Markdown.ToHtml(safeMarkdown, _pipeline);
+
+        // Step 3: Sanitize the HTML to remove dangerous content
+        // This removes <script>, <iframe>, and other potentially harmful tags
+        var safeHtml = _htmlSanitizer.Sanitize(html);
+
+        // Step 4: Return as MarkupString (tells Blazor this is raw HTML)
+        return new MarkupString(safeHtml);
     }
 }

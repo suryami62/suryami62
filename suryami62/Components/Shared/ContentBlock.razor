@@ -1,17 +1,26 @@
-﻿@* Reusable titled content section wrapper for grouped information blocks. *@
+﻿@* Content Block Component - A titled section container.
+   Used on the About page for Experience and Education sections.
+*@
 <div class="flex flex-col gap-6">
-    <!-- Title -->
+    <!-- Section Title -->
     <h3 class="neo-content-title">
         @Title
     </h3>
 
-    <!-- Content -->
+    <!-- Content Container with border styling -->
     <div class="neo-content-border">
         @ChildContent
     </div>
 </div>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* The title text for this content block *@
     [Parameter] public string? Title { get; set; }
+
+    @* The content inside the block (passed from parent) *@
     [Parameter] public RenderFragment? ChildContent { get; set; }
 }

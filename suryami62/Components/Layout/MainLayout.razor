@@ -1,15 +1,44 @@
-﻿@* Primary layout that wraps routed pages with the navigation header, main content area, and footer. *@
+﻿@* This is the MAIN LAYOUT - it wraps every page on the site.
+   Think of it as the "page template" that contains:
+   - Navigation menu at top
+   - Content area in middle (where page content goes)
+   - Footer at bottom
+
+   @inherits LayoutComponentBase tells Blazor this is a layout file.
+   @Body is where the actual page content gets inserted.
+*@
 @inherits LayoutComponentBase
 
+@*
+   Main container div with styling:
+   - flex min-h-screen: Makes page at least full screen height
+   - bg-white / dark:bg-black: White background (black in dark mode)
+   - font-sans: Use sans-serif font
+   - selection styles: Change text selection colors
+*@
 <div
     class="flex min-h-screen flex-col bg-white font-sans text-black selection:bg-black selection:text-white dark:bg-black dark:text-white dark:selection:bg-white dark:selection:text-black">
+
+    @* Navigation Menu (header with links) *@
     <NavMenu/>
 
+    @* Main Content Area:
+       - mx-auto: Center horizontally
+       - max-w-7xl: Maximum width (7xl = very wide)
+       - flex-1: Take all available space (pushes footer down)
+       - p-4 / md:p-8: Padding (more on larger screens)
+    *@
     <main class="mx-auto w-full max-w-7xl flex-1 p-4 md:p-8">
         <article class="max-w-none">
+            @*
+               @Body is a special Blazor directive.
+               It inserts the actual page content here.
+               Example: Home.razor content goes here when on home page.
+            *@
             @Body
         </article>
     </main>
 
+    @* Footer at bottom *@
     <Footer/>
 </div>

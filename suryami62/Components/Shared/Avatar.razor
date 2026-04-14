@@ -1,11 +1,20 @@
-﻿@* Reusable profile image component used for avatar-style presentation. *@
+﻿@* Avatar Component - Displays a profile image with styling.
+   Used in the page header to show the author's photo.
+*@
 <div class="relative mx-auto w-full max-w-70 md:mx-0 md:max-w-[320px]">
-    <img src="@AvatarUrl" alt="@Alt"
+    <img src="@AvatarUrl"
+         alt="@Alt"
          class="neo-frame aspect-square w-full object-cover"/>
 </div>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* URL to the avatar/profile image *@
     [Parameter] public string? AvatarUrl { get; set; }
 
+    @* Alt text for accessibility (screen readers) *@
     [Parameter] public string? Alt { get; set; }
 }
