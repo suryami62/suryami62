@@ -1,3 +1,29 @@
+// ============================================================================
+// JOURNEY HISTORY SERVICE
+// ============================================================================
+// This service manages career timeline items displayed on the About page.
+//
+// WHAT IS JOURNEY HISTORY?
+// Journey items represent milestones in your career:
+// - Jobs and work experience
+// - Education and degrees
+// - Certifications and credentials
+// - Major projects or achievements
+//
+// SECTIONS:
+// - Professional: Work history, job positions
+// - Certification: Courses, certificates, credentials
+// - Other custom sections defined in JourneySection enum
+//
+// CACHING:
+// Journey data changes infrequently (when you get a new job or certificate).
+// We cache by section so the About page loads quickly without database hits.
+//
+// CACHE KEYS:
+// - journey:section:Professional    - Work experience items
+// - journey:section:Certification   - Certifications
+// ============================================================================
+
 #region
 
 using suryami62.Application.Persistence;
@@ -8,50 +34,60 @@ using suryami62.Domain.Models;
 namespace suryami62.Services;
 
 /// <summary>
-///     Defines application operations for managing journey timeline items.
+///     Interface for journey/timeline item operations.
+///     Allows using fake implementations for testing.
 /// </summary>
 public interface IJourneyHistoryService
 {
     /// <summary>
-    ///     Gets journey items for a specific section.
+    ///     Gets all journey items for a specific section (e.g., Professional, Certification).
+    ///     Results are ordered by date for timeline display.
     /// </summary>
-    /// <param name="section">The section to filter by.</param>
-    /// <returns>The ordered items in the section.</returns>
+    /// <param name="section">The section to retrieve (e.g., Professional).</param>
+    /// <returns>List of journey items in that section.</returns>
     Task<List<JourneyHistory>> GetBySectionAsync(JourneySection section);
 
     /// <summary>
-    ///     Creates a new journey item.
+    ///     Creates a new journey item (e.g., a new job or certification).
     /// </summary>
-    /// <param name="item">The item to persist.</param>
-    /// <returns>The created item.</returns>
+    /// <param name="item">The journey item to create.</param>
+    /// <returns>The created item (with assigned ID).</returns>
     Task<JourneyHistory> CreateAsync(JourneyHistory item);
 
     /// <summary>
-    ///     Deletes a journey item by identifier.
+    ///     Deletes a journey item by its ID.
     /// </summary>
-    /// <param name="id">The identifier of the item to remove.</param>
+    /// <param name="id">The ID of the item to delete.</param>
     Task DeleteAsync(int id);
 }
 
 /// <summary>
-///     Implements journey item operations with Redis caching support.
-///     Includes stampede protection to prevent multiple concurrent requests
-///     from executing the same expensive operation when cache expires.
+///     Implements journey operations with Redis caching and stampede protection.
+///     Uses cache-aside pattern for optimal performance.
 /// </summary>
-/// <remarks>
-///     Cache-aside pattern with stampede protection ensures optimal performance
-///     during high traffic scenarios when cache entries expire.
-///     See: https://learn.microsoft.com/aspnet/core/performance/caching/overview?view=aspnetcore-10.0#hybridcache
-/// </remarks>
 public sealed class JourneyHistoryService : IJourneyHistoryService
 {
+    // All cache keys start with this prefix
     private const string CacheKeyPrefix = "journey:";
+
+    // Cache entries expire after 15 minutes
     private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(15);
+
+    // Optional cache service (null if Redis not configured)
     private readonly IRedisCacheService? _cacheService;
 
+    // Repository for database operations
     private readonly IJourneyHistoryRepository _repository;
+
+    // Optional stampede protection (prevents database overload)
     private readonly CacheStampedeProtection? _stampedeProtection;
 
+    /// <summary>
+    ///     Creates a new journey history service.
+    /// </summary>
+    /// <param name="repository">The database repository.</param>
+    /// <param name="cacheService">Optional Redis cache service.</param>
+    /// <param name="stampedeProtection">Optional stampede protection locking.</param>
     public JourneyHistoryService(
         IJourneyHistoryRepository repository,
         IRedisCacheService? cacheService = null,
@@ -62,64 +98,98 @@ public sealed class JourneyHistoryService : IJourneyHistoryService
         _stampedeProtection = stampedeProtection;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets journey items for a section with caching.
+    /// </summary>
     public async Task<List<JourneyHistory>> GetBySectionAsync(JourneySection section)
     {
+        // Step 1: Build cache key for this section
+        // Example: "journey:section:Professional"
         var cacheKey = $"{CacheKeyPrefix}section:{section}";
 
-        // Try to get from cache first (cache-aside pattern)
+        // Step 2: Try to get from cache first
         if (_cacheService != null)
         {
-            var cached = await _cacheService.GetAsync<List<JourneyHistory>>(cacheKey).ConfigureAwait(false);
-            if (cached != null) return cached;
+            var cached = await _cacheService
+                .GetAsync<List<JourneyHistory>>(cacheKey)
+                .ConfigureAwait(false);
+
+            if (cached != null)
+                // Cache hit - return immediately
+                return cached;
         }
 
-        // Cache miss - fetch from database with stampede protection
-        // This prevents multiple concurrent requests from executing the same expensive operation
+        // Step 3: Cache miss - need to fetch from database
+        // Use stampede protection if available
         if (_stampedeProtection != null && _cacheService != null)
-            return await _stampedeProtection.ExecuteAsync(cacheKey, async () =>
-            {
-                // Double-check cache after acquiring lock (another thread might have populated it)
-                var doubleCheck = await _cacheService.GetAsync<List<JourneyHistory>>(cacheKey).ConfigureAwait(false);
-                if (doubleCheck != null) return doubleCheck;
+        {
+            // Execute with locking - only one thread fetches from database
+            var result = await _stampedeProtection
+                .ExecuteAsync(cacheKey, async () =>
+                {
+                    // Step 3a: Double-check cache (another thread might have populated it)
+                    var doubleCheck = await _cacheService
+                        .GetAsync<List<JourneyHistory>>(cacheKey)
+                        .ConfigureAwait(false);
 
-                // Fetch from database
-                var items = await _repository.GetBySectionAsync(section).ConfigureAwait(false);
+                    if (doubleCheck != null) return doubleCheck;
 
-                // Store in cache
-                await _cacheService.SetAsync(cacheKey, items, CacheExpiration).ConfigureAwait(false);
+                    // Step 3b: Fetch from database
+                    var items = await _repository
+                        .GetBySectionAsync(section)
+                        .ConfigureAwait(false);
 
-                return items;
-            }).ConfigureAwait(false);
+                    // Step 3c: Store in cache
+                    await _cacheService.SetAsync(cacheKey, items, CacheExpiration)
+                        .ConfigureAwait(false);
 
-        // Fallback without stampede protection (when not configured)
-        var fallbackItems = await _repository.GetBySectionAsync(section).ConfigureAwait(false);
+                    return items;
+                }).ConfigureAwait(false);
 
+            return result;
+        }
+
+        // Step 4: No stampede protection - fetch directly
+        var fallbackItems = await _repository
+            .GetBySectionAsync(section)
+            .ConfigureAwait(false);
+
+        // Store in cache if available
         if (_cacheService != null)
-            await _cacheService.SetAsync(cacheKey, fallbackItems, CacheExpiration).ConfigureAwait(false);
+            await _cacheService.SetAsync(cacheKey, fallbackItems, CacheExpiration)
+                .ConfigureAwait(false);
 
         return fallbackItems;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Creates a new journey item and invalidates section caches.
+    /// </summary>
     public async Task<JourneyHistory> CreateAsync(JourneyHistory item)
     {
-        var result = await _repository.CreateAsync(item).ConfigureAwait(false);
+        // Save to database first
+        var result = await _repository.CreateAsync(item)
+            .ConfigureAwait(false);
 
-        // Invalidate section caches
+        // Invalidate section caches (new item might belong to a section)
         if (_cacheService != null)
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*").ConfigureAwait(false);
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*")
+                .ConfigureAwait(false);
 
         return result;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Deletes a journey item and invalidates section caches.
+    /// </summary>
     public async Task DeleteAsync(int id)
     {
+        // Delete from database
         await _repository.DeleteAsync(id).ConfigureAwait(false);
 
-        // Invalidate section caches
+        // Invalidate section caches (item removed from display)
         if (_cacheService != null)
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*").ConfigureAwait(false);
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*")
+                .ConfigureAwait(false);
     }
 }

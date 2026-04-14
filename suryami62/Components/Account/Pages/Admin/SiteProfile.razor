@@ -160,11 +160,13 @@
 
     private SiteProfileSettings CreateSettingsFromForm()
     {
-        return new SiteProfileSettings(
-            FormInput.Instagram ?? string.Empty,
-            FormInput.Linkedin ?? string.Empty,
-            FormInput.Github ?? string.Empty,
-            FormInput.Email ?? string.Empty);
+        return new SiteProfileSettings
+        {
+            Instagram = FormInput.Instagram ?? string.Empty,
+            Linkedin = FormInput.Linkedin ?? string.Empty,
+            Github = FormInput.Github ?? string.Empty,
+            Email = FormInput.Email ?? string.Empty
+        };
     }
 
     private void SetSuccessStatus(string message)

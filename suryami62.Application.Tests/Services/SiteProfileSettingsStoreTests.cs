@@ -57,7 +57,13 @@ public class SiteProfileSettingsStoreTests
     [Fact]
     public async Task SaveAsyncPersistsAllValues()
     {
-        var profile = new SiteProfileSettings("insta", "linkedin", "github", "email@test.com");
+        var profile = new SiteProfileSettings
+        {
+            Instagram = "insta",
+            Linkedin = "linkedin",
+            Github = "github",
+            Email = "email@test.com"
+        };
 
         await _store.SaveAsync(profile);
 
@@ -77,8 +83,20 @@ public class SiteProfileSettingsStoreTests
     [Fact]
     public async Task SaveAsyncCalledTwiceOverwritesPreviousValues()
     {
-        await _store.SaveAsync(new SiteProfileSettings("old", "old", "old", "old@test.com"));
-        await _store.SaveAsync(new SiteProfileSettings("new", "new", "new", "new@test.com"));
+        await _store.SaveAsync(new SiteProfileSettings
+        {
+            Instagram = "old",
+            Linkedin = "old",
+            Github = "old",
+            Email = "old@test.com"
+        });
+        await _store.SaveAsync(new SiteProfileSettings
+        {
+            Instagram = "new",
+            Linkedin = "new",
+            Github = "new",
+            Email = "new@test.com"
+        });
 
         var settings = await _store.GetAsync();
 
