@@ -118,14 +118,21 @@ internal sealed class RedisCacheService : IRedisCacheService, IDistributedCache
     /// <param name="options">Expiration options (when the cache entry should expire).</param>
     public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
     {
-        // Ensure options is provided - throw if null
+        // Step 1: Validate options parameter
         ArgumentNullException.ThrowIfNull(options);
 
-        // Calculate expiration from the options
+        // Step 2: Calculate expiration from the options (TimeSpan? type)
         var expiry = GetExpiration(options);
 
-        // Store in Redis
-        _database.StringSet(key, value, expiry);
+        // Step 3: Store in Redis with or without expiration
+        // StackExchange.Redis v2.8+ requires non-nullable Expiration.
+        // Use different overloads: one with expiration, one without.
+        if (expiry.HasValue)
+            // Cast TimeSpan to Expiration (implicit conversion operator)
+            _database.StringSet(key, value, expiry.Value);
+        else
+            // No expiration specified - use overload without expiration parameter
+            _database.StringSet(key, value);
     }
 
     /// <summary>
@@ -142,17 +149,24 @@ internal sealed class RedisCacheService : IRedisCacheService, IDistributedCache
         DistributedCacheEntryOptions options,
         CancellationToken token = default)
     {
-        // Validate options parameter
+        // Step 1: Validate options parameter
         ArgumentNullException.ThrowIfNull(options);
 
-        // Check if operation was cancelled
+        // Step 2: Check if operation was cancelled
         token.ThrowIfCancellationRequested();
 
-        // Calculate expiration
+        // Step 3: Calculate expiration from options (TimeSpan? type)
         var expiry = GetExpiration(options);
 
-        // Async store
-        await _database.StringSetAsync(key, value, expiry).ConfigureAwait(false);
+        // Step 4: Store in Redis with or without expiration
+        // StackExchange.Redis v2.8+ requires non-nullable Expiration.
+        // Use different overloads: one with expiration, one without.
+        if (expiry.HasValue)
+            // Cast TimeSpan to Expiration (implicit conversion operator)
+            await _database.StringSetAsync(key, value, expiry.Value).ConfigureAwait(false);
+        else
+            // No expiration specified - use overload without expiration parameter
+            await _database.StringSetAsync(key, value).ConfigureAwait(false);
     }
 
     /// <summary>
