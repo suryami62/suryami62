@@ -314,7 +314,7 @@ internal sealed class RedisCacheService : IRedisCacheService, IDistributedCache
         }
 
         // Delete all collected keys at once (more efficient than one-by-one)
-        if (keyList.Count > 0) await _database.KeyDeleteAsync(keyList.ToArray()).ConfigureAwait(false);
+        if (keyList is { Count: > 0 }) await _database.KeyDeleteAsync(keyList.ToArray()).ConfigureAwait(false);
     }
 
     /// <summary>
