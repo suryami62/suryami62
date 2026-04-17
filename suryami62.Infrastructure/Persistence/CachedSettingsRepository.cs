@@ -1,3 +1,36 @@
+// ============================================================================
+// CACHED SETTINGS REPOSITORY
+// ============================================================================
+// This class adds in-memory caching on top of the database settings repository.
+//
+// WHAT IS THE DECORATOR PATTERN?
+// This class "decorates" (wraps) another ISettingsRepository.
+// Think of it like adding a coat of paint - the original object still works,
+// but now has extra features (caching) added on top.
+//
+// WHY TWO LEVELS OF CACHING?
+// 1. In-memory cache (this class): Fast, but only for this server instance
+// 2. Redis cache (optional): Shared across all servers, survives app restarts
+//
+// This decorator sits between the application and the database repository:
+//   Application -> CachedSettingsRepository -> SettingsRepository -> Database
+//
+// CACHING STRATEGY:
+// - Settings rarely change (site title, SEO settings)
+// - But they are read frequently (every page load might read settings)
+// - Cache for 5 minutes - balances performance with freshness
+//
+// CACHE INVALIDATION:
+// When settings are updated (Upsert), we remove them from cache immediately.
+// This ensures the next read gets the fresh value from database.
+//
+// BATCH LOOKUPS:
+// GetValuesAsync handles multiple keys efficiently:
+// - Checks cache for all keys first
+// - Only queries database for keys not in cache
+// - Stores newly fetched values in cache
+// ============================================================================
+
 #region
 
 using Microsoft.Extensions.Caching.Memory;
@@ -9,85 +42,120 @@ using suryami62.Application.Persistence;
 namespace suryami62.Infrastructure.Persistence;
 
 /// <summary>
-///     Decorator for ISettingsRepository that adds in-memory caching for read operations.
-///     Settings rarely change, making them ideal candidates for memory caching.
+///     Adds in-memory caching to the settings repository.
+///     Wraps the database repository to reduce database queries.
 /// </summary>
-public sealed partial class CachedSettingsRepository : ISettingsRepository
+public sealed class CachedSettingsRepository : ISettingsRepository
 {
     // Cache settings for 5 minutes - settings rarely change
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+
+    // In-memory cache (faster than database, but not shared across servers)
     private readonly IMemoryCache _cache;
 
+    // The underlying database repository (decorated/wrapped object)
     private readonly ISettingsRepository _inner;
+
+    // Logger for cache hit/miss/invalidate diagnostics
     private readonly ILogger<CachedSettingsRepository> _logger;
 
-    public CachedSettingsRepository(ISettingsRepository inner, IMemoryCache cache,
+    /// <summary>
+    ///     Creates a cached decorator around a settings repository.
+    /// </summary>
+    /// <param name="inner">The underlying database repository to wrap.</param>
+    /// <param name="cache">The in-memory cache instance.</param>
+    /// <param name="logger">Logger for diagnostic output.</param>
+    public CachedSettingsRepository(
+        ISettingsRepository inner,
+        IMemoryCache cache,
         ILogger<CachedSettingsRepository> logger)
     {
-        _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(inner);
+        ArgumentNullException.ThrowIfNull(cache);
+        ArgumentNullException.ThrowIfNull(logger);
 
-        LogRepositoryInitialized(CacheDuration);
+        _inner = inner;
+        _cache = cache;
+        _logger = logger;
+
+        _logger.LogDebug(
+            "CachedSettingsRepository initialized with cache duration: {CacheDuration}",
+            CacheDuration);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets a single setting value with caching.
+    ///     Checks cache first, falls back to database if not cached.
+    /// </summary>
     public async Task<string?> GetValueAsync(string key, CancellationToken cancellationToken = default)
     {
+        // Step 1: Build the cache key for this setting
         var cacheKey = BuildCacheKey(key);
 
-        // Try to get from cache first
+        // Step 2: Try to get from in-memory cache first
         if (_cache.TryGetValue(cacheKey, out string? cachedValue))
         {
-            LogCacheHit(key);
+            // Cache HIT - value found in memory (fast!)
+            _logger.LogDebug("Cache HIT for setting '{SettingKey}'", key);
             return cachedValue;
         }
 
-        // Cache miss - get from underlying repository
-        LogCacheMiss(key);
+        // Step 3: Cache MISS - need to fetch from database
+        _logger.LogDebug("Cache MISS for setting '{SettingKey}'", key);
         var value = await _inner.GetValueAsync(key, cancellationToken).ConfigureAwait(false);
 
-        // Store in cache
+        // Step 4: Store in cache for next time (if value exists)
         if (value != null) SetCache(cacheKey, value);
 
         return value;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets multiple setting values with caching.
+    ///     Efficiently handles batch lookups - only queries database for missing keys.
+    /// </summary>
     public async Task<IReadOnlyDictionary<string, string>> GetValuesAsync(
         IReadOnlyCollection<string> keys,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(keys);
 
+        // Step 1: Handle empty key list
         if (keys.Count == 0) return new Dictionary<string, string>(StringComparer.Ordinal);
 
+        // Step 2: Prepare result collection and track missing keys
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         var missingKeys = new List<string>(keys.Count);
 
-        // Try to get values from cache
+        // Step 3: Check cache for each key
         foreach (var key in keys)
         {
             var cacheKey = BuildCacheKey(key);
+
             if (_cache.TryGetValue(cacheKey, out string? cachedValue))
             {
-                LogCacheHit(key);
+                // Cache HIT for this key
+                _logger.LogDebug("Cache HIT for setting '{SettingKey}'", key);
+
                 if (cachedValue != null) result[key] = cachedValue;
             }
             else
             {
+                // Cache MISS - need to fetch this key from database
                 missingKeys.Add(key);
             }
         }
 
-        // If all values were cached, return immediately
+        // Step 4: If all values were cached, return immediately (fast path)
         if (missingKeys.Count == 0) return result;
 
-        // Fetch missing values from underlying repository
-        LogBatchCacheMiss(missingKeys.Count);
-        var missingValues = await _inner.GetValuesAsync(missingKeys, cancellationToken).ConfigureAwait(false);
+        // Step 5: Fetch missing values from database in one batch query
+        _logger.LogDebug("Batch cache MISS for {Count} settings", missingKeys.Count);
+        var missingValues = await _inner
+            .GetValuesAsync(missingKeys, cancellationToken)
+            .ConfigureAwait(false);
 
-        // Store fetched values in cache and add to result
+        // Step 6: Store fetched values in cache and add to result
         foreach (var (key, value) in missingValues)
         {
             var cacheKey = BuildCacheKey(key);
@@ -98,62 +166,64 @@ public sealed partial class CachedSettingsRepository : ISettingsRepository
         return result;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Updates a single setting and invalidates its cache entry.
+    /// </summary>
     public async Task UpsertAsync(string key, string value, CancellationToken cancellationToken = default)
     {
+        // Step 1: Save to database through inner repository
         await _inner.UpsertAsync(key, value, cancellationToken).ConfigureAwait(false);
 
-        // Invalidate cache for this key
+        // Step 2: Remove from cache so next read gets fresh value
         InvalidateCache(key);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Updates multiple settings and invalidates their cache entries.
+    /// </summary>
     public async Task UpsertManyAsync(
         IReadOnlyDictionary<string, string> values,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(values);
 
+        // Step 1: Save all values to database
         await _inner.UpsertManyAsync(values, cancellationToken).ConfigureAwait(false);
 
-        // Invalidate cache for all modified keys
+        // Step 2: Invalidate cache for all modified keys
         foreach (var key in values.Keys) InvalidateCache(key);
     }
 
+    /// <summary>
+    ///     Builds a cache key from the setting key.
+    ///     Prefixes with "setting:" to avoid collisions with other cached data.
+    /// </summary>
     private static string BuildCacheKey(string settingKey)
     {
         return $"setting:{settingKey}";
     }
 
+    /// <summary>
+    ///     Stores a value in the in-memory cache with expiration settings.
+    /// </summary>
     private void SetCache(string cacheKey, string value)
     {
+        // Configure cache entry options
         var options = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(CacheDuration)
-            .SetPriority(CacheItemPriority.Normal);
+            .SetAbsoluteExpiration(CacheDuration) // Expire after 5 minutes
+            .SetPriority(CacheItemPriority.Normal); // Memory pressure handling
 
         _cache.Set(cacheKey, value, options);
     }
 
+    /// <summary>
+    ///     Removes a setting from the cache.
+    ///     Called when settings are updated to ensure fresh reads.
+    /// </summary>
     private void InvalidateCache(string key)
     {
         var cacheKey = BuildCacheKey(key);
         _cache.Remove(cacheKey);
-        LogCacheInvalidated(key);
+        _logger.LogDebug("Cache INVALIDATED for setting '{SettingKey}'", key);
     }
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Cache HIT for setting '{SettingKey}'")]
-    private partial void LogCacheHit(string settingKey);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Cache MISS for setting '{SettingKey}'")]
-    private partial void LogCacheMiss(string settingKey);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Batch cache MISS for {Count} settings")]
-    private partial void LogBatchCacheMiss(int count);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Cache INVALIDATED for setting '{SettingKey}'")]
-    private partial void LogCacheInvalidated(string settingKey);
-
-    [LoggerMessage(Level = LogLevel.Debug,
-        Message = "CachedSettingsRepository initialized with cache duration: {CacheDuration}")]
-    private partial void LogRepositoryInitialized(TimeSpan cacheDuration);
 }

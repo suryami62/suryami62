@@ -1,11 +1,22 @@
-﻿@* Application error page that renders request diagnostics when an unhandled failure occurs. *@
+﻿@* This page displays when an error occurs in the application.
+   It shows a user-friendly error message and (in development mode)
+   additional diagnostic information for debugging.
+*@
 @page "/Error"
 @using System.Diagnostics
+
+@* System.Diagnostics provides tools for getting request information *@
+
+@* Inject environment info to check if we're in development mode *@
 @inject IHostEnvironment Env
 
+@* Set browser tab title *@
 <PageTitle>500: System Collapse | suryami62</PageTitle>
 
+<!-- Main error display -->
 <div class="flex flex-col gap-12 py-8">
+
+    <!-- Header: Big error message -->
     <PageHeader Title="SYSTEM" Highlight="CRASH">
         <ChildContent>
             An unexpected glitch has manifested in the system's core. Our algorithms are frantically trying to
@@ -16,22 +27,28 @@
         </AsideContent>
     </PageHeader>
 
+    <!-- Error Details Section -->
     <div class="grid gap-12 lg:grid-cols-[1fr_2fr]">
+
+        <!-- Left Column: Summary and Request ID -->
         <ErrorSummarySection
             Title="Core Exception"
             Description="The server encountered an internal error or misconfiguration and was unable to complete your request. This is likely a temporary anomaly in the digital fabric.">
             <BodyContent>
-                @if (ShowRequestId)
+                @* Only show request ID if we have one *@
+                @if (HasRequestId())
                 {
                     <div class="neo-card border-2 bg-neutral-100 p-4 dark:bg-neutral-900">
-                        <span
-                            class="mb-1 block text-xs font-black uppercase italic opacity-60">Tracking Identifier</span>
+                        <span class="mb-1 block text-xs font-black uppercase italic opacity-60">
+                            Tracking Identifier
+                        </span>
                         <code class="font-mono text-sm font-bold break-all">@RequestId</code>
                     </div>
                 }
             </BodyContent>
         </ErrorSummarySection>
 
+        <!-- Right Column: Status and Debug Info -->
         <div class="space-y-8">
             <ErrorPanel Title="Status Report">
                 <ul class="space-y-4 text-sm font-bold text-neutral-600 uppercase dark:text-neutral-400">
@@ -40,12 +57,18 @@
                     <li>→ User patience level: [CRITICAL]</li>
                 </ul>
                 <div class="mt-8">
-                    <p class="italic">Please try refreshing the page or come back later when the monkeys have finished
-                        their coffee.</p>
+                    <p class="italic">
+                        Please try refreshing the page or come back later when the monkeys have finished
+                        their coffee.
+                    </p>
                 </div>
             </ErrorPanel>
 
-            @if (Env.IsDevelopment())
+            @* Development Mode Warning:
+               Only show this red warning box when running in Development mode.
+               It reminds developers that error details are visible.
+               In Production, this box is hidden for security. *@
+            @if (IsDevelopmentMode())
             {
                 <div class="neo-card border-red-500 bg-red-100 p-6 text-red-900 dark:bg-red-900 dark:text-red-100">
                     <h4 class="mb-2 text-xl font-black uppercase italic">DEBUG_MODE_ENABLED</h4>
@@ -60,16 +83,68 @@
     </div>
 </div>
 
-@code{
+@code {
+    // ============================================================
+    // FIELDS
+    // ============================================================
+
+    @* This gets the HTTP context (request info) from the server.
+       [CascadingParameter] means it flows down from a parent component.
+       It contains information about the current web request.*@
     [CascadingParameter] private HttpContext? HttpContext { get; set; }
 
+    @* Unique identifier for this error request.
+       Helps match error messages to server logs.*@
     private string? RequestId { get; set; }
 
-    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+    // ============================================================
+    // PAGE LIFECYCLE
+    // ============================================================
 
+    @* This runs when the page first loads.
+       It captures the request ID for error tracking.*@
     protected override void OnInitialized()
     {
-        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+        RequestId = GetRequestId();
+    }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Gets the request ID from the current activity or HTTP context.
+       The ?. means "if not null, get the property".
+       The ?? means "if left side is null, use right side instead".
+
+       Example:
+       Activity.Current?.Id gets the current activity ID
+       If that's null, use HttpContext?.TraceIdentifier instead
+       If both are null, RequestId becomes null.*@
+    private string? GetRequestId()
+    {
+        // Try to get from Activity (diagnostics system)
+        var activityId = Activity.Current?.Id;
+
+        // If no activity ID, try HTTP context trace ID
+        if (activityId == null)
+        {
+            return HttpContext?.TraceIdentifier;
+        }
+
+        return activityId;
+    }
+
+    @* Checks if we have a request ID to display.*@
+    private bool HasRequestId()
+    {
+        return !string.IsNullOrEmpty(RequestId);
+    }
+
+    @* Checks if running in Development mode.
+       Development mode shows more detailed error information.*@
+    private bool IsDevelopmentMode()
+    {
+        return Env.IsDevelopment();
     }
 
 }

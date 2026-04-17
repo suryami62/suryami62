@@ -1,3 +1,32 @@
+// ============================================================================
+// BLOG POST SERVICE
+// ============================================================================
+// This service manages blog posts with Redis caching for performance.
+//
+// WHAT IS CACHING?
+// Caching stores frequently-accessed data in fast storage (Redis) to reduce
+// database load. Blog posts don't change often, so caching them makes sense.
+//
+// CACHE-ASIDE PATTERN:
+// 1. Check cache first (fast)
+// 2. If not in cache (miss), fetch from database (slow)
+// 3. Store in cache for next time
+//
+// STAMPEDE PROTECTION:
+// When cache expires, many users might request the same data simultaneously.
+// Without protection, all would hit the database at once (stampede).
+// This uses locking so only one request fetches from database.
+//
+// CACHE KEYS:
+// - blogposts:list:true:0:10:search  - List of posts (varies by parameters)
+// - blogposts:slug:my-post          - Single post by slug
+// - blogposts:id:42                  - Single post by ID
+//
+// CACHE INVALIDATION:
+// When a post is created/updated/deleted, we clear related caches so
+// the next request gets fresh data.
+// ============================================================================
+
 #region
 
 using suryami62.Application.Persistence;
@@ -8,74 +37,86 @@ using suryami62.Domain.Models;
 namespace suryami62.Services;
 
 /// <summary>
-///     Defines application operations for managing blog posts.
+///     Interface for blog post operations. This allows using fake/mock
+///     implementations for testing without a real database.
 /// </summary>
 public interface IBlogPostService
 {
     /// <summary>
-    ///     Gets blog posts that match the supplied filter and paging arguments.
+    ///     Gets a list of blog posts with optional filtering and pagination.
     /// </summary>
-    /// <param name="onlyPublished">Restricts the result to published posts when true.</param>
-    /// <param name="skip">The optional number of items to skip.</param>
-    /// <param name="take">The optional maximum number of items to return.</param>
-    /// <param name="searchTerm">The optional search term applied to titles and summaries.</param>
-    /// <returns>A tuple containing the matching items and total count.</returns>
-    Task<(List<BlogPost> Items, int Total)>
-        GetPostsAsync(bool onlyPublished = true, int? skip = null, int? take = null, string? searchTerm = null);
+    /// <param name="onlyPublished">If true, only return published posts.</param>
+    /// <param name="skip">Number of posts to skip (for pagination).</param>
+    /// <param name="take">Maximum posts to return (page size).</param>
+    /// <param name="searchTerm">Text to search in titles/content.</param>
+    /// <returns>Tuple with (list of posts, total count).</returns>
+    Task<(List<BlogPost> Items, int Total)> GetPostsAsync(
+        bool onlyPublished = true,
+        int? skip = null,
+        int? take = null,
+        string? searchTerm = null);
 
     /// <summary>
-    ///     Gets a blog post by its slug.
+    ///     Gets a single post by its URL slug (e.g., "hello-world").
     /// </summary>
-    /// <param name="slug">The route slug of the post.</param>
-    /// <returns>The matching post when found; otherwise <see langword="null" />.</returns>
+    /// <param name="slug">The URL-friendly post identifier.</param>
+    /// <returns>The post, or null if not found.</returns>
     Task<BlogPost?> GetPostBySlugAsync(string slug);
 
     /// <summary>
-    ///     Gets a blog post by its identifier.
+    ///     Gets a single post by its database ID.
     /// </summary>
-    /// <param name="id">The identifier of the post.</param>
-    /// <returns>The matching post when found; otherwise <see langword="null" />.</returns>
+    /// <param name="id">The numeric database ID.</param>
+    /// <returns>The post, or null if not found.</returns>
     Task<BlogPost?> GetPostByIdAsync(int id);
 
     /// <summary>
     ///     Creates a new blog post.
     /// </summary>
-    /// <param name="post">The post to persist.</param>
-    /// <returns>The created post.</returns>
+    /// <param name="post">The post to create.</param>
+    /// <returns>The created post (with assigned ID).</returns>
     Task<BlogPost> CreatePostAsync(BlogPost post);
 
     /// <summary>
     ///     Updates an existing blog post.
     /// </summary>
-    /// <param name="post">The post to update.</param>
+    /// <param name="post">The post with updated values.</param>
     Task UpdatePostAsync(BlogPost post);
 
     /// <summary>
-    ///     Deletes a blog post by identifier.
+    ///     Deletes a blog post.
     /// </summary>
-    /// <param name="id">The identifier of the post to remove.</param>
+    /// <param name="id">The ID of the post to delete.</param>
     Task DeletePostAsync(int id);
 }
 
 /// <summary>
-///     Implements blog post operations with Redis caching support.
-///     Includes stampede protection to prevent multiple concurrent requests
-///     from executing the same expensive operation when cache expires.
+///     Implements blog post operations with Redis caching.
+///     Uses cache-aside pattern with stampede protection for high-traffic scenarios.
 /// </summary>
-/// <remarks>
-///     Cache-aside pattern with stampede protection ensures optimal performance
-///     during high traffic scenarios when cache entries expire.
-///     See: https://learn.microsoft.com/aspnet/core/performance/caching/overview?view=aspnetcore-10.0#hybridcache
-/// </remarks>
 public sealed class BlogPostService : IBlogPostService
 {
+    // All cache keys start with this prefix for organization
     private const string CacheKeyPrefix = "blogposts:";
+
+    // Cache entries expire after 15 minutes
     private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(15);
+
+    // Optional cache service (null if Redis is not configured)
     private readonly IRedisCacheService? _cacheService;
 
+    // Repository for database operations
     private readonly IBlogPostRepository _repository;
+
+    // Optional stampede protection (prevents database overload)
     private readonly CacheStampedeProtection? _stampedeProtection;
 
+    /// <summary>
+    ///     Creates a new blog post service.
+    /// </summary>
+    /// <param name="repository">The database repository for blog posts.</param>
+    /// <param name="cacheService">Optional Redis cache service.</param>
+    /// <param name="stampedeProtection">Optional stampede protection locking.</param>
     public BlogPostService(
         IBlogPostRepository repository,
         IRedisCacheService? cacheService = null,
@@ -86,153 +127,203 @@ public sealed class BlogPostService : IBlogPostService
         _stampedeProtection = stampedeProtection;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets a list of blog posts with optional filtering.
+    ///     This is the most complex method because it uses stampede protection.
+    /// </summary>
     public async Task<(List<BlogPost> Items, int Total)> GetPostsAsync(
         bool onlyPublished = true,
         int? skip = null,
         int? take = null,
         string? searchTerm = null)
     {
-        // Create cache key based on parameters
+        // Step 1: Build cache key that uniquely identifies this query
+        // Example: "blogposts:list:true:0:10:hello"
         var cacheKey = $"{CacheKeyPrefix}list:{onlyPublished}:{skip ?? 0}:{take ?? 0}:{searchTerm ?? ""}";
 
-        // Try to get from cache first (cache-aside pattern)
+        // Step 2: Try to get from cache first (cache-aside pattern)
         if (_cacheService != null)
         {
-            var cached = await _cacheService.GetAsync<CachedBlogPostList>(cacheKey).ConfigureAwait(false);
-            if (cached != null) return (cached.Items, cached.Total);
+            var cached = await _cacheService.GetAsync<CachedBlogPostList>(cacheKey)
+                .ConfigureAwait(false);
+
+            if (cached != null)
+                // Cache hit - return immediately (fast!)
+                return (cached.Items, cached.Total);
         }
 
-        // Cache miss - fetch from database with stampede protection
-        // This prevents multiple concurrent requests from executing the same expensive operation
+        // Step 3: Cache miss - need to fetch from database
+        // Use stampede protection if available to prevent database overload
         if (_stampedeProtection != null && _cacheService != null)
         {
-            var result = await _stampedeProtection.ExecuteAsync(cacheKey, async () =>
-            {
-                // Double-check cache after acquiring lock (another thread might have populated it)
-                var doubleCheck = await _cacheService.GetAsync<CachedBlogPostList>(cacheKey).ConfigureAwait(false);
-                if (doubleCheck != null) return (doubleCheck.Items, doubleCheck.Total);
+            // Execute with locking - only one thread fetches from database
+            var result = await _stampedeProtection
+                .ExecuteAsync(cacheKey, async () =>
+                {
+                    // Step 3a: Double-check cache (another thread might have populated it)
+                    var doubleCheck = await _cacheService
+                        .GetAsync<CachedBlogPostList>(cacheKey)
+                        .ConfigureAwait(false);
 
-                // Fetch from database
-                var dbResult = await _repository.GetPostsAsync(onlyPublished, skip, take, searchTerm)
-                    .ConfigureAwait(false);
+                    if (doubleCheck != null) return (doubleCheck.Items, doubleCheck.Total);
 
-                // Store in cache
-                await _cacheService.SetAsync(cacheKey, new CachedBlogPostList(dbResult.Items, dbResult.Total),
-                        CacheExpiration)
-                    .ConfigureAwait(false);
+                    // Step 3b: Fetch from database (expensive operation)
+                    var dbResult = await _repository
+                        .GetPostsAsync(onlyPublished, skip, take, searchTerm)
+                        .ConfigureAwait(false);
 
-                return dbResult;
-            }).ConfigureAwait(false);
+                    // Step 3c: Store in cache for future requests
+                    await _cacheService.SetAsync(
+                        cacheKey,
+                        new CachedBlogPostList(dbResult.Items, dbResult.Total),
+                        CacheExpiration).ConfigureAwait(false);
+
+                    return dbResult;
+                }).ConfigureAwait(false);
 
             return result;
         }
 
-        // Fallback without stampede protection (when not configured)
-        var fallbackResult =
-            await _repository.GetPostsAsync(onlyPublished, skip, take, searchTerm).ConfigureAwait(false);
+        // Step 4: No stampede protection - fetch directly from database
+        var fallbackResult = await _repository
+            .GetPostsAsync(onlyPublished, skip, take, searchTerm)
+            .ConfigureAwait(false);
 
+        // Store in cache if caching is available
         if (_cacheService != null)
-            await _cacheService.SetAsync(cacheKey, new CachedBlogPostList(fallbackResult.Items, fallbackResult.Total),
-                    CacheExpiration)
-                .ConfigureAwait(false);
+            await _cacheService.SetAsync(
+                cacheKey,
+                new CachedBlogPostList(fallbackResult.Items, fallbackResult.Total),
+                CacheExpiration).ConfigureAwait(false);
 
         return fallbackResult;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets a single post by its URL slug.
+    /// </summary>
     public async Task<BlogPost?> GetPostBySlugAsync(string slug)
     {
+        // Validate input
         if (string.IsNullOrWhiteSpace(slug)) return null;
 
+        // Build cache key
         var cacheKey = $"{CacheKeyPrefix}slug:{slug}";
 
-        // Try to get from cache first
+        // Step 1: Try cache first
         if (_cacheService != null)
         {
             var cached = await _cacheService.GetAsync<BlogPost>(cacheKey).ConfigureAwait(false);
             if (cached != null) return cached;
         }
 
-        // Cache miss - fetch from database
+        // Step 2: Cache miss - fetch from database
         var post = await _repository.GetBySlugAsync(slug).ConfigureAwait(false);
 
-        // Store in cache if found
+        // Step 3: Store in cache if found
         if (_cacheService != null && post != null)
             await _cacheService.SetAsync(cacheKey, post, CacheExpiration).ConfigureAwait(false);
 
         return post;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets a single post by its database ID.
+    /// </summary>
     public async Task<BlogPost?> GetPostByIdAsync(int id)
     {
+        // Build cache key
         var cacheKey = $"{CacheKeyPrefix}id:{id}";
 
-        // Try to get from cache first
+        // Step 1: Try cache first
         if (_cacheService != null)
         {
             var cached = await _cacheService.GetAsync<BlogPost>(cacheKey).ConfigureAwait(false);
             if (cached != null) return cached;
         }
 
-        // Cache miss - fetch from database
+        // Step 2: Cache miss - fetch from database
         var post = await _repository.GetByIdAsync(id).ConfigureAwait(false);
 
-        // Store in cache if found
+        // Step 3: Store in cache if found
         if (_cacheService != null && post != null)
             await _cacheService.SetAsync(cacheKey, post, CacheExpiration).ConfigureAwait(false);
 
         return post;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Creates a new blog post and invalidates list caches.
+    /// </summary>
     public async Task<BlogPost> CreatePostAsync(BlogPost post)
     {
+        // Save to database first
         var result = await _repository.CreateAsync(post).ConfigureAwait(false);
 
-        // Invalidate list caches
+        // Invalidate list caches (the new post should appear in lists)
         if (_cacheService != null)
             await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
 
         return result;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Updates an existing post and invalidates related caches.
+    /// </summary>
     public async Task UpdatePostAsync(BlogPost post)
     {
         ArgumentNullException.ThrowIfNull(post);
+
+        // Update in database
         await _repository.UpdateAsync(post).ConfigureAwait(false);
 
-        // Invalidate related caches
+        // Invalidate related caches so next request gets fresh data
         if (_cacheService != null)
         {
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}").ConfigureAwait(false);
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{post.Id}").ConfigureAwait(false);
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
-        }
-    }
+            // Remove specific post caches
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}")
+                .ConfigureAwait(false);
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{post.Id}")
+                .ConfigureAwait(false);
 
-    /// <inheritdoc />
-    public async Task DeletePostAsync(int id)
-    {
-        // Get post first for cache invalidation
-        var post = await _repository.GetByIdAsync(id).ConfigureAwait(false);
-
-        await _repository.DeleteAsync(id).ConfigureAwait(false);
-
-        // Invalidate caches
-        if (_cacheService != null)
-        {
-            if (post != null)
-                await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}").ConfigureAwait(false);
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}").ConfigureAwait(false);
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+            // Remove all list caches (post might appear in lists)
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+                .ConfigureAwait(false);
         }
     }
 
     /// <summary>
-    ///     Internal type for caching paginated lists.
+    ///     Deletes a post and invalidates related caches.
+    /// </summary>
+    public async Task DeletePostAsync(int id)
+    {
+        // Get post first (needed to invalidate slug-based cache)
+        var post = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+
+        // Delete from database
+        await _repository.DeleteAsync(id).ConfigureAwait(false);
+
+        // Invalidate related caches
+        if (_cacheService != null)
+        {
+            // Remove slug cache if we know the slug
+            if (post != null)
+                await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}")
+                    .ConfigureAwait(false);
+
+            // Remove ID cache
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}")
+                .ConfigureAwait(false);
+
+            // Remove all list caches (post no longer appears in lists)
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+                .ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    ///     Helper class for caching paginated list results.
+    ///     Stores both the items and total count needed for pagination.
     /// </summary>
     private sealed record CachedBlogPostList(List<BlogPost> Items, int Total);
 }

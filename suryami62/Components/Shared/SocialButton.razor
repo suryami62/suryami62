@@ -1,11 +1,26 @@
-﻿@* Reusable social link button with icon-based presentation. *@
-<a href="@Href" target="_blank" rel="noopener noreferrer"
+﻿@* Social Button Component - A link button for social media icons.
+   Opens in new tab (target="_blank") with security attributes.
+*@
+<a href="@Href"
+   target="_blank"
+   rel="noopener noreferrer"
    class="neo-button">
+    @*
+       rel="noopener noreferrer" is for security:
+       - noopener: Prevents new tab from accessing this page
+       - noreferrer: Don't send referrer info to the link
+    *@
     <i class="@IconClass fa-2x"></i>
 </a>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* The social media profile URL *@
     [Parameter] public string? Href { get; set; }
 
+    @* Font Awesome icon class (e.g., "fa-brands fa-github") *@
     [Parameter] public string? IconClass { get; set; }
 }

@@ -1,13 +1,43 @@
-﻿@* Reusable oversized symbol component used on error-oriented screens. *@
-<div class="@ContainerClass">
+﻿@* Error Glyph Component - Displays a big symbol (like "!" or "?")
+   on error pages (404, 500) with a styled background.
+*@
+<div class="@GetContainerClass()">
     @Symbol
 </div>
 
 @code {
-    [Parameter] [EditorRequired] public string Symbol { get; set; } = "";
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
 
+    @* The symbol to display (e.g., "!", "?") *@
+    [Parameter]
+    [EditorRequired] // Must be provided by parent
+    public string Symbol { get; set; } = "";
+
+    @* CSS classes for the background color.
+       Default: white background (black in dark mode). *@
     [Parameter] public string BackgroundClass { get; set; } = "bg-white dark:bg-black";
 
-    private string ContainerClass => $"neo-frame flex h-32 w-32 items-center justify-center text-6xl font-black md:h-48 md:w-48 md:text-8xl {BackgroundClass}";
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Builds the complete CSS class string for the container.
+       Combines base styles with the custom background class.
+
+       Styles explained:
+       - neo-frame: The site's frame/border style
+       - flex: Use flexbox for centering
+       - h-32 w-32: Size (8rem x 8rem) on mobile
+       - md:h-48 md:w-48: Larger size on desktop
+       - text-6xl / md:text-8xl: Huge font size
+       - items-center justify-center: Center the symbol
+
+    *@
+    private string GetContainerClass()
+    {
+        return $"neo-frame flex h-32 w-32 items-center justify-center text-6xl font-black md:h-48 md:w-48 md:text-8xl {BackgroundClass}";
+    }
 
 }

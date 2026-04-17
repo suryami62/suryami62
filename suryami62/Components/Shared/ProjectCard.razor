@@ -1,38 +1,52 @@
-﻿@* Reusable summary card for portfolio projects with image and outbound links. *@
+﻿@* Project Card Component - Displays a portfolio project.
+   Shows project image, title, technology tags, description, and links.
+*@
 <article class="neo-card flex h-full flex-col p-6">
 
-    @if (!string.IsNullOrEmpty(ImageUrl))
+    <!-- Project Screenshot (optional) -->
+    @if (HasImage())
     {
         <div class="mb-6 overflow-hidden border-4 border-black bg-gray-100 dark:border-white">
-            <img src="@ImageUrl" alt="@Title" class="aspect-video w-full object-cover"/>
+            <img src="@ImageUrl"
+                 alt="@Title"
+                 class="aspect-video w-full object-cover"/>
         </div>
     }
 
-    <!-- Title & Header -->
+    <!-- Title & Technology Tags -->
     <div class="mb-4">
         <h3 class="neo-title-md mb-2 leading-none">@Title</h3>
         <div class="flex flex-wrap gap-2">
-            @foreach (var tag in Tags ?? [])
+            @* Loop through each tag and create a pill badge *@
+            @foreach (var tag in GetTags())
             {
                 <span class="neo-pill-outline">@tag</span>
             }
         </div>
     </div>
 
-    <!-- Description -->
+    <!-- Project Description -->
     <p class="mb-8 font-medium text-gray-700 dark:text-gray-300">@Description</p>
 
-    <!-- Links/Actions -->
+    <!-- Action Buttons (at bottom due to mt-auto) -->
     <div class="mt-auto flex gap-4">
-        @if (!string.IsNullOrEmpty(RepoUrl))
+        @* View Code button - only show if repository URL exists *@
+        @if (HasRepoUrl())
         {
-            <a href="@RepoUrl" target="_blank" rel="noopener noreferrer" class="neo-button-inverse flex-1">
+            <a href="@RepoUrl"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="neo-button-inverse flex-1">
                 View Code
             </a>
         }
-        @if (!string.IsNullOrEmpty(DemoUrl))
+
+        @* Live Demo button - only show if demo URL exists *@
+        @if (HasDemoUrl())
         {
-            <a href="@DemoUrl" target="_blank" rel="noopener noreferrer"
+            <a href="@DemoUrl"
+               target="_blank"
+               rel="noopener noreferrer"
                class="neo-button flex-1 px-4 py-3 text-center">
                 Live Demo
             </a>
@@ -41,15 +55,55 @@
 </article>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* Project name/title *@
     [Parameter] public string? Title { get; set; }
 
+    @* Project description text *@
     [Parameter] public string? Description { get; set; }
 
+    @* Array of technology tags (e.g., ["C#", "Blazor", "Azure"]) *@
     [Parameter] public string[]? Tags { get; set; }
 
+    @* URL to the source code repository *@
     [Parameter] public string? RepoUrl { get; set; }
 
+    @* URL to the live demo of the project *@
     [Parameter] public string? DemoUrl { get; set; }
 
+    @* URL to the project screenshot image *@
     [Parameter] public string? ImageUrl { get; set; }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Get the tags array, or empty array if null.
+       Prevents crash if Tags wasn't provided. *@
+    private string[] GetTags()
+    {
+        return Tags ?? Array.Empty<string>();
+    }
+
+    @* Check if we have an image URL *@
+    private bool HasImage()
+    {
+        return !string.IsNullOrEmpty(ImageUrl);
+    }
+
+    @* Check if repository URL exists *@
+    private bool HasRepoUrl()
+    {
+        return !string.IsNullOrEmpty(RepoUrl);
+    }
+
+    @* Check if demo URL exists *@
+    private bool HasDemoUrl()
+    {
+        return !string.IsNullOrEmpty(DemoUrl);
+    }
+
 }

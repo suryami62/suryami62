@@ -1,16 +1,35 @@
-﻿@* Reusable SEO component that emits canonical, Open Graph, and social metadata tags. *@
+﻿@* Meta Open Graph Card - SEO and social media meta tags.
+
+   This component adds <meta> tags to the HTML <head> section.
+   These tags help with:
+   - Search Engine Optimization (SEO)
+   - Social media sharing previews (Facebook, Twitter, LinkedIn)
+
+   Used in: Home.razor, Posts.razor, Projects.razor, About.razor, PostDetails.razor
+*@
+
+@* Canonical URL - tells search engines this is the official URL *@
 <link rel="canonical" href="@Url"/>
 
+@* Standard meta tags for search engines *@
 <meta name="author" content="@Author"/>
 <meta name="description" content="@Description"/>
 <meta name="keywords" content="@Keywords"/>
 
+@*
+   Open Graph meta tags (for Facebook, LinkedIn, etc.)
+   When someone shares your page, these control the preview card.
+*@
 <meta property="og:title" content="@Title"/>
 <meta property="og:type" content="website"/>
 <meta property="og:image" content="@Image"/>
 <meta property="og:url" content="@Url"/>
 <meta property="og:description" content="@Description"/>
 
+@*
+   Twitter Card meta tags (for Twitter/X sharing)
+   "summary_large_image" creates a big image preview.
+*@
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="@Title"/>
 <meta name="twitter:description" content="@Description"/>
@@ -18,15 +37,25 @@
 <meta name="twitter:url" content="@Url"/>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* Author name. Default: "suryami62". *@
     [Parameter] public string? Author { get; set; } = "suryami62";
 
+    @* Page title (shown in search results and social cards). *@
     [Parameter] public string? Title { get; set; }
 
+    @* Page description (shown under the title in search/social). *@
     [Parameter] public string? Description { get; set; }
 
+    @* SEO keywords (not used much by modern search engines, but included). *@
     [Parameter] public string? Keywords { get; set; } = "Curriculum Vitae, Portfolio, Blog, Physics Teacher, .NET Developer, Personal Website, Surya Ramadhan, suryami62";
 
+    @* URL to the social media preview image. *@
     [Parameter] public string? Image { get; set; }
 
+    @* The canonical URL of this page. *@
     [Parameter] public string? Url { get; set; }
 }

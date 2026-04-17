@@ -1,10 +1,19 @@
-﻿@* Custom 404 page displayed when no route matches the current request. *@
+﻿@* This is the "404 Not Found" page.
+   It displays when a user tries to visit a URL that doesn't exist.
+   The fun science theme makes a boring error page more interesting!
+*@
 @page "/not-found"
+
+@* Use the main site layout (header, footer, styles) *@
 @layout MainLayout
 
+@* Set browser tab title *@
 <PageTitle>404: Lost in Space | suryami62</PageTitle>
 
+<!-- Main 404 content area -->
 <div class="flex flex-col gap-12 py-8">
+
+    <!-- Header: Big 404 message -->
     <PageHeader Title="ERROR" Highlight="404">
         <ChildContent>
             Maximum Entropy: The page you are looking for has undergone radioactive decay or shifted into another
@@ -15,11 +24,15 @@
         </AsideContent>
     </PageHeader>
 
+    <!-- Content area with two columns -->
     <div class="grid gap-12 lg:grid-cols-[1fr_2fr]">
+
+        <!-- Left column: Error explanation -->
         <ErrorSummarySection
             Title="Uncertainty Principle"
             Description="According to Heisenberg, we know you are looking for something, but this file's position cannot be determined. It might be Quantum Tunneling to another directory."/>
 
+        <!-- Right column: Search box to find content -->
         <ErrorPanel Title="Still Lost in the Void?">
             <p class="mb-6 font-bold text-neutral-600 dark:text-neutral-400">
                 Search the database to find content that hasn't collapsed into a black hole yet.
@@ -28,3 +41,7 @@
         </ErrorPanel>
     </div>
 </div>
+
+@* NOTE: This page has no @code section because it's "static" -
+   it doesn't load data or handle user interactions. It just displays
+   content. This is the simplest type of Razor component. *@

@@ -1,8 +1,21 @@
-﻿@* Reusable search form component for submitting and propagating query text. *@
-<form @onsubmit="InvokeSearch" @onsubmit:preventDefault
+﻿@* Search Form Component - A reusable search input with button.
+   Used on the Posts page to search blog posts.
+
+   Features:
+   - Two-way data binding with parent (@bind-Value)
+   - Search event when form submitted
+   - Prevents default form submission (stops page reload)
+*@
+<form @onsubmit="HandleSearchSubmit"
+      @onsubmit:preventDefault
       class="mb-4 flex w-full max-w-xl flex-col items-stretch gap-4 sm:flex-row sm:items-center">
 
-    <!-- Search Input -->
+    <!-- Text Input -->
+    @*
+       @bind:get - reads the current value
+       @bind:set - updates the value when user types
+       @bind:event="oninput" - update on every keystroke (not just blur)
+    *@
     <input type="text"
            @bind:get="Value"
            @bind:set="UpdateValue"
@@ -10,26 +23,50 @@
            class="neo-input"
            placeholder="Search posts..."/>
 
-    <!-- Search Button -->
-    <button
-        type="submit"
-        class="neo-button border-4 px-6 py-3">
+    <!-- Submit Button -->
+    <button type="submit"
+            class="neo-button border-4 px-6 py-3">
         Search
     </button>
 </form>
 
 @code {
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    @* The current search text value.
+
+    @bind-Value="variable" from parent connects to this. *@
     [Parameter] public string? Value { get; set; }
+
+    @* Event callback to notify parent when value changes.
+       Automatically invoked by @bind-Value. *@
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    @* Event callback when user submits the search.
+       Parent provides a method to handle this. *@
     [Parameter] public EventCallback<string?> OnSearch { get; set; }
 
+    // ============================================================
+    // EVENT HANDLERS
+    // ============================================================
+
+    @* Called every time the input value changes (user types).
+       Updates the Value and notifies the parent component. *@
     private async Task UpdateValue(string? newValue)
     {
+        // Update local value
         Value = newValue;
+
+        // Notify parent that value changed
+        // (this is how @bind-Value works under the hood)
         await ValueChanged.InvokeAsync(newValue);
     }
 
-    private async Task InvokeSearch()
+    @* Called when user clicks Search button or presses Enter.
+       Invokes the OnSearch event to tell parent to perform search. *@
+    private async Task HandleSearchSubmit()
     {
         await OnSearch.InvokeAsync(Value);
     }

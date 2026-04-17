@@ -1,5 +1,11 @@
-﻿@* Site footer that presents attribution and persistent footer content. *@
-<footer
-    class="neo-footer">
+﻿@* Footer - appears at the bottom of every page.
+   Shows copyright information with the current year.
+*@
+<footer class="neo-footer">
+    @*
+       &copy; is the copyright symbol (©).
+       DateTime.Now.Year gets the current year (2026).
+       This auto-updates every year!
+    *@
     This website created by Surya Ramadhan &copy; @DateTime.Now.Year
 </footer>

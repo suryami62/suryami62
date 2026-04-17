@@ -1,3 +1,27 @@
+// ============================================================================
+// PROJECT SERVICE
+// ============================================================================
+// This service manages portfolio projects with Redis caching for performance.
+//
+// WHAT IS A PORTFOLIO PROJECT?
+// Projects showcase your work - websites, apps, libraries, tools you've built.
+// Each project typically has:
+// - Title and description
+// - Image/screenshot
+// - Links to live demo and source code
+// - Technologies used
+//
+// CACHING STRATEGY:
+// Same as BlogPostService - see that file for detailed comments on:
+// - Cache-aside pattern
+// - Stampede protection
+// - Cache invalidation
+//
+// CACHE KEYS:
+// - projects:list:0:10      - Paginated list of projects
+// - projects:id:42            - Single project by ID
+// ============================================================================
+
 #region
 
 using suryami62.Application.Persistence;
@@ -8,64 +32,77 @@ using suryami62.Domain.Models;
 namespace suryami62.Services;
 
 /// <summary>
-///     Defines application operations for managing portfolio projects.
+///     Interface for portfolio project operations.
+///     Allows using fake implementations for testing.
 /// </summary>
 public interface IProjectService
 {
     /// <summary>
-    ///     Gets projects with optional paging information.
+    ///     Gets a list of projects with optional pagination.
     /// </summary>
-    /// <param name="skip">The optional number of items to skip.</param>
-    /// <param name="take">The optional maximum number of items to return.</param>
-    /// <returns>A tuple containing the matching items and total count.</returns>
+    /// <param name="skip">Number of projects to skip (for pagination).</param>
+    /// <param name="take">Maximum projects to return (page size).</param>
+    /// <returns>
+    ///     A tuple containing:
+    ///     - Items: The list of projects
+    ///     - Total: Total number of projects (for pagination)
+    /// </returns>
     Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null);
 
     /// <summary>
-    ///     Gets a project by its identifier.
+    ///     Gets a single project by its database ID.
     /// </summary>
-    /// <param name="id">The project identifier.</param>
-    /// <returns>The matching project when found; otherwise <see langword="null" />.</returns>
+    /// <param name="id">The numeric database ID.</param>
+    /// <returns>The project, or null if not found.</returns>
     Task<Project?> GetProjectByIdAsync(int id);
 
     /// <summary>
-    ///     Creates a new project.
+    ///     Creates a new portfolio project.
     /// </summary>
-    /// <param name="project">The project to persist.</param>
-    /// <returns>The created project.</returns>
+    /// <param name="project">The project to create.</param>
+    /// <returns>The created project (with assigned ID).</returns>
     Task<Project> CreateProjectAsync(Project project);
 
     /// <summary>
-    ///     Updates an existing project.
+    ///     Updates an existing portfolio project.
     /// </summary>
-    /// <param name="project">The project to update.</param>
+    /// <param name="project">The project with updated values.</param>
     Task UpdateProjectAsync(Project project);
 
     /// <summary>
-    ///     Deletes a project by identifier.
+    ///     Deletes a portfolio project.
     /// </summary>
-    /// <param name="id">The project identifier.</param>
+    /// <param name="id">The ID of the project to delete.</param>
     Task DeleteProjectAsync(int id);
 }
 
 /// <summary>
-///     Implements project operations with Redis caching support.
-///     Includes stampede protection to prevent multiple concurrent requests
-///     from executing the same expensive operation when cache expires.
+///     Implements project operations with Redis caching and stampede protection.
+///     Uses cache-aside pattern for optimal performance.
 /// </summary>
-/// <remarks>
-///     Cache-aside pattern with stampede protection ensures optimal performance
-///     during high traffic scenarios when cache entries expire.
-///     See: https://learn.microsoft.com/aspnet/core/performance/caching/overview?view=aspnetcore-10.0#hybridcache
-/// </remarks>
 public sealed class ProjectService : IProjectService
 {
+    // All cache keys start with this prefix
     private const string CacheKeyPrefix = "projects:";
+
+    // Cache entries expire after 15 minutes
     private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(15);
+
+    // Optional cache service (null if Redis not configured)
     private readonly IRedisCacheService? _cacheService;
 
+    // Repository for database operations
     private readonly IProjectRepository _repository;
+
+    // Optional stampede protection (prevents database overload)
     private readonly CacheStampedeProtection? _stampedeProtection;
 
+    /// <summary>
+    ///     Creates a new project service.
+    /// </summary>
+    /// <param name="repository">The database repository for projects.</param>
+    /// <param name="cacheService">Optional Redis cache service.</param>
+    /// <param name="stampedeProtection">Optional stampede protection locking.</param>
     public ProjectService(
         IProjectRepository repository,
         IRedisCacheService? cacheService = null,
@@ -76,134 +113,190 @@ public sealed class ProjectService : IProjectService
         _stampedeProtection = stampedeProtection;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets a list of projects with caching.
+    /// </summary>
     public async Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null)
     {
-        // Create cache key based on parameters
+        // Step 1: Build cache key for this query
+        // Example: "projects:list:0:10"
         var cacheKey = $"{CacheKeyPrefix}list:{skip ?? 0}:{take ?? 0}";
 
-        // Try to get from cache first (cache-aside pattern)
+        // Step 2: Try to get from cache first
         if (_cacheService != null)
         {
-            var cached = await _cacheService.GetAsync<CachedProjectList>(cacheKey).ConfigureAwait(false);
-            if (cached != null) return (cached.Items, cached.Total);
+            var cached = await _cacheService.GetAsync<CachedProjectList>(cacheKey)
+                .ConfigureAwait(false);
+
+            if (cached != null)
+                // Cache hit - return immediately
+                return (cached.Items, cached.Total);
         }
 
-        // Cache miss - fetch from database with stampede protection
-        // This prevents multiple concurrent requests from executing the same expensive operation
+        // Step 3: Cache miss - need to fetch from database
+        // Use stampede protection if available
         if (_stampedeProtection != null && _cacheService != null)
         {
-            var result = await _stampedeProtection.ExecuteAsync(cacheKey, async () =>
-            {
-                // Double-check cache after acquiring lock (another thread might have populated it)
-                var doubleCheck = await _cacheService.GetAsync<CachedProjectList>(cacheKey).ConfigureAwait(false);
-                if (doubleCheck != null) return (doubleCheck.Items, doubleCheck.Total);
+            // Execute with locking - only one thread fetches from database
+            var result = await _stampedeProtection
+                .ExecuteAsync(cacheKey, async () =>
+                {
+                    // Step 3a: Double-check cache (another thread might have populated it)
+                    var doubleCheck = await _cacheService
+                        .GetAsync<CachedProjectList>(cacheKey)
+                        .ConfigureAwait(false);
 
-                // Fetch from database
-                var dbResult = await _repository.GetProjectsAsync(skip, take).ConfigureAwait(false);
+                    if (doubleCheck != null) return (doubleCheck.Items, doubleCheck.Total);
 
-                // Store in cache
-                await _cacheService.SetAsync(cacheKey, new CachedProjectList(dbResult.Items, dbResult.Total),
-                        CacheExpiration)
-                    .ConfigureAwait(false);
+                    // Step 3b: Fetch from database
+                    var dbResult = await _repository
+                        .GetProjectsAsync(skip, take)
+                        .ConfigureAwait(false);
 
-                return dbResult;
-            }).ConfigureAwait(false);
+                    // Step 3c: Store in cache
+                    await _cacheService.SetAsync(
+                        cacheKey,
+                        new CachedProjectList(dbResult.Items, dbResult.Total),
+                        CacheExpiration).ConfigureAwait(false);
+
+                    return dbResult;
+                }).ConfigureAwait(false);
 
             return result;
         }
 
-        // Fallback without stampede protection (when not configured)
-        var fallbackResult = await _repository.GetProjectsAsync(skip, take).ConfigureAwait(false);
+        // Step 4: No stampede protection - fetch directly
+        var fallbackResult = await _repository
+            .GetProjectsAsync(skip, take)
+            .ConfigureAwait(false);
 
+        // Store in cache if available
         if (_cacheService != null)
-            await _cacheService.SetAsync(cacheKey, new CachedProjectList(fallbackResult.Items, fallbackResult.Total),
-                    CacheExpiration)
-                .ConfigureAwait(false);
+            await _cacheService.SetAsync(
+                cacheKey,
+                new CachedProjectList(fallbackResult.Items, fallbackResult.Total),
+                CacheExpiration).ConfigureAwait(false);
 
         return fallbackResult;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets a single project by ID with caching.
+    /// </summary>
     public async Task<Project?> GetProjectByIdAsync(int id)
     {
+        // Step 1: Build cache key
+        // Example: "projects:id:42"
         var cacheKey = $"{CacheKeyPrefix}id:{id}";
 
-        // Try to get from cache first
+        // Step 2: Try to get from cache first
         if (_cacheService != null)
         {
             var cached = await _cacheService.GetAsync<Project>(cacheKey).ConfigureAwait(false);
             if (cached != null) return cached;
         }
 
-        // Cache miss - fetch from database with stampede protection
+        // Step 3: Cache miss - need to fetch from database
+        // Use stampede protection if available
         if (_stampedeProtection != null && _cacheService != null)
-            return await _stampedeProtection.ExecuteAsync(cacheKey, async () =>
-            {
-                // Double-check cache after acquiring lock
-                var doubleCheck = await _cacheService.GetAsync<Project>(cacheKey).ConfigureAwait(false);
-                if (doubleCheck != null) return doubleCheck;
+        {
+            // Execute with locking
+            var result = await _stampedeProtection
+                .ExecuteAsync(cacheKey, async () =>
+                {
+                    // Step 3a: Double-check cache
+                    var doubleCheck = await _cacheService.GetAsync<Project>(cacheKey)
+                        .ConfigureAwait(false);
+                    if (doubleCheck != null) return doubleCheck;
 
-                // Fetch from database
-                var project = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+                    // Step 3b: Fetch from database
+                    var project = await _repository.GetByIdAsync(id).ConfigureAwait(false);
 
-                // Store in cache if found
-                if (project != null)
-                    await _cacheService.SetAsync(cacheKey, project, CacheExpiration).ConfigureAwait(false);
+                    // Step 3c: Store in cache if found
+                    if (project != null)
+                        await _cacheService.SetAsync(cacheKey, project, CacheExpiration)
+                            .ConfigureAwait(false);
 
-                return project;
-            }).ConfigureAwait(false);
+                    return project;
+                }).ConfigureAwait(false);
 
-        // Fallback without stampede protection (when not configured)
+            return result;
+        }
+
+        // Step 4: No stampede protection - fetch directly
         var fallbackProject = await _repository.GetByIdAsync(id).ConfigureAwait(false);
 
+        // Store in cache if available and found
         if (_cacheService != null && fallbackProject != null)
-            await _cacheService.SetAsync(cacheKey, fallbackProject, CacheExpiration).ConfigureAwait(false);
+            await _cacheService.SetAsync(cacheKey, fallbackProject, CacheExpiration)
+                .ConfigureAwait(false);
 
         return fallbackProject;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Creates a new project and invalidates list caches.
+    /// </summary>
     public async Task<Project> CreateProjectAsync(Project project)
     {
+        // Save to database first
         var result = await _repository.CreateAsync(project).ConfigureAwait(false);
 
-        // Invalidate list caches
+        // Invalidate list caches (new project should appear in lists)
         if (_cacheService != null)
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+                .ConfigureAwait(false);
 
         return result;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Updates an existing project and invalidates related caches.
+    /// </summary>
     public async Task UpdateProjectAsync(Project project)
     {
         ArgumentNullException.ThrowIfNull(project);
+
+        // Update in database
         await _repository.UpdateAsync(project).ConfigureAwait(false);
 
         // Invalidate related caches
         if (_cacheService != null)
         {
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{project.Id}").ConfigureAwait(false);
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
-        }
-    }
+            // Remove specific project cache
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{project.Id}")
+                .ConfigureAwait(false);
 
-    /// <inheritdoc />
-    public async Task DeleteProjectAsync(int id)
-    {
-        await _repository.DeleteAsync(id).ConfigureAwait(false);
-
-        // Invalidate caches
-        if (_cacheService != null)
-        {
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}").ConfigureAwait(false);
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+            // Remove all list caches (project data changed)
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+                .ConfigureAwait(false);
         }
     }
 
     /// <summary>
-    ///     Internal type for caching paginated lists.
+    ///     Deletes a project and invalidates related caches.
+    /// </summary>
+    public async Task DeleteProjectAsync(int id)
+    {
+        // Delete from database
+        await _repository.DeleteAsync(id).ConfigureAwait(false);
+
+        // Invalidate related caches
+        if (_cacheService != null)
+        {
+            // Remove specific project cache
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}")
+                .ConfigureAwait(false);
+
+            // Remove all list caches (project removed from lists)
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+                .ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    ///     Helper class for caching paginated list results.
+    ///     Stores both the items and total count needed for pagination.
     /// </summary>
     private sealed record CachedProjectList(List<Project> Items, int Total);
 }

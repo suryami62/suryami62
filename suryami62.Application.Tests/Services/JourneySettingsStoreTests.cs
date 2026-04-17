@@ -22,7 +22,7 @@ public class JourneySettingsStoreTests
         string period = "2020-2023",
         string summary = "Summary")
     {
-        return new JourneyEntry(title, organization, period, summary, []);
+        return new JourneyEntry { Title = title, Organization = organization, Period = period, Summary = summary, Highlights = [] };
     }
 
     [Fact]
@@ -173,12 +173,14 @@ public class JourneySettingsStoreTests
     [Fact]
     public async Task AddExperienceAsyncWithWhitespaceInputStoresSanitizedEntry()
     {
-        var entry = new JourneyEntry(
-            "  Software Engineer  ",
-            "  Company A  ",
-            "  2020-2023  ",
-            "  Built internal tools.  ",
-            ["  APIs  ", " ", "  Mentoring  "]);
+        var entry = new JourneyEntry
+        {
+            Title = "  Software Engineer  ",
+            Organization = "  Company A  ",
+            Period = "  2020-2023  ",
+            Summary = "  Built internal tools.  ",
+            Highlights = ["  APIs  ", " ", "  Mentoring  "]
+        };
 
         await _store.AddExperienceAsync(entry);
 

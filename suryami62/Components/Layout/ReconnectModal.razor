@@ -1,32 +1,64 @@
-﻿@* Connection status modal shown when the interactive Blazor circuit reconnects. *@
+﻿@* Reconnect Modal - shows when Blazor Server connection is lost.
+
+   Blazor Server needs a constant connection to the server.
+   If the connection drops (network issue, server restart), this
+   modal appears to let the user know what's happening.
+
+   This is a "static" component - no @code section because
+   the JavaScript file handles all the interactivity.
+*@
+
+@* Load the JavaScript that handles reconnection logic *@
 <script type="module" src="@Assets["Components/Layout/ReconnectModal.razor.js"]"></script>
 
+@*
+   HTML <dialog> element for the modal popup.
+   id="components-reconnect-modal" is used by Blazor and JavaScript to find this element.
+   data-nosnippet tells search engines not to index this content.
+   Styling: neo-card, positioned at 20% from top (mt-[20vh]), 20rem wide.
+*@
 <dialog id="components-reconnect-modal" data-nosnippet class="neo-card mt-[20vh] w-[20rem] p-8">
     <div class="components-reconnect-container text-center">
+
+        @* Loading Animation - spinning dots while reconnecting *@
         <div class="components-rejoining-animation" aria-hidden="true">
             <div></div>
             <div></div>
         </div>
+
+        @* STATE 1: First reconnection attempt in progress *@
         <p class="components-reconnect-first-attempt-visible">
             Rejoining the server...
         </p>
+
+        @* STATE 2: Reconnection failed, will retry automatically *@
         <p class="components-reconnect-repeated-attempt-visible">
             Rejoin failed... trying again in <span id="components-seconds-to-next-attempt"></span> seconds.
         </p>
+
+        @* STATE 3: Reconnection completely failed - show retry button *@
         <p class="components-reconnect-failed-visible">
             Failed to rejoin.<br/>Please retry or reload the page.
         </p>
         <button id="components-reconnect-button" class="components-reconnect-failed-visible neo-button px-6 py-1">
             Retry
         </button>
+
+        @* STATE 4: Session paused by server (maintenance, timeout, etc.) *@
         <p class="components-pause-visible">
             The session has been paused by the server.
         </p>
         <button id="components-resume-button" class="components-pause-visible neo-button px-6 py-1">
             Resume
         </button>
+
+        @* STATE 5: Resume attempt failed completely *@
         <p class="components-resume-failed-visible">
             Failed to resume the session.<br/>Please reload the page.
         </p>
     </div>
 </dialog>
+
+@* NOTE: No @code section here. This component is controlled entirely by
+   JavaScript (ReconnectModal.razor.js) and Blazor's built-in reconnection logic.
+   The CSS classes control which message is visible at each state. *@

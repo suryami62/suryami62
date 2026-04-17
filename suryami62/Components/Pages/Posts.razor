@@ -1,13 +1,24 @@
-﻿@* Public blog index page with search and pagination for published posts. *@
+﻿@* This page shows all blog posts with search and pagination.
+   @page "/posts" tells Blazor this handles the /posts URL.
+   @rendermode InteractiveServer means this page is interactive
+   (buttons, search, and pagination work via server communication).
+*@
 @page "/posts"
 @using suryami62.Domain.Models
+
+@* Import the BlogPost model *@
+
+@* Inject services - tools we need for this page *@
 @inject IBlogPostService BlogPostService
-@rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 
+@* Tell Blazor this page needs interactivity (buttons, search) *@
+@rendermode InteractiveServer
+
+@* Set the browser tab title *@
 <PageTitle>My Tech Writings | suryami62</PageTitle>
 
-<!-- Meta Section -->
+<!-- Meta tags for social media sharing -->
 <HeadContent>
     <MetaOpenGraphCard Title="My Tech Writings | suryami62"
                        Description="In-depth tutorials and insights from a .NET Developer and Physics Teacher."
@@ -15,8 +26,10 @@
                        Url="@NavigationManager.Uri"/>
 </HeadContent>
 
+<!-- Main content area -->
 <div class="flex flex-col gap-12 py-8">
-    <!-- Header Section -->
+
+    <!-- Header: Page title and description -->
     <PageHeader Title="My Tech" Highlight="Writings">
         <ChildContent>
             In-depth tutorials and insights from a
@@ -25,48 +38,64 @@
         </ChildContent>
     </PageHeader>
 
-    <!-- Search Section -->
+    <!-- Search Box: Lets users search for posts -->
     <section>
         <SearchForm @bind-Value="_localSearchTerm" OnSearch="HandleSearch"/>
     </section>
 
-    <!-- Blog Posts Grid -->
+    <!-- Blog Posts Display Area -->
     <section>
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+
+            @* CASE 1: Still loading from server *@
             @if (_posts == null)
             {
                 <div class="neo-card col-span-full p-12 text-center">
                     <p class="neo-title-md">Loading posts...</p>
                 </div>
             }
+            @* CASE 2: No posts found *@
             else if (_posts.Count == 0)
             {
                 <div class="neo-placeholder col-span-full border-4 border-dashed p-12 text-center">
                     <p class="neo-title-md">No posts found yet. Check back soon!</p>
                 </div>
             }
+            @* CASE 3: Display the posts *@
             else
             {
                 @foreach (var post in _posts)
                 {
-                    <PostCard Label="@post.Label" Date="@post.Date.ToString("MMM dd, yyyy")" Title="@post.Title"
-                              Href="@($"/posts/{post.Slug}")" Summary="@post.Summary"
-                              ImageUrl="@post.ImageUrl?.ToString()"/>
+                    @* Create a card for each blog post *@
+                    <PostCard Label="@post.Label"
+                              Date="@post.Date.ToString("MMM dd, yyyy")"
+                              Title="@post.Title"
+                              Href="@($"/posts/{post.Slug}")"
+                              Summary="@post.Summary"
+                              ImageUrl="@GetImageUrl(post.ImageUrl)"/>
                 }
             }
         </div>
 
+        @* Pagination controls - only show if there are more posts than fit on one page *@
         @if (_total > _pageSize)
         {
             <div class="mt-12 flex justify-center gap-4">
-                <button disabled="@(_page == 1)" @onclick="() => ChangePage(_page - 1)"
+                @* Previous Page Button - disabled when on page 1 *@
+                <button disabled="@IsOnFirstPage()"
+                        @onclick="GoToPreviousPage"
                         class="neo-pagination-btn bg-white dark:bg-black">
                     PREV
                 </button>
+
+                @* Page counter showing current page and total pages *@
                 <div class="flex items-center text-2xl font-black">
-                    @_page / @(Math.Ceiling((double)_total / _pageSize))
+                    @_page / @GetTotalPages()
                 </div>
-                <button disabled="@(_page * _pageSize >= _total)" @onclick="() => ChangePage(_page + 1)"
+
+                @* Next Page Button - disabled when on last page *@
+                <button disabled="@IsOnLastPage()"
+                        @onclick="GoToNextPage"
                         class="neo-pagination-btn bg-lime-400 dark:bg-lime-500">
                     NEXT
                 </button>
@@ -76,39 +105,175 @@
 </div>
 
 @code {
+    // ============================================================
+    // FIELDS (variables that store data for this page)
+    // ============================================================
+
+    @* This gets the search term from the URL (?q=searchterm).
+       [SupplyParameterFromQuery] automatically reads from the browser URL.
+       The ? means it can be null (no search term provided).*@
     [SupplyParameterFromQuery(Name = "q")] private string? SearchQuery { get; set; }
 
+    @* List of blog posts. The ? means it starts as null (not loaded yet) *@
     private List<BlogPost>? _posts;
+
+    @* Current page number (starts at 1) *@
     private int _page = 1;
+
+    @* How many posts to show per page (readonly = can't change after set) *@
     private readonly int _pageSize = 6;
+
+    @* Total number of posts (across all pages) *@
     private int _total;
+
+    @* The search term the user typed in the search box *@
     private string? _localSearchTerm;
 
+    // ============================================================
+    // PAGE LIFECYCLE METHODS
+    // ============================================================
+
+    @* This runs when page loads or URL parameters change.
+       It syncs the URL search term with the search box,
+       then loads the posts from the database.*@
     protected override async Task OnParametersSetAsync()
     {
+        // Copy URL search term into the search box
         _localSearchTerm = SearchQuery;
+
+        // Load posts from database
         await LoadPosts();
     }
 
+    // ============================================================
+    // DATA LOADING METHODS
+    // ============================================================
+
+    @* Loads blog posts from the database based on current page and search term.
+       'async' means it can wait for the database without freezing the page.*@
     private async Task LoadPosts()
     {
-        var (items, total) = await BlogPostService.GetPostsAsync(true, (_page - 1) * _pageSize, _pageSize, SearchQuery);
-        _posts = items;
-        _total = total;
+        // Calculate how many posts to skip (for pagination)
+        // Example: Page 2 with 6 posts per page = skip 6 posts
+        var skipCount = (_page - 1) * _pageSize;
+
+        // Call the service to get posts
+        // Parameters:
+        //   onlyPublished: true (only show published posts)
+        //   skip: how many posts to skip
+        //   take: how many posts to get (pageSize)
+        //   searchTerm: what to search for (null = no search)
+        var result = await BlogPostService.GetPostsAsync(
+            true,
+            skipCount,
+            _pageSize,
+            SearchQuery
+        );
+
+        // The result contains:
+        //   - Items: the actual blog posts for this page
+        //   - Total: how many posts exist in total (for pagination)
+        _posts = result.Items;
+        _total = result.Total;
     }
 
+    // ============================================================
+    // PAGINATION METHODS
+    // ============================================================
+
+    @* Check if we're on the first page *@
+    private bool IsOnFirstPage()
+    {
+        return _page == 1;
+    }
+
+    @* Check if we're on the last page *@
+    private bool IsOnLastPage()
+    {
+        // Calculate how many posts we've shown so far
+        var postsShownSoFar = _page * _pageSize;
+
+        // If we've shown all posts, we're on the last page
+        return postsShownSoFar >= _total;
+    }
+
+    @* Calculate total number of pages needed *@
+    private int GetTotalPages()
+    {
+        // Math.Ceiling rounds up - if we have 7 posts and 6 per page,
+        // we need 2 pages (7 / 6 = 1.17, rounded up = 2)
+        var pages = (double)_total / _pageSize;
+        return (int)Math.Ceiling(pages);
+    }
+
+    @* Go to the previous page *@
+    private async Task GoToPreviousPage()
+    {
+        // Only go back if not on first page
+        if (_page > 1)
+        {
+            _page = _page - 1;
+            await LoadPosts();
+        }
+    }
+
+    @* Go to the next page *@
+    private async Task GoToNextPage()
+    {
+        // Only go forward if not on last page
+        if (!IsOnLastPage())
+        {
+            _page = _page + 1;
+            await LoadPosts();
+        }
+    }
+
+    @* Old method kept for backwards compatibility *@
     private async Task ChangePage(int newPage)
     {
         _page = newPage;
         await LoadPosts();
     }
 
+    // ============================================================
+    // SEARCH METHODS
+    // ============================================================
+
+    @* Handles when user submits a search.
+       Updates the page and URL to show search results.*@
     private void HandleSearch(string? term)
     {
+        // Save the search term locally
         _localSearchTerm = term;
-        _page = 1; // Reset to first page on new search
-        var uri = NavigationManager.GetUriWithQueryParameter("q", string.IsNullOrWhiteSpace(_localSearchTerm) ? null : _localSearchTerm);
-        NavigationManager.NavigateTo(uri);
+
+        // Go back to page 1 when searching (new search = start from beginning)
+        _page = 1;
+
+        // Build the new URL with the search parameter
+        // If search is empty, pass null (cleaner URL)
+        var cleanTerm = string.IsNullOrWhiteSpace(_localSearchTerm)
+            ? null
+            : _localSearchTerm;
+
+        var newUrl = NavigationManager.GetUriWithQueryParameter("q", cleanTerm);
+
+        // Navigate to the new URL (this reloads the page with search results)
+        NavigationManager.NavigateTo(newUrl);
+    }
+
+    // ============================================================
+    // HELPER METHODS
+    // ============================================================
+
+    @* Converts an image URL object to a string for the PostCard component *@
+    private string? GetImageUrl(Uri? imageUrl)
+    {
+        if (imageUrl == null)
+        {
+            return null;
+        }
+
+        return imageUrl.ToString();
     }
 
 }
