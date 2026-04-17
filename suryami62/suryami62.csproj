@@ -9,6 +9,10 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="suryami62.Tests" />
+    </ItemGroup>
+
     <PropertyGroup>
         <AnalysisLevel>10.0</AnalysisLevel>
         <AnalysisMode>All</AnalysisMode>
