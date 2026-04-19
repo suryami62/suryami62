@@ -29,6 +29,7 @@
 
 #region
 
+using System.Text;
 using suryami62.Application.Persistence;
 using suryami62.Domain.Models;
 
@@ -88,6 +89,22 @@ public interface IBlogPostService
     /// </summary>
     /// <param name="id">The ID of the post to delete.</param>
     Task DeletePostAsync(int id);
+
+    /// <summary>
+    ///     Generates a unique slug from a title, appending a counter if needed.
+    /// </summary>
+    /// <param name="title">The post title to generate slug from.</param>
+    /// <param name="excludeId">Optional post ID to exclude from uniqueness check.</param>
+    /// <returns>A unique slug string.</returns>
+    Task<string> GenerateUniqueSlugAsync(string title, int? excludeId = null);
+
+    /// <summary>
+    ///     Checks if a slug is already in use.
+    /// </summary>
+    /// <param name="slug">The slug to check.</param>
+    /// <param name="excludeId">Optional post ID to exclude from check.</param>
+    /// <returns>True if slug exists; otherwise false.</returns>
+    Task<bool> SlugExistsAsync(string slug, int? excludeId = null);
 }
 
 /// <summary>
@@ -254,9 +271,20 @@ public sealed class BlogPostService : IBlogPostService
 
     /// <summary>
     ///     Creates a new blog post and invalidates list caches.
+    ///     Validates slug uniqueness before saving.
     /// </summary>
     public async Task<BlogPost> CreatePostAsync(BlogPost post)
     {
+        ArgumentNullException.ThrowIfNull(post);
+
+        // Validate slug is not empty
+        if (string.IsNullOrWhiteSpace(post.Slug))
+            throw new ArgumentException("Post slug cannot be empty.", nameof(post));
+
+        // Check for duplicate slug
+        if (await _repository.SlugExistsAsync(post.Slug).ConfigureAwait(false))
+            throw new InvalidOperationException($"A post with slug '{post.Slug}' already exists.");
+
         // Save to database first
         var result = await _repository.CreateAsync(post).ConfigureAwait(false);
 
@@ -269,10 +297,19 @@ public sealed class BlogPostService : IBlogPostService
 
     /// <summary>
     ///     Updates an existing post and invalidates related caches.
+    ///     Validates slug uniqueness before saving.
     /// </summary>
     public async Task UpdatePostAsync(BlogPost post)
     {
         ArgumentNullException.ThrowIfNull(post);
+
+        // Validate slug is not empty
+        if (string.IsNullOrWhiteSpace(post.Slug))
+            throw new ArgumentException("Post slug cannot be empty.", nameof(post));
+
+        // Check for duplicate slug (exclude current post)
+        if (await _repository.SlugExistsAsync(post.Slug, post.Id).ConfigureAwait(false))
+            throw new InvalidOperationException($"A post with slug '{post.Slug}' already exists.");
 
         // Update in database
         await _repository.UpdateAsync(post).ConfigureAwait(false);
@@ -319,6 +356,73 @@ public sealed class BlogPostService : IBlogPostService
             await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
                 .ConfigureAwait(false);
         }
+    }
+
+    /// <summary>
+    ///     Generates a unique slug from a title, appending a counter if needed.
+    ///     Example: "hello-world", "hello-world-2", "hello-world-3"
+    /// </summary>
+    public async Task<string> GenerateUniqueSlugAsync(string title, int? excludeId = null)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return string.Empty;
+
+        // Generate base slug from title
+        var baseSlug = CreateSlug(title);
+        if (string.IsNullOrEmpty(baseSlug))
+            return string.Empty;
+
+        // Check if base slug is unique
+        if (!await _repository.SlugExistsAsync(baseSlug, excludeId).ConfigureAwait(false))
+            return baseSlug;
+
+        // Find next available number
+        var counter = 2;
+        string candidate;
+        do
+        {
+            candidate = $"{baseSlug}-{counter}";
+            counter++;
+        } while (await _repository.SlugExistsAsync(candidate, excludeId).ConfigureAwait(false));
+
+        return candidate;
+    }
+
+    /// <summary>
+    ///     Checks if a slug is already in use.
+    /// </summary>
+    public Task<bool> SlugExistsAsync(string slug, int? excludeId = null)
+    {
+        return _repository.SlugExistsAsync(slug, excludeId);
+    }
+
+    /// <summary>
+    ///     Converts a title to a URL-friendly slug.
+    ///     Removes special characters, converts to lowercase, spaces to hyphens.
+    /// </summary>
+    private static string CreateSlug(string title)
+    {
+        var builder = new StringBuilder(title.Length);
+        var previousWasDash = false;
+
+        foreach (var c in title.Trim().ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(c))
+            {
+                builder.Append(c);
+                previousWasDash = false;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(c) || c is '-' or '_')
+                if (builder.Length > 0 && !previousWasDash)
+                {
+                    builder.Append('-');
+                    previousWasDash = true;
+                }
+        }
+
+        return builder.ToString().Trim('-');
     }
 
     /// <summary>

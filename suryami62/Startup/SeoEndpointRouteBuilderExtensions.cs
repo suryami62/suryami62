@@ -88,7 +88,7 @@ internal static class SeoEndpointRouteBuilderExtensions
         if (canonicalBaseUrl is null) return CreateMissingCanonicalBaseUrlProblem("sitemap.xml");
 
         // Step 3: Get all blog posts to include in sitemap
-        (IEnumerable<BlogPost> posts, var _) = await blogPostService.GetPostsAsync().ConfigureAwait(false);
+        (IEnumerable<BlogPost> posts, _) = await blogPostService.GetPostsAsync().ConfigureAwait(false);
 
         // Step 4: Build and return the XML sitemap
         var sitemapXml = BuildSitemapXml(canonicalBaseUrl, posts);

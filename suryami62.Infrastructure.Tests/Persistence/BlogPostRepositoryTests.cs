@@ -314,4 +314,54 @@ public class BlogPostRepositoryTests
         Assert.NotEqual(0, created.Id);
         Assert.False(created.IsPublished);
     }
+
+    [Fact]
+    public async Task SlugExistsAsyncWithExistingSlugReturnsTrue()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        var post = CreatePost("My Post", "my-post");
+        context.BlogPosts.Add(post);
+        await context.SaveChangesAsync();
+
+        var repository = new BlogPostRepository(context);
+        var result = await repository.SlugExistsAsync("my-post");
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task SlugExistsAsyncWithNonExistingSlugReturnsFalse()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        var repository = new BlogPostRepository(context);
+
+        var result = await repository.SlugExistsAsync("nonexistent");
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task SlugExistsAsyncWithExcludedIdIgnoresThatPost()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        var post = CreatePost("My Post", "my-post");
+        context.BlogPosts.Add(post);
+        await context.SaveChangesAsync();
+
+        var repository = new BlogPostRepository(context);
+        var result = await repository.SlugExistsAsync("my-post", post.Id);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task SlugExistsAsyncWithEmptySlugReturnsFalse()
+    {
+        await using var context = DbContextFactory.CreateInMemory();
+        var repository = new BlogPostRepository(context);
+
+        var result = await repository.SlugExistsAsync(string.Empty);
+
+        Assert.False(result);
+    }
 }

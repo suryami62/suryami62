@@ -128,8 +128,15 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         });
 
         // Step 5: Configure BlogPost entity (table: BlogPosts)
-        // Only ImageUrl needs Uri conversion (PostAt is DateTimeOffset, etc.)
-        builder.Entity<BlogPost>(entity => { entity.Property(p => p.ImageUrl).HasConversion(uriConverter); });
+        builder.Entity<BlogPost>(entity =>
+        {
+            // Convert Uri properties to strings for database storage
+            entity.Property(p => p.ImageUrl).HasConversion(uriConverter);
+
+            // Create unique index on Slug for fast lookups and to prevent duplicates
+            // This ensures no two posts can have the same URL slug
+            entity.HasIndex(p => p.Slug).IsUnique();
+        });
 
         // Step 6: Configure JourneyHistory entity (table: JourneyHistories)
         // Add database index for fast queries by Section + DisplayOrder

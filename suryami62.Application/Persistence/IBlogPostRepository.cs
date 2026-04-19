@@ -58,6 +58,14 @@ public interface IBlogPostRepository
     Task<BlogPost?> GetBySlugAsync(string slug);
 
     /// <summary>
+    ///     Checks if a slug already exists in the database.
+    /// </summary>
+    /// <param name="slug">The slug to check.</param>
+    /// <param name="excludeId">Optional post ID to exclude from check (for updates).</param>
+    /// <returns>True if slug exists; otherwise false.</returns>
+    Task<bool> SlugExistsAsync(string slug, int? excludeId = null);
+
+    /// <summary>
     ///     Gets a single blog post by its database ID.
     /// </summary>
     /// <param name="id">The numeric database ID.</param>

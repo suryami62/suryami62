@@ -1,7 +1,6 @@
 ﻿@* Admin editor page for creating and updating blog posts. *@
 @page "/Account/Admin/Posts/New"
 @page "/Account/Admin/Posts/Edit/{Id:int}"
-@using System.Text
 @using Microsoft.AspNetCore.Authorization
 @using suryami62.Domain.Models
 @attribute [Authorize(Policy = AdminAccessPolicy.Name)]
@@ -136,9 +135,9 @@
     }
 
     /// <summary>
-    ///     Auto-generates a slug while creating a new post.
+    ///     Auto-generates a unique slug while creating a new post.
     /// </summary>
-    private void OnTitleChanged(ChangeEventArgs e)
+    private async Task OnTitleChanged(ChangeEventArgs e)
     {
         if (!IsNewPost)
         {
@@ -147,8 +146,8 @@
 
         var title = e.Value?.ToString();
 
-        // Only auto-updating the slug for new posts avoids overwriting a slug that was curated during editing.
-        _post.Slug = CreateSlug(title);
+        // Generate unique slug via service (handles duplicates with -2, -3, etc.)
+        _post.Slug = await BlogPostService.GenerateUniqueSlugAsync(title);
     }
 
     /// <summary>
@@ -234,41 +233,6 @@
     private static BlogPost CreateNewPost()
     {
         return new BlogPost { Date = DateTime.UtcNow };
-    }
-
-    /// <summary>
-    ///     Converts a title into a predictable slug for the post route.
-    /// </summary>
-    private static string CreateSlug(string? title)
-    {
-        if (string.IsNullOrWhiteSpace(title))
-        {
-            return string.Empty;
-        }
-
-        var builder = new StringBuilder(title.Length);
-        var previousWasDash = false;
-
-        foreach (var c in title.Trim().ToLowerInvariant())
-        {
-            if (char.IsLetterOrDigit(c))
-            {
-                builder.Append(c);
-                previousWasDash = false;
-                continue;
-            }
-
-            if (char.IsWhiteSpace(c) || c is '-' or '_')
-            {
-                if (builder.Length > 0 && !previousWasDash)
-                {
-                    builder.Append('-');
-                    previousWasDash = true;
-                }
-            }
-        }
-
-        return builder.ToString().Trim('-');
     }
 
 }

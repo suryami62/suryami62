@@ -259,6 +259,9 @@ namespace suryami62.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
                     b.ToTable("BlogPosts");
                 });
 
