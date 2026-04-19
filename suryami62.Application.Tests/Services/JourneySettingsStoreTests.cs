@@ -22,7 +22,8 @@ public class JourneySettingsStoreTests
         string period = "2020-2023",
         string summary = "Summary")
     {
-        return new JourneyEntry { Title = title, Organization = organization, Period = period, Summary = summary, Highlights = [] };
+        return new JourneyEntry
+            { Title = title, Organization = organization, Period = period, Summary = summary, Highlights = [] };
     }
 
     [Fact]

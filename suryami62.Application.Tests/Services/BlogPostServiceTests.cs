@@ -80,6 +80,9 @@ public class BlogPostServiceTests
     {
         var post = new BlogPost { Title = "New Post", Slug = "new-post" };
         _repositoryMock
+            .Setup(r => r.SlugExistsAsync(post.Slug, null))
+            .ReturnsAsync(false);
+        _repositoryMock
             .Setup(r => r.CreateAsync(post))
             .ReturnsAsync(post);
 
@@ -133,7 +136,10 @@ public class BlogPostServiceTests
     [Fact]
     public async Task UpdatePostAsyncWhenCalledDelegatesToRepository()
     {
-        var post = new BlogPost { Id = 2, Title = "Updated Post" };
+        var post = new BlogPost { Id = 2, Title = "Updated Post", Slug = "updated-post" };
+        _repositoryMock
+            .Setup(r => r.SlugExistsAsync(post.Slug, post.Id))
+            .ReturnsAsync(false);
         _repositoryMock
             .Setup(r => r.UpdateAsync(post))
             .Returns(Task.CompletedTask);
@@ -141,6 +147,84 @@ public class BlogPostServiceTests
         await _service.UpdatePostAsync(post);
 
         _repositoryMock.Verify(r => r.UpdateAsync(post), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePostAsyncWithDuplicateSlugThrowsInvalidOperationException()
+    {
+        var post = new BlogPost { Title = "Test Post", Slug = "test-post" };
+        _repositoryMock
+            .Setup(r => r.SlugExistsAsync(post.Slug, null))
+            .ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreatePostAsync(post));
+    }
+
+    [Fact]
+    public async Task UpdatePostAsyncWithDuplicateSlugThrowsInvalidOperationException()
+    {
+        var post = new BlogPost { Id = 1, Title = "Test Post", Slug = "test-post" };
+        _repositoryMock
+            .Setup(r => r.SlugExistsAsync(post.Slug, post.Id))
+            .ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.UpdatePostAsync(post));
+    }
+
+    [Fact]
+    public async Task CreatePostAsyncWithEmptySlugThrowsArgumentException()
+    {
+        var post = new BlogPost { Title = "Test Post", Slug = "" };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.CreatePostAsync(post));
+    }
+
+    [Fact]
+    public async Task SlugExistsAsyncDelegatesToRepository()
+    {
+        _repositoryMock
+            .Setup(r => r.SlugExistsAsync("test-slug", null))
+            .ReturnsAsync(true);
+
+        var result = await _service.SlugExistsAsync("test-slug");
+
+        Assert.True(result);
+        _repositoryMock.Verify(r => r.SlugExistsAsync("test-slug", null), Times.Once);
+    }
+
+    [Fact]
+    public async Task GenerateUniqueSlugAsyncReturnsBaseSlugWhenUnique()
+    {
+        _repositoryMock
+            .Setup(r => r.SlugExistsAsync("hello-world", null))
+            .ReturnsAsync(false);
+
+        var result = await _service.GenerateUniqueSlugAsync("Hello World");
+
+        Assert.Equal("hello-world", result);
+    }
+
+    [Fact]
+    public async Task GenerateUniqueSlugAsyncAppendsCounterWhenSlugExists()
+    {
+        _repositoryMock
+            .Setup(r => r.SlugExistsAsync("hello-world", null))
+            .ReturnsAsync(true);
+        _repositoryMock
+            .Setup(r => r.SlugExistsAsync("hello-world-2", null))
+            .ReturnsAsync(false);
+
+        var result = await _service.GenerateUniqueSlugAsync("Hello World");
+
+        Assert.Equal("hello-world-2", result);
+    }
+
+    [Fact]
+    public async Task GenerateUniqueSlugAsyncReturnsEmptyForEmptyTitle()
+    {
+        var result = await _service.GenerateUniqueSlugAsync("");
+
+        Assert.Equal(string.Empty, result);
     }
 
     [Fact]

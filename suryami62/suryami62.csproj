@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="suryami62.Tests" />
+        <InternalsVisibleTo Include="suryami62.Tests"/>
     </ItemGroup>
 
     <PropertyGroup>

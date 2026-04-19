@@ -127,6 +127,32 @@ public sealed class BlogPostRepository : IBlogPostRepository
     }
 
     /// <summary>
+    ///     Checks if a slug already exists in the database.
+    ///     Used to prevent duplicate slugs when creating or updating posts.
+    /// </summary>
+    /// <param name="slug">The slug to check.</param>
+    /// <param name="excludeId">Optional post ID to exclude from check (for updates).</param>
+    /// <returns>True if slug exists; otherwise false.</returns>
+    public async Task<bool> SlugExistsAsync(string slug, int? excludeId = null)
+    {
+        // Validate input
+        if (string.IsNullOrWhiteSpace(slug))
+            return false;
+
+        // Build query: check if any post has this slug
+        var query = _context.BlogPosts
+            .AsNoTracking()
+            .Where(p => p.Slug == slug);
+
+        // If updating, exclude the current post from the check
+        if (excludeId.HasValue)
+            query = query.Where(p => p.Id != excludeId.Value);
+
+        // Execute: check if any matching post exists
+        return await query.AnyAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
     ///     Creates a new blog post in the database.
     /// </summary>
     /// <param name="post">The blog post to create.</param>
