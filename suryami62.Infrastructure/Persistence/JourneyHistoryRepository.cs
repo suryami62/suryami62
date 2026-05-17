@@ -1,3 +1,12 @@
+#region
+
+using Microsoft.EntityFrameworkCore;
+using suryami62.Application.Persistence;
+using suryami62.Data;
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // JOURNEY HISTORY REPOSITORY
 // ============================================================================
@@ -23,15 +32,6 @@
 // - OrderBy(): Sort by DisplayOrder
 // - ThenBy(): Secondary sort by Id (stable ordering if orders are equal)
 // ============================================================================
-
-#region
-
-using Microsoft.EntityFrameworkCore;
-using suryami62.Application.Persistence;
-using suryami62.Data;
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Infrastructure.Persistence;
 

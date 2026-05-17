@@ -1,3 +1,11 @@
+#region
+
+using Ganss.Xss; // For sanitizing HTML (removing dangerous tags)
+using Markdig; // For converting Markdown to HTML
+using Microsoft.AspNetCore.Components; // For MarkupString type
+
+#endregion
+
 // ============================================================================
 // MARKDOWN RENDERER SERVICE
 // ============================================================================
@@ -15,13 +23,6 @@
 // be used for attacks. We use HtmlSanitizer library for this.
 // ============================================================================
 
-#region
-
-using Ganss.Xss; // For sanitizing HTML (removing dangerous tags)
-using Markdig; // For converting Markdown to HTML
-using Microsoft.AspNetCore.Components; // For MarkupString type
-
-#endregion
 
 namespace suryami62.Services;
 

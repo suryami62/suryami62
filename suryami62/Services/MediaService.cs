@@ -1,3 +1,13 @@
+#region
+
+using System.Globalization; // For date formatting in file names
+using System.Text; // For StringBuilder in file name processing
+using SixLabors.ImageSharp; // For image processing (resize, convert)
+using SixLabors.ImageSharp.Formats.Webp; // For WebP image format
+using SixLabors.ImageSharp.Processing; // For image resize operations
+
+#endregion
+
 // ============================================================================
 // MEDIA SERVICE
 // ============================================================================
@@ -12,15 +22,6 @@
 // - Stores files in wwwroot/img/uploads for public access
 // ============================================================================
 
-#region
-
-using System.Globalization; // For date formatting in file names
-using System.Text; // For StringBuilder in file name processing
-using SixLabors.ImageSharp; // For image processing (resize, convert)
-using SixLabors.ImageSharp.Formats.Webp; // For WebP image format
-using SixLabors.ImageSharp.Processing; // For image resize operations
-
-#endregion
 
 namespace suryami62.Services;
 

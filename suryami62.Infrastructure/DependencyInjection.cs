@@ -1,3 +1,13 @@
+#region
+
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using suryami62.Application.Persistence;
+using suryami62.Infrastructure.Persistence;
+
+#endregion
+
 // ============================================================================
 // INFRASTRUCTURE DEPENDENCY INJECTION
 // ============================================================================
@@ -24,16 +34,6 @@
 // DbContext is scoped (one per request). Repositories use DbContext, so they
 // must also be scoped. Same lifetime = can share DbContext instance.
 // ============================================================================
-
-#region
-
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using suryami62.Application.Persistence;
-using suryami62.Infrastructure.Persistence;
-
-#endregion
 
 namespace suryami62.Infrastructure;
 

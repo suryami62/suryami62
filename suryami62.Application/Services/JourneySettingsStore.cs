@@ -1,3 +1,10 @@
+#region
+
+using System.Text.Json;
+using suryami62.Application.Persistence;
+
+#endregion
+
 // ============================================================================
 // JOURNEY SETTINGS STORE
 // ============================================================================
@@ -25,13 +32,6 @@
 // - About:Journey:Experience  - Work history stored as JSON array
 // - About:Journey:Education   - Education history stored as JSON array
 // ============================================================================
-
-#region
-
-using System.Text.Json;
-using suryami62.Application.Persistence;
-
-#endregion
 
 namespace suryami62.Services;
 

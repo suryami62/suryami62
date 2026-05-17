@@ -1,3 +1,13 @@
+#region
+
+using System.Globalization;
+using System.Text;
+using suryami62.Application.Persistence;
+using suryami62.Domain.Models;
+using suryami62.Services;
+
+#endregion
+
 // ============================================================================
 // SEO ENDPOINT ROUTE BUILDER EXTENSIONS
 // ============================================================================
@@ -31,16 +41,6 @@
 // Disallow: /Account
 // Sitemap: https://example.com/sitemap.xml
 // ============================================================================
-
-#region
-
-using System.Globalization;
-using System.Text;
-using suryami62.Application.Persistence;
-using suryami62.Domain.Models;
-using suryami62.Services;
-
-#endregion
 
 namespace suryami62.Startup;
 

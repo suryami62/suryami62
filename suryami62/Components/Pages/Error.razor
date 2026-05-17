@@ -1,22 +1,19 @@
-﻿@* This page displays when an error occurs in the application.
+﻿@page "/Error"
+@using System.Diagnostics
+@inject IHostEnvironment Env
+
+@* This page displays when an error occurs in the application.
    It shows a user-friendly error message and (in development mode)
    additional diagnostic information for debugging.
 *@
-@page "/Error"
-@using System.Diagnostics
-
-@* System.Diagnostics provides tools for getting request information *@
-
-@* Inject environment info to check if we're in development mode *@
-@inject IHostEnvironment Env
 
 @* Set browser tab title *@
 <PageTitle>500: System Collapse | suryami62</PageTitle>
 
-<!-- Main error display -->
+@* Main error display *@
 <div class="flex flex-col gap-12 py-8">
 
-    <!-- Header: Big error message -->
+    @* Header: Big error message *@
     <PageHeader Title="SYSTEM" Highlight="CRASH">
         <ChildContent>
             An unexpected glitch has manifested in the system's core. Our algorithms are frantically trying to
@@ -27,10 +24,10 @@
         </AsideContent>
     </PageHeader>
 
-    <!-- Error Details Section -->
+    @* Error Details Section *@
     <div class="grid gap-12 lg:grid-cols-[1fr_2fr]">
 
-        <!-- Left Column: Summary and Request ID -->
+        @* Left Column: Summary and Request ID *@
         <ErrorSummarySection
             Title="Core Exception"
             Description="The server encountered an internal error or misconfiguration and was unable to complete your request. This is likely a temporary anomaly in the digital fabric.">
@@ -48,7 +45,7 @@
             </BodyContent>
         </ErrorSummarySection>
 
-        <!-- Right Column: Status and Debug Info -->
+        @* Right Column: Status and Debug Info *@
         <div class="space-y-8">
             <ErrorPanel Title="Status Report">
                 <ul class="space-y-4 text-sm font-bold text-neutral-600 uppercase dark:text-neutral-400">

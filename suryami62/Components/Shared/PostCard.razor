@@ -4,7 +4,7 @@
 *@
 <article class="neo-card-interactive group p-6">
 
-    <!-- Featured Image (optional) -->
+    @* Featured Image (optional) *@
     @if (HasImage())
     {
         <div class="mb-6 overflow-hidden border-4 border-black bg-gray-100 dark:border-white">
@@ -14,13 +14,13 @@
         </div>
     }
 
-    <!-- Meta Row: Category Label + Publication Date -->
+    @* Meta Row: Category Label + Publication Date *@
     <div class="mb-4 flex items-center justify-between">
         <span class="neo-pill">@Label</span>
         <span class="font-mono text-sm font-bold">@Date</span>
     </div>
 
-    <!-- Title with Link -->
+    @* Title with Link *@
     <h3 class="neo-title-sm mb-4 leading-none">
         @* The "before:absolute before:inset-0" trick makes the whole card clickable
            even though only the title is the actual link text. *@
@@ -29,13 +29,13 @@
         </a>
     </h3>
 
-    <!-- Article Summary/Excerpt -->
+    @* Article Summary/Excerpt *@
     <p class="mb-6 text-justify font-medium text-gray-700 dark:text-gray-300">
         @Summary
     </p>
 
-    <!-- Read More Link -->
-    @* group-hover applies styles when parent (.group) is hovered *@
+    @* Read More Link
+       group-hover applies styles when parent (.group) is hovered *@
     <div class="group-hover:neo-inline-link-sm mt-auto flex items-center gap-2 font-black uppercase">
         <span class="underline decoration-4 underline-offset-4">Read Article</span>
         <i class="fa-solid fa-arrow-right"></i>

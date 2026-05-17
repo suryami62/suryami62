@@ -1,3 +1,11 @@
+#region
+
+using System.Text;
+using suryami62.Application.Persistence;
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // BLOG POST SERVICE
 // ============================================================================
@@ -26,14 +34,6 @@
 // When a post is created/updated/deleted, we clear related caches so
 // the next request gets fresh data.
 // ============================================================================
-
-#region
-
-using System.Text;
-using suryami62.Application.Persistence;
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Services;
 

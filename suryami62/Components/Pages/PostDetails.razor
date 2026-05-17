@@ -1,24 +1,19 @@
-﻿@* This page displays a single blog post (the full article).
-   @page "/posts/{Slug}" handles URLs like /posts/my-article-name.
-   The {Slug} is a parameter from the URL.
-*@
-@page "/posts/{Slug}"
+﻿@page "/posts/{Slug}"
 @using suryami62.Domain.Models
-
-@* Import the BlogPost model *@
-
-@* Inject services we need *@
 @inject IBlogPostService BlogPostService
 @inject NavigationManager NavigationManager
 @inject MarkdownRenderer MarkdownRenderer
-
-@* Enable interactive features *@
 @rendermode InteractiveServer
+
+@* This page displays a single blog post (the full article).
+   @page "/posts/{Slug}" handles URLs like /posts/my-article-name.
+   The {Slug} is a parameter from the URL.
+*@
 
 @* Set browser tab title - use helper method *@
 <PageTitle>@GetPageTitle()</PageTitle>
 
-<!-- Meta tags for social media sharing -->
+@* Meta tags for social media sharing *@
 <HeadContent>
     <MetaOpenGraphCard Title="@GetPageTitle()"
                        Description="@GetMetaDescription()"
@@ -26,10 +21,10 @@
                        Url="@NavigationManager.Uri"/>
 </HeadContent>
 
-<!-- Main content area -->
+@* Main content area *@
 <div class="flex flex-col gap-8 py-8">
 
-    <!-- Back Button -->
+    @* Back Button *@
     <div>
         <a href="/posts" class="neo-inline-link">
             <i class="fa-solid fa-arrow-left"></i>
@@ -57,7 +52,7 @@
     {
         <article class="mx-auto w-full max-w-4xl">
 
-            <!-- Post Header: Label, Date, Title, Summary -->
+            @* Post Header: Label, Date, Title, Summary *@
             <header class="mb-8 border-b-4 border-black pb-6 dark:border-white">
                 <div class="mb-4 flex flex-wrap items-center gap-4">
                     @* Category label (e.g., "Tutorial", "News") *@
@@ -88,7 +83,7 @@
                 </div>
             }
 
-            <!-- Article Content (rendered from Markdown) -->
+            @* Article Content (rendered from Markdown) *@
             <div class="prose prose-lg max-w-none text-justify dark:prose-invert">
                 @RenderContent(_post.Content)
             </div>
@@ -103,10 +98,10 @@
 
     @* This gets the slug from the URL.
        [Parameter] tells Blazor to read this from the URL.
-       Example: /posts/hello-world → Slug = "hello-world".*@
+       Example: /posts/hello-world → Slug = "hello-world". *@
     [Parameter] public string? Slug { get; set; }
 
-    @* The blog post data. The ? means it can be null (not found or loading).*@
+    @* The blog post data. The ? means it can be null (not found or loading). *@
     private BlogPost? _post;
 
     @* Tracks whether we've finished loading the post.
@@ -121,27 +116,27 @@
        It fetches the blog post from the database using the slug.*@
     protected override async Task OnParametersSetAsync()
     {
-        // Reset state before loading
+        @* Reset state before loading *@
         _isLoaded = false;
         _post = null;
 
-        // Check if slug is missing from URL
+        @* Check if slug is missing from URL *@
         if (string.IsNullOrWhiteSpace(Slug))
         {
             _isLoaded = true;
-            return; // Nothing to load
+            return;
         }
 
-        // Fetch post from database
+        @* Fetch post from database *@
         var post = await BlogPostService.GetPostBySlugAsync(Slug);
 
-        // Only display if post exists AND is published
+        @* Only display if post exists AND is published *@
         if (post != null && post.IsPublished)
         {
             _post = post;
         }
 
-        // Mark loading as complete
+        @* Mark loading as complete *@
         _isLoaded = true;
     }
 

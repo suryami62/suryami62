@@ -1,3 +1,12 @@
+#region
+
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // APPLICATION DATABASE CONTEXT
 // ============================================================================
@@ -41,15 +50,6 @@
 // Fast queries: WHERE Section = 'Work' ORDER BY DisplayOrder
 // Slow queries: WHERE DisplayOrder = 5 (index not used effectively)
 // ============================================================================
-
-#region
-
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Data;
 

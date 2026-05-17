@@ -1,3 +1,12 @@
+#region
+
+using Microsoft.EntityFrameworkCore;
+using suryami62.Application.Persistence;
+using suryami62.Data;
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // BLOG POST REPOSITORY
 // ============================================================================
@@ -27,15 +36,6 @@
 // Changes to entities (Add, Update, Remove) are queued in memory.
 // SaveChangesAsync() applies all queued changes to the database in one transaction.
 // ============================================================================
-
-#region
-
-using Microsoft.EntityFrameworkCore;
-using suryami62.Application.Persistence;
-using suryami62.Data;
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Infrastructure.Persistence;
 

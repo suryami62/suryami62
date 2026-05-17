@@ -1,3 +1,9 @@
+#region
+
+using System.ComponentModel.DataAnnotations;
+
+#endregion
+
 // ============================================================================
 // PROJECT MODEL
 // ============================================================================
@@ -25,12 +31,6 @@
 // DisplayOrder controls sort order on the Projects page.
 // Lower numbers appear first. Use this to feature best projects at top.
 // ============================================================================
-
-#region
-
-using System.ComponentModel.DataAnnotations;
-
-#endregion
 
 namespace suryami62.Domain.Models;
 

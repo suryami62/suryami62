@@ -1,23 +1,18 @@
-﻿@* This page displays the portfolio of projects with pagination.
+﻿@page "/projects"
+@using suryami62.Domain.Models
+@inject IProjectService ProjectService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+@* This page displays the portfolio of projects with pagination.
    @page "/projects" tells Blazor this handles the /projects URL.
    @rendermode InteractiveServer means buttons work via server communication.
 *@
-@page "/projects"
-@using suryami62.Domain.Models
-
-@* Import the Project model *@
-
-@* Inject services we need *@
-@inject IProjectService ProjectService
-@inject NavigationManager NavigationManager
-
-@* Enable interactive buttons (pagination) *@
-@rendermode InteractiveServer
 
 @* Set browser tab title *@
 <PageTitle>My Selected Projects | suryami62</PageTitle>
 
-<!-- Meta tags for social media sharing -->
+@* Meta tags for social media sharing *@
 <HeadContent>
     <MetaOpenGraphCard Title="My Selected Projects | suryami62"
                        Description="Discover practical projects combining technology and science. From web applications to coding experiments solving real-world problems with systematic innovation."
@@ -25,10 +20,10 @@
                        Url="@NavigationManager.Uri"/>
 </HeadContent>
 
-<!-- Main content area -->
+@* Main content area *@
 <div class="flex flex-col gap-12 py-8">
 
-    <!-- Header: Page title and description -->
+    @* Header: Page title and description *@
     <PageHeader Title="My Selected" Highlight="Projects">
         <ChildContent>
             A collection of tools and experiments built by a
@@ -37,7 +32,7 @@
         </ChildContent>
     </PageHeader>
 
-    <!-- Projects Display Area -->
+    @* Projects Display Area *@
     <section>
         <div class="grid gap-12 md:grid-cols-2">
 
@@ -132,17 +127,17 @@
     @* Load projects from database based on current page *@
     private async Task LoadProjects()
     {
-        // Calculate how many projects to skip for pagination
+        @* Calculate how many projects to skip for pagination *@
         var skipCount = (_page - 1) * _pageSize;
 
-        // Get projects from service
+        @* Get projects from service *@
         var result = await ProjectService.GetProjectsAsync(
             skipCount,
             _pageSize
         );
 
-        // Store results
-        // result has: Items (the projects) and Total (total count)
+        @* Store results
+          result has: Items (the projects) and Total (total count) *@
         _projects = result.Items;
         _total = result.Total;
     }
@@ -208,11 +203,11 @@
     {
         if (string.IsNullOrWhiteSpace(tags))
         {
-            // Return empty array if no tags
+            @* Return empty array if no tags *@
             return Array.Empty<string>();
         }
 
-        // Split by comma and remove any empty entries
+        @* Split by comma and remove any empty entries *@
         return tags.Split(
             ',',
             StringSplitOptions.RemoveEmptyEntries

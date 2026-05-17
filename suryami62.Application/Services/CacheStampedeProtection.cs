@@ -1,3 +1,9 @@
+#region
+
+using System.Collections.Concurrent;
+
+#endregion
+
 // ============================================================================
 // CACHE STAMPEDE PROTECTION
 // ============================================================================
@@ -24,12 +30,6 @@
 // - WaitAsync() = wait until it's your turn
 // - Release() = let the next person in
 // ============================================================================
-
-#region
-
-using System.Collections.Concurrent;
-
-#endregion
 
 namespace suryami62.Services;
 

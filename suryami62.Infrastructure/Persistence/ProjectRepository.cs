@@ -1,3 +1,12 @@
+#region
+
+using Microsoft.EntityFrameworkCore;
+using suryami62.Application.Persistence;
+using suryami62.Data;
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // PROJECT REPOSITORY
 // ============================================================================
@@ -16,15 +25,6 @@
 // Uses EfRepositoryHelpers.UpdateExistingOrAttachModified() to handle
 // EF Core tracking conflicts. See that helper for detailed explanation.
 // ============================================================================
-
-#region
-
-using Microsoft.EntityFrameworkCore;
-using suryami62.Application.Persistence;
-using suryami62.Data;
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Infrastructure.Persistence;
 

@@ -3,7 +3,7 @@
 *@
 <article class="neo-card flex h-full flex-col p-6">
 
-    <!-- Project Screenshot (optional) -->
+    @* Project Screenshot (optional) *@
     @if (HasImage())
     {
         <div class="mb-6 overflow-hidden border-4 border-black bg-gray-100 dark:border-white">
@@ -13,7 +13,7 @@
         </div>
     }
 
-    <!-- Title & Technology Tags -->
+    @* Title & Technology Tags *@
     <div class="mb-4">
         <h3 class="neo-title-md mb-2 leading-none">@Title</h3>
         <div class="flex flex-wrap gap-2">
@@ -25,10 +25,10 @@
         </div>
     </div>
 
-    <!-- Project Description -->
+    @* Project Description *@
     <p class="mb-8 font-medium text-gray-700 dark:text-gray-300">@Description</p>
 
-    <!-- Action Buttons (at bottom due to mt-auto) -->
+    @* Action Buttons (at bottom due to mt-auto) *@
     <div class="mt-auto flex gap-4">
         @* View Code button - only show if repository URL exists *@
         @if (HasRepoUrl())

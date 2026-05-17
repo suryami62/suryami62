@@ -3,23 +3,23 @@
    and provide a way to navigate back.
 *@
 <div class="flex flex-col gap-6">
-    <!-- Section Title -->
+    @* Section Title *@
     <h3 class="text-2xl font-black tracking-tighter uppercase underline decoration-4 underline-offset-4">
         @Title
     </h3>
 
-    <!-- Error Description -->
+    @* Error Description *@
     <p class="text-lg leading-relaxed font-medium">
         @Description
     </p>
 
-    <!-- Optional Extra Content (like request ID, details) -->
+    @* Optional Extra Content (like request ID, details) *@
     @if (HasBodyContent())
     {
         @BodyContent
     }
 
-    <!-- Navigation Button -->
+    @* Navigation Button *@
     <div class="mt-4">
         <NavButton Href="@ButtonHref" Text="@ButtonText"/>
     </div>

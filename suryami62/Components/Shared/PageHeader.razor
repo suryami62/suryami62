@@ -10,18 +10,18 @@
     <div class="@GetGridClass()">
         <div class="@GetTextAlignClass()">
 
-            <!-- Title: Main word + highlighted word on second line -->
+            @* Title: Main word + highlighted word on second line *@
             <h1 class="neo-title">
                 @Title <br/>
                 <span class="neo-highlight">@Highlight</span>
             </h1>
 
-            <!-- Description content passed by parent -->
+            @* Description content passed by parent *@
             <div class="@GetDescriptionClass()">
                 @ChildContent
             </div>
 
-            <!-- Optional Footer Area: Social buttons, etc. -->
+            @* Optional Footer Area: Social buttons, etc. *@
             @if (HasFooterContent())
             {
                 <div class="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
@@ -30,7 +30,7 @@
             }
         </div>
 
-        <!-- Optional Aside Area: Avatar, image, etc. -->
+        @* Optional Aside Area: Avatar, image, etc. *@
         @if (HasAsideContent())
         {
             @AsideContent
@@ -45,7 +45,7 @@
 
     @* The main title word (e.g., "My Personal") *@
     [Parameter]
-    [EditorRequired] // This parameter MUST be provided
+    [EditorRequired]
     public string Title { get; set; } = "";
 
     @* The highlighted word (e.g., "Blog") *@
@@ -83,7 +83,7 @@
     {
         if (HasAsideContent())
         {
-            // 2-column grid: 1fr (flexible) + auto (size to content)
+            @* 2-column grid: 1fr (flexible) + auto (size to content) *@
             return "grid gap-12 md:grid-cols-[1fr_auto] md:items-center";
         }
 
@@ -110,8 +110,8 @@
     {
         if (HasAsideContent())
         {
-            // mx-auto = center horizontally
-            // md:mx-0 = remove centering on medium+ screens
+            @* mx-auto = center horizontally
+               md:mx-0 = remove centering on medium+ screens *@
             return "mx-auto md:mx-0 mt-6 max-w-2xl text-xl font-bold md:text-2xl";
         }
 

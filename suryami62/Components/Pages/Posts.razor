@@ -1,24 +1,19 @@
-﻿@* This page shows all blog posts with search and pagination.
+﻿@page "/posts"
+@using suryami62.Domain.Models
+@inject IBlogPostService BlogPostService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+@* This page shows all blog posts with search and pagination.
    @page "/posts" tells Blazor this handles the /posts URL.
    @rendermode InteractiveServer means this page is interactive
    (buttons, search, and pagination work via server communication).
 *@
-@page "/posts"
-@using suryami62.Domain.Models
-
-@* Import the BlogPost model *@
-
-@* Inject services - tools we need for this page *@
-@inject IBlogPostService BlogPostService
-@inject NavigationManager NavigationManager
-
-@* Tell Blazor this page needs interactivity (buttons, search) *@
-@rendermode InteractiveServer
 
 @* Set the browser tab title *@
 <PageTitle>My Tech Writings | suryami62</PageTitle>
 
-<!-- Meta tags for social media sharing -->
+@* Meta tags for social media sharing *@
 <HeadContent>
     <MetaOpenGraphCard Title="My Tech Writings | suryami62"
                        Description="Explore in-depth tutorials on .NET and web technologies. Learn coding through an educational approach connecting physics concepts with practical programming."
@@ -26,10 +21,10 @@
                        Url="@NavigationManager.Uri"/>
 </HeadContent>
 
-<!-- Main content area -->
+@* Main content area *@
 <div class="flex flex-col gap-12 py-8">
 
-    <!-- Header: Page title and description -->
+    @* Header: Page title and description *@
     <PageHeader Title="My Tech" Highlight="Writings">
         <ChildContent>
             In-depth tutorials and insights from a
@@ -38,12 +33,12 @@
         </ChildContent>
     </PageHeader>
 
-    <!-- Search Box: Lets users search for posts -->
+    @* Search Box: Lets users search for posts *@
     <section>
         <SearchForm @bind-Value="_localSearchTerm" OnSearch="HandleSearch"/>
     </section>
 
-    <!-- Blog Posts Display Area -->
+    @* Blog Posts Display Area *@
     <section>
         <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
 
@@ -135,13 +130,13 @@
 
     @* This runs when page loads or URL parameters change.
        It syncs the URL search term with the search box,
-       then loads the posts from the database.*@
+       then loads the posts from the database. *@
     protected override async Task OnParametersSetAsync()
     {
-        // Copy URL search term into the search box
+        @* Copy URL search term into the search box *@
         _localSearchTerm = SearchQuery;
 
-        // Load posts from database
+        @* Load posts from database *@
         await LoadPosts();
     }
 
@@ -153,16 +148,16 @@
        'async' means it can wait for the database without freezing the page.*@
     private async Task LoadPosts()
     {
-        // Calculate how many posts to skip (for pagination)
-        // Example: Page 2 with 6 posts per page = skip 6 posts
+        @* Calculate how many posts to skip (for pagination)
+           Example: Page 2 with 6 posts per page = skip 6 posts *@
         var skipCount = (_page - 1) * _pageSize;
 
-        // Call the service to get posts
-        // Parameters:
-        //   onlyPublished: true (only show published posts)
-        //   skip: how many posts to skip
-        //   take: how many posts to get (pageSize)
-        //   searchTerm: what to search for (null = no search)
+        @* Call the service to get posts
+           Parameters:
+             onlyPublished: true (only show published posts)
+             skip: how many posts to skip
+             take: how many posts to get (pageSize)
+             searchTerm: what to search for (null = no search) *@
         var result = await BlogPostService.GetPostsAsync(
             true,
             skipCount,
@@ -170,9 +165,9 @@
             SearchQuery
         );
 
-        // The result contains:
-        //   - Items: the actual blog posts for this page
-        //   - Total: how many posts exist in total (for pagination)
+        @* The result contains:
+           //   - Items: the actual blog posts for this page
+           //   - Total: how many posts exist in total (for pagination) *@
         _posts = result.Items;
         _total = result.Total;
     }
@@ -190,18 +185,18 @@
     @* Check if we're on the last page *@
     private bool IsOnLastPage()
     {
-        // Calculate how many posts we've shown so far
+        @* Calculate how many posts we've shown so far *@
         var postsShownSoFar = _page * _pageSize;
 
-        // If we've shown all posts, we're on the last page
+        @* If we've shown all posts, we're on the last page *@
         return postsShownSoFar >= _total;
     }
 
     @* Calculate total number of pages needed *@
     private int GetTotalPages()
     {
-        // Math.Ceiling rounds up - if we have 7 posts and 6 per page,
-        // we need 2 pages (7 / 6 = 1.17, rounded up = 2)
+        @* Math.Ceiling rounds up - if we have 7 posts and 6 per page,
+           we need 2 pages (7 / 6 = 1.17, rounded up = 2) *@
         var pages = (double)_total / _pageSize;
         return (int)Math.Ceiling(pages);
     }
@@ -209,7 +204,7 @@
     @* Go to the previous page *@
     private async Task GoToPreviousPage()
     {
-        // Only go back if not on first page
+        @* Only go back if not on first page *@
         if (_page > 1)
         {
             _page = _page - 1;
@@ -220,7 +215,7 @@
     @* Go to the next page *@
     private async Task GoToNextPage()
     {
-        // Only go forward if not on last page
+        @* Only go forward if not on last page *@
         if (!IsOnLastPage())
         {
             _page = _page + 1;
@@ -243,21 +238,21 @@
        Updates the page and URL to show search results.*@
     private void HandleSearch(string? term)
     {
-        // Save the search term locally
+        @* Save the search term locally *@
         _localSearchTerm = term;
 
-        // Go back to page 1 when searching (new search = start from beginning)
+        @* Go back to page 1 when searching (new search = start from beginning) *@
         _page = 1;
 
-        // Build the new URL with the search parameter
-        // If search is empty, pass null (cleaner URL)
+        @* Build the new URL with the search parameter
+           If search is empty, pass null (cleaner URL) *@
         var cleanTerm = string.IsNullOrWhiteSpace(_localSearchTerm)
             ? null
             : _localSearchTerm;
 
         var newUrl = NavigationManager.GetUriWithQueryParameter("q", cleanTerm);
 
-        // Navigate to the new URL (this reloads the page with search results)
+        @* Navigate to the new URL (this reloads the page with search results) *@
         NavigationManager.NavigateTo(newUrl);
     }
 
