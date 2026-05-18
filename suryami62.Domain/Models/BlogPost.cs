@@ -1,3 +1,9 @@
+#region
+
+using System.ComponentModel.DataAnnotations;
+
+#endregion
+
 // ============================================================================
 // BLOG POST MODEL
 // ============================================================================
@@ -25,12 +31,6 @@
 // Properties like "Title { get; set; } = string.Empty" initialize
 // with an empty string to avoid null reference exceptions.
 // ============================================================================
-
-#region
-
-using System.ComponentModel.DataAnnotations;
-
-#endregion
 
 namespace suryami62.Domain.Models;
 

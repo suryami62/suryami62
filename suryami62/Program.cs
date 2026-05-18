@@ -1,3 +1,9 @@
+#region
+
+using suryami62.Startup;
+
+#endregion
+
 // ============================================================================
 // PROGRAM.CS - Application Entry Point
 // ============================================================================
@@ -12,13 +18,6 @@
 // 5. Configures the middleware pipeline (how requests are handled)
 // 6. Starts the web server
 // ============================================================================
-
-#region
-
-using suryami62.Startup; // Extension methods for configuration
-
-#endregion
-
 
 // Enable legacy timestamp behavior for PostgreSQL (Npgsql).
 // This ensures DateTime values work correctly with the database.

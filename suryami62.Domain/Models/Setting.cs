@@ -1,3 +1,9 @@
+#region
+
+using System.ComponentModel.DataAnnotations;
+
+#endregion
+
 // ============================================================================
 // SETTING MODEL
 // ============================================================================
@@ -29,12 +35,6 @@
 // All values are stored as strings. Convert to other types when reading:
 //   bool enabled = bool.Parse(setting.Value);  // "true" -> true
 // ============================================================================
-
-#region
-
-using System.ComponentModel.DataAnnotations;
-
-#endregion
 
 namespace suryami62.Domain.Models;
 

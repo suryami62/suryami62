@@ -10,8 +10,7 @@
       @onsubmit:preventDefault
       class="mb-4 flex w-full max-w-xl flex-col items-stretch gap-4 sm:flex-row sm:items-center">
 
-    <!-- Text Input -->
-    @*
+    @* Text Input
        @bind:get - reads the current value
        @bind:set - updates the value when user types
        @bind:event="oninput" - update on every keystroke (not just blur)
@@ -23,7 +22,7 @@
            class="neo-input"
            placeholder="Search posts..."/>
 
-    <!-- Submit Button -->
+    @* Submit Button *@
     <button type="submit"
             class="neo-button border-4 px-6 py-3">
         Search
@@ -55,11 +54,11 @@
        Updates the Value and notifies the parent component. *@
     private async Task UpdateValue(string? newValue)
     {
-        // Update local value
+        @* Update local value *@
         Value = newValue;
 
-        // Notify parent that value changed
-        // (this is how @bind-Value works under the hood)
+        @* Notify parent that value changed
+           (this is how @bind-Value works under the hood) *@
         await ValueChanged.InvokeAsync(newValue);
     }
 

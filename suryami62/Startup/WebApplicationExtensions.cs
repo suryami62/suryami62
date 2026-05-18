@@ -1,3 +1,13 @@
+#region
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using suryami62.Components;
+using suryami62.Components.Account;
+using suryami62.Data;
+
+#endregion
+
 // ============================================================================
 // WEB APPLICATION EXTENSIONS
 // ============================================================================
@@ -17,16 +27,6 @@
 // - Authentication must come before authorization
 // - Static files should come early (fast path for images/CSS)
 // ============================================================================
-
-#region
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
-using suryami62.Components;
-using suryami62.Components.Account;
-using suryami62.Data;
-
-#endregion
 
 namespace suryami62.Startup;
 

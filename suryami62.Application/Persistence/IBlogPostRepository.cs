@@ -1,3 +1,9 @@
+#region
+
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // BLOG POST REPOSITORY INTERFACE
 // ============================================================================
@@ -18,12 +24,6 @@
 // - Items: The actual blog posts for this page
 // - Total: Total count (for pagination "Showing X of Y posts")
 // ============================================================================
-
-#region
-
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Application.Persistence;
 

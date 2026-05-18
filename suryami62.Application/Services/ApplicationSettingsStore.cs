@@ -1,3 +1,9 @@
+#region
+
+using suryami62.Application.Persistence;
+
+#endregion
+
 // ============================================================================
 // APPLICATION SETTINGS STORE
 // ============================================================================
@@ -23,12 +29,6 @@
 //   ApplicationSettings settings = await settingsStore.GetAsync();
 //   if (settings.RegistrationEnabled) { ... }
 // ============================================================================
-
-#region
-
-using suryami62.Application.Persistence;
-
-#endregion
 
 namespace suryami62.Services;
 

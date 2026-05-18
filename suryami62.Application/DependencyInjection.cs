@@ -1,3 +1,10 @@
+#region
+
+using Microsoft.Extensions.DependencyInjection;
+using suryami62.Services;
+
+#endregion
+
 // ============================================================================
 // APPLICATION DEPENDENCY INJECTION
 // ============================================================================
@@ -27,13 +34,6 @@
 //   ^ Register concrete class directly
 //   Use when there's no interface or only one implementation
 // ============================================================================
-
-#region
-
-using Microsoft.Extensions.DependencyInjection;
-using suryami62.Services;
-
-#endregion
 
 namespace suryami62.Application;
 

@@ -1,3 +1,11 @@
+#region
+
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using suryami62.Application.Persistence;
+
+#endregion
+
 // ============================================================================
 // CACHED SETTINGS REPOSITORY
 // ============================================================================
@@ -30,14 +38,6 @@
 // - Only queries database for keys not in cache
 // - Stores newly fetched values in cache
 // ============================================================================
-
-#region
-
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using suryami62.Application.Persistence;
-
-#endregion
 
 namespace suryami62.Infrastructure.Persistence;
 

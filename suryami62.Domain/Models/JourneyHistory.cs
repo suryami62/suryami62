@@ -1,3 +1,9 @@
+#region
+
+using System.ComponentModel.DataAnnotations;
+
+#endregion
+
 // ============================================================================
 // JOURNEY HISTORY MODEL
 // ============================================================================
@@ -27,12 +33,6 @@
 //   1. B.S. Computer Science - MIT (2014-2018)
 //      Summary of studies...
 // ============================================================================
-
-#region
-
-using System.ComponentModel.DataAnnotations;
-
-#endregion
 
 namespace suryami62.Domain.Models;
 

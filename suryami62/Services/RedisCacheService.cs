@@ -1,3 +1,11 @@
+#region
+
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
+
+#endregion
+
 // ============================================================================
 // REDIS CACHE SERVICE
 // ============================================================================
@@ -18,13 +26,6 @@
 // See: https://learn.microsoft.com/azure/redis/best-practices-connection
 // ============================================================================
 
-#region
-
-using System.Text.Json;
-using Microsoft.Extensions.Caching.Distributed;
-using StackExchange.Redis;
-
-#endregion
 
 namespace suryami62.Services;
 

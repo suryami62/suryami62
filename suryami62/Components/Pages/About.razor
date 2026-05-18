@@ -1,24 +1,19 @@
-﻿@* This page displays the author's biography and career history.
-   It shows work experience and education in a timeline format.
-   @page "/about" handles the /about URL.
-*@
-@page "/about"
+﻿@page "/about"
 @using suryami62.Domain.Models
-
-@* Import the data models we need *@
-
-@* Inject services we need *@
 @inject NavigationManager NavigationManager
 @inject IJourneyHistoryService JourneyHistoryService
 @inject MarkdownRenderer MarkdownRenderer
-
-@* Enable interactive features *@
 @rendermode InteractiveServer
+
+@* This page displays the author's biography and career history.
+   It shows work experience and education in a timeline format.
+   @page "/about" handles the /about URL.
+*@
 
 @* Set browser tab title *@
 <PageTitle>My Personal Bio | suryami62</PageTitle>
 
-<!-- Meta tags for social media sharing -->
+@* Meta tags for social media sharing *@
 <HeadContent>
     <MetaOpenGraphCard Title="My Personal Bio | suryami62"
                        Description="Learn about Surya Ramadhan's journey as a .NET Developer and Physics Teacher. Discover how passion for science and coding shapes problem-solving approaches."
@@ -26,10 +21,10 @@
                        Url="@NavigationManager.Uri"/>
 </HeadContent>
 
-<!-- Main content area -->
+@* Main content area *@
 <div class="flex flex-col gap-12 py-8">
 
-    <!-- Header: Page title -->
+    @* Header: Page title *@
     <PageHeader Title="My Personal" Highlight="Bio">
         <ChildContent>
             A <span class="underline decoration-4">.NET Developer</span> and
@@ -38,9 +33,9 @@
         </ChildContent>
     </PageHeader>
 
-    <!-- Role Cards: Two cards side by side explaining the two roles -->
+    @* Role Cards: Two cards side by side explaining the two roles *@
     <section class="grid gap-8 md:grid-cols-2">
-        <!-- Developer Role Card -->
+        @* Developer Role Card *@
         <InfoCard Title="The Developer" IconClass="fa-solid fa-code">
             <p class="text-lg leading-relaxed font-medium">
                 Specializing in <strong>.NET</strong> and <strong>C#</strong>,
@@ -49,7 +44,7 @@
             </p>
         </InfoCard>
 
-        <!-- Teacher Role Card -->
+        @* Teacher Role Card *@
         <InfoCard Title="The Teacher" IconClass="fa-solid fa-chalkboard-user">
             <p class="text-lg leading-relaxed font-medium">
                 With a background in <strong>Physics Education</strong>, I
@@ -59,14 +54,14 @@
         </InfoCard>
     </section>
 
-    <!-- Journey Section: Work Experience and Education Timeline -->
+    @* Journey Section: Work Experience and Education Timeline *@
     <section>
         <h2 class="mb-8 text-4xl font-black tracking-tighter uppercase decoration-4 underline-offset-4 md:text-6xl md:underline">
             Journey
         </h2>
 
         <div class="grid gap-8 lg:grid-cols-2">
-            <!-- Work Experience Column -->
+            @* Work Experience Column *@
             <ContentBlock Title="Experience">
                 <div class="flex flex-col gap-6">
                     @* Loop through each job in the experience list *@
@@ -94,7 +89,7 @@
                 </div>
             </ContentBlock>
 
-            <!-- Education Column -->
+            @* Education Column *@
             <ContentBlock Title="Education">
                 <div class="flex flex-col gap-6">
                     @* Loop through each school/degree *@
@@ -169,19 +164,19 @@
        It fetches the experience and education data from the database.*@
     protected override async Task OnInitializedAsync()
     {
-        // Load work experience from database
-        // JourneySection.Experience means "only get work history items"
+        @* Load work experience from database
+           JourneySection.Experience means "only get work history items" *@
         var experiences = await JourneyHistoryService.GetBySectionAsync(
             JourneySection.Experience
         );
 
-        // Load education history from database
-        // JourneySection.Education means "only get education items"
+        @* Load education history from database
+           JourneySection.Education means "only get education items" *@
         var educations = await JourneyHistoryService.GetBySectionAsync(
             JourneySection.Education
         );
 
-        // Create the view model with both lists
+        @* Create the view model with both lists *@
         _journey = new JourneyViewModel(experiences, educations);
     }
 
@@ -193,9 +188,9 @@
        Returns true if there is text to display.*@
     private bool HasDescription(string? summary)
     {
-        // string.IsNullOrWhiteSpace returns true if the text is
-        // null, empty, or only whitespace. The ! means "not",
-        // so this returns true if there IS actual content.
+        @* string.IsNullOrWhiteSpace returns true if the text is
+           null, empty, or only whitespace. The ! means "not",
+           so this returns true if there IS actual content. *@
         return !string.IsNullOrWhiteSpace(summary);
     }
 
@@ -206,11 +201,11 @@
     {
         if (string.IsNullOrWhiteSpace(markdownText))
         {
-            // Return empty HTML if no text
+            @* Return empty HTML if no text *@
             return new MarkupString("");
         }
 
-        // Convert Markdown to HTML and return it
+        @* Convert Markdown to HTML and return it *@
         return MarkdownRenderer.Render(markdownText);
     }
 

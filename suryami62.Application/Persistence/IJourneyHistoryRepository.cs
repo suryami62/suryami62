@@ -1,3 +1,9 @@
+#region
+
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // JOURNEY HISTORY REPOSITORY INTERFACE
 // ============================================================================
@@ -13,12 +19,6 @@
 //
 // See JourneySection enum in Domain for all section types.
 // ============================================================================
-
-#region
-
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Application.Persistence;
 

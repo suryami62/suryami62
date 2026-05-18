@@ -1,3 +1,9 @@
+#region
+
+using Microsoft.EntityFrameworkCore;
+
+#endregion
+
 // ============================================================================
 // EF CORE REPOSITORY HELPERS
 // ============================================================================
@@ -25,12 +31,6 @@
 // - Skip(10): Skip first 10 results (for page 2)
 // - Take(10): Return only 10 results (page size)
 // ============================================================================
-
-#region
-
-using Microsoft.EntityFrameworkCore;
-
-#endregion
 
 namespace suryami62.Infrastructure.Persistence;
 

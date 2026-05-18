@@ -1,3 +1,9 @@
+#region
+
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // PROJECT REPOSITORY INTERFACE
 // ============================================================================
@@ -12,12 +18,6 @@
 // - Items: The projects for this page
 // - Total: Total count (for pagination)
 // ============================================================================
-
-#region
-
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Application.Persistence;
 

@@ -1,4 +1,8 @@
-﻿@* Markdown Editor Component - A text editor with Markdown formatting tools.
+﻿@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+@inject MarkdownRenderer MarkdownRenderer
+
+@* Markdown Editor Component - A text editor with Markdown formatting tools.
 
    Features:
    - Formatting toolbar (headings, bold, italic, lists, etc.)
@@ -14,18 +18,13 @@
    async cleanup (disposing the JavaScript module).
    This is needed for JavaScript interop.
 *@
-@implements IAsyncDisposable
-
-@* Services we need *@
-@inject IJSRuntime JSRuntime
-@inject MarkdownRenderer MarkdownRenderer
 
 <div class="neo-card flex flex-col">
 
-    <!-- Toolbar: Formatting buttons and view mode switcher -->
+    @* Toolbar: Formatting buttons and view mode switcher *@
     <div class="flex flex-wrap gap-2 border-b-4 border-black bg-gray-50 p-2 dark:border-white dark:bg-gray-900/50">
 
-        <!-- Heading Buttons (H1-H6) -->
+        @* Heading Buttons (H1-H6) *@
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             @foreach (var i in Enumerable.Range(1, 6))
             {
@@ -40,7 +39,7 @@
             }
         </div>
 
-        <!-- Text Formatting: Bold, Italic -->
+        @* Text Formatting: Bold, Italic *@
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             <button type="button"
                     @onclick='() => WrapSelection("**", "**")'
@@ -58,7 +57,7 @@
             </button>
         </div>
 
-        <!-- List and Block Formatting -->
+        @* List and Block Formatting *@
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             <button type="button"
                     @onclick='() => WrapSelection("- ", "")'
@@ -90,7 +89,7 @@
             </button>
         </div>
 
-        <!-- Code Formatting -->
+        @* Code Formatting *@
         <div class="flex gap-1 border-r-2 border-black pr-2 dark:border-white">
             <button type="button"
                     @onclick='() => WrapSelection("`", "`")'
@@ -108,7 +107,7 @@
             </button>
         </div>
 
-        <!-- Links and Images -->
+        @* Links and Images *@
         <div class="flex gap-1">
             <button type="button"
                     @onclick='() => WrapSelection("[", "](url)")'
@@ -129,7 +128,7 @@
         @* Spacer to push mode buttons to the right *@
         <div class="grow"></div>
 
-        <!-- View Mode Buttons: Edit / Split / Preview -->
+        @* View Mode Buttons: Edit / Split / Preview *@
         <div class="flex h-10 border-2 border-black dark:border-white">
             <button type="button"
                     @onclick="() => SetMode(EditorMode.Edit)"
@@ -149,10 +148,10 @@
         </div>
     </div>
 
-    <!-- Editor Area -->
+    @* Editor Area *@
     <div class="grid @(GetGridClass()) min-h-[400px]">
 
-        <!-- Text Editor (shown in Edit and Split modes) -->
+        @* Text Editor (shown in Edit and Split modes) *@
         @if (Mode != EditorMode.Preview)
         {
             <textarea @ref="_textArea"
@@ -162,7 +161,7 @@
                       class="@GetTextAreaClass()"></textarea>
         }
 
-        <!-- Preview Panel (shown in Split and Preview modes) -->
+        @* Preview Panel (shown in Split and Preview modes) *@
         @if (Mode != EditorMode.Edit)
         {
             <div class="prose prose-lg h-full min-h-100 max-w-none overflow-auto p-4 dark:prose-invert">
@@ -219,14 +218,14 @@
     {
         if (firstRender)
         {
-            // Load the JavaScript module for text manipulation
+            @* Load the JavaScript module for text manipulation *@
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>(
                 "import",
                 "/js/markdown-editor.js"
             );
 
-            // Tell Blazor to re-render now that JS is loaded
-            // (enables the formatting buttons)
+            @* Tell Blazor to re-render now that JS is loaded
+               (enables the formatting buttons) *@
             StateHasChanged();
         }
     }
@@ -272,13 +271,13 @@
        Example: WrapSelection("**", "**") on "text" produces "**text**" *@
     private async Task WrapSelection(string prefix, string suffix)
     {
-        // Don't format if in preview mode or JS not ready
+        @* Don't format if in preview mode or JS not ready *@
         if (IsFormattingDisabled || _module is null)
         {
             return;
         }
 
-        // Call JavaScript to insert text at cursor/selection
+        @* Call JavaScript to insert text at cursor/selection *@
         var newValue = await _module.InvokeAsync<string>(
             "insertText",
             _textArea,
@@ -286,7 +285,7 @@
             suffix
         );
 
-        // Update the value and notify parent
+        @* Update the value and notify parent *@
         Value = newValue;
         await ValueChanged.InvokeAsync(Value);
     }
@@ -294,8 +293,8 @@
     @* Get CSS class for grid layout based on mode *@
     private string GetGridClass()
     {
-        // Split mode: 2 columns side by side
-        // Other modes: 1 column (full width)
+        @* Split mode: 2 columns side by side
+           Other modes: 1 column (full width) *@
         return Mode == EditorMode.Split
             ? "grid-cols-2"
             : "grid-cols-1";
@@ -304,8 +303,8 @@
     @* Get CSS class for the active mode button *@
     private string GetActiveClass(EditorMode mode)
     {
-        // Active button: black background (white in dark mode)
-        // Inactive button: gray hover effect
+        @* Active button: black background (white in dark mode)
+           Inactive button: gray hover effect *@
         return Mode == mode
             ? "bg-black dark:bg-white"
             : "hover:bg-gray-100 dark:hover:bg-gray-800";
@@ -316,7 +315,7 @@
     {
         var baseClass = "h-full min-h-100 w-full resize-none p-4 font-mono text-lg outline-none dark:bg-gray-900";
 
-        // Add border on right side in split mode
+        @* Add border on right side in split mode *@
         if (Mode == EditorMode.Split)
         {
             baseClass += " border-r-4 border-black dark:border-white";
@@ -332,9 +331,9 @@
     @* The three view modes for the editor *@
     private enum EditorMode
     {
-        Edit, // Text editor only
-        Split, // Editor and preview side by side
-        Preview // Rendered preview only
+        Edit,
+        Split,
+        Preview
     }
 
 }

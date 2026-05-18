@@ -1,3 +1,9 @@
+#region
+
+using Microsoft.AspNetCore.Identity;
+
+#endregion
+
 // ============================================================================
 // APPLICATION USER
 // ============================================================================
@@ -24,12 +30,6 @@
 // DATABASE TABLE:
 // This class maps to the "AspNetUsers" table (created by Identity).
 // ============================================================================
-
-#region
-
-using Microsoft.AspNetCore.Identity;
-
-#endregion
 
 namespace suryami62.Data;
 

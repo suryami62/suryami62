@@ -1,3 +1,10 @@
+#region
+
+using suryami62.Application.Persistence;
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // PROJECT SERVICE
 // ============================================================================
@@ -21,13 +28,6 @@
 // - projects:list:0:10      - Paginated list of projects
 // - projects:id:42            - Single project by ID
 // ============================================================================
-
-#region
-
-using suryami62.Application.Persistence;
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Services;
 

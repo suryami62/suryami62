@@ -1,3 +1,12 @@
+#region
+
+using Microsoft.EntityFrameworkCore;
+using suryami62.Application.Persistence;
+using suryami62.Data;
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // SETTINGS REPOSITORY
 // ============================================================================
@@ -24,15 +33,6 @@
 // Callers cannot accidentally modify the returned dictionary.
 // StringComparer.Ordinal = case-sensitive, culture-neutral key comparison.
 // ============================================================================
-
-#region
-
-using Microsoft.EntityFrameworkCore;
-using suryami62.Application.Persistence;
-using suryami62.Data;
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Infrastructure.Persistence;
 

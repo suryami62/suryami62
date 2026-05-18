@@ -1,21 +1,3 @@
-// ============================================================================
-// WEB SERVICE COLLECTION EXTENSIONS
-// ============================================================================
-// This file contains extension methods that register all services needed
-// by the web application. "Services" are objects that provide functionality
-// like database access, caching, authentication, etc.
-//
-// WHAT IS DEPENDENCY INJECTION?
-// Instead of creating objects with "new", we register them here and ASP.NET
-// automatically provides them when needed. This is called "Dependency Injection"
-// and makes testing and maintenance easier.
-//
-// SERVICE LIFETIMES:
-// - Singleton: One instance for entire application (e.g., Redis connection)
-// - Scoped: One instance per HTTP request (e.g., database context)
-// - Transient: New instance every time (e.g., MarkdownRenderer)
-// ============================================================================
-
 #region
 
 using System.IO.Compression;
@@ -40,6 +22,24 @@ using suryami62.Security;
 using suryami62.Services;
 
 #endregion
+
+// ============================================================================
+// WEB SERVICE COLLECTION EXTENSIONS
+// ============================================================================
+// This file contains extension methods that register all services needed
+// by the web application. "Services" are objects that provide functionality
+// like database access, caching, authentication, etc.
+//
+// WHAT IS DEPENDENCY INJECTION?
+// Instead of creating objects with "new", we register them here and ASP.NET
+// automatically provides them when needed. This is called "Dependency Injection"
+// and makes testing and maintenance easier.
+//
+// SERVICE LIFETIMES:
+// - Singleton: One instance for entire application (e.g., Redis connection)
+// - Scoped: One instance per HTTP request (e.g., database context)
+// - Transient: New instance every time (e.g., MarkdownRenderer)
+// ============================================================================
 
 namespace suryami62.Startup;
 

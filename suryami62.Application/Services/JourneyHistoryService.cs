@@ -1,3 +1,10 @@
+#region
+
+using suryami62.Application.Persistence;
+using suryami62.Domain.Models;
+
+#endregion
+
 // ============================================================================
 // JOURNEY HISTORY SERVICE
 // ============================================================================
@@ -23,13 +30,6 @@
 // - journey:section:Professional    - Work experience items
 // - journey:section:Certification   - Certifications
 // ============================================================================
-
-#region
-
-using suryami62.Application.Persistence;
-using suryami62.Domain.Models;
-
-#endregion
 
 namespace suryami62.Services;
 

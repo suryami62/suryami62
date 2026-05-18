@@ -1,3 +1,10 @@
+#region
+
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+
+#endregion
+
 // ============================================================================
 // ADMIN ACCESS POLICY
 // ============================================================================
@@ -22,13 +29,6 @@
 // USAGE IN RAZOR COMPONENTS:
 // @attribute [Authorize(Policy = AdminAccessPolicy.Name)]
 // ============================================================================
-
-#region
-
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-
-#endregion
 
 namespace suryami62.Security;
 

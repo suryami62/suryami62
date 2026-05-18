@@ -1,3 +1,9 @@
+#region
+
+using suryami62.Application.Persistence;
+
+#endregion
+
 // ============================================================================
 // SITE PROFILE SETTINGS STORE
 // ============================================================================
@@ -23,12 +29,6 @@
 // - UserInfo:Github     - GitHub URL
 // - UserInfo:Email      - Contact email
 // ============================================================================
-
-#region
-
-using suryami62.Application.Persistence;
-
-#endregion
 
 namespace suryami62.Services;
 
