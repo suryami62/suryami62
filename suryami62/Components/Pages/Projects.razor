@@ -4,15 +4,8 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-@* This page displays the portfolio of projects with pagination.
-   @page "/projects" tells Blazor this handles the /projects URL.
-   @rendermode InteractiveServer means buttons work via server communication.
-*@
-
-@* Set browser tab title *@
 <PageTitle>My Selected Projects | suryami62</PageTitle>
 
-@* Meta tags for social media sharing *@
 <HeadContent>
     <MetaOpenGraphCard Title="My Selected Projects | suryami62"
                        Description="Discover practical projects combining technology and science. From web applications to coding experiments solving real-world problems with systematic innovation."
@@ -20,10 +13,7 @@
                        Url="@NavigationManager.Uri"/>
 </HeadContent>
 
-@* Main content area *@
 <div class="flex flex-col gap-12 py-8">
-
-    @* Header: Page title and description *@
     <PageHeader Title="My Selected" Highlight="Projects">
         <ChildContent>
             A collection of tools and experiments built by a
@@ -32,30 +22,24 @@
         </ChildContent>
     </PageHeader>
 
-    @* Projects Display Area *@
     <section>
         <div class="grid gap-12 md:grid-cols-2">
-
-            @* CASE 1: Still loading from server *@
             @if (_projects == null)
             {
                 <div class="neo-card col-span-full p-12 text-center">
                     <p class="neo-title-md">Loading projects...</p>
                 </div>
             }
-            @* CASE 2: No projects found *@
             else if (_projects.Count == 0)
             {
                 <div class="neo-placeholder col-span-full border-4 border-dashed p-12 text-center">
                     <p class="neo-title-md">No projects found yet.</p>
                 </div>
             }
-            @* CASE 3: Display the projects *@
             else
             {
                 @foreach (var project in _projects)
                 {
-                    @* Create a card for each project *@
                     <ProjectCard Title="@project.Title"
                                  Description="@project.Description"
                                  Tags="@GetTagsArray(project.Tags)"
@@ -66,23 +50,19 @@
             }
         </div>
 
-        @* Pagination controls - only show if more projects than fit on one page *@
         @if (_total > _pageSize)
         {
             <div class="mt-12 flex justify-center gap-4">
-                @* Previous Page Button *@
                 <button disabled="@IsOnFirstPage()"
                         @onclick="GoToPreviousPage"
                         class="neo-pagination-btn bg-white dark:bg-black">
                     PREV
                 </button>
 
-                @* Page counter *@
                 <div class="flex items-center text-2xl font-black">
                     @_page / @GetTotalPages()
                 </div>
 
-                @* Next Page Button *@
                 <button disabled="@IsOnLastPage()"
                         @onclick="GoToNextPage"
                         class="neo-pagination-btn bg-orange-400 dark:bg-orange-400">
@@ -94,79 +74,49 @@
 </div>
 
 @code {
-    // ============================================================
-    // FIELDS
-    // ============================================================
-
-    @* List of projects. The ? means it starts as null (not loaded yet) *@
     private List<Project>? _projects;
 
-    @* Current page number (starts at 1) *@
     private int _page = 1;
 
-    @* How many projects to show per page *@
     private readonly int _pageSize = 6;
 
-    @* Total number of projects (across all pages) *@
     private int _total;
 
-    // ============================================================
-    // PAGE LIFECYCLE
-    // ============================================================
-
-    @* Runs automatically when page first loads *@
     protected override async Task OnInitializedAsync()
     {
         await LoadProjects();
     }
 
-    // ============================================================
-    // DATA LOADING
-    // ============================================================
-
-    @* Load projects from database based on current page *@
     private async Task LoadProjects()
     {
-        @* Calculate how many projects to skip for pagination *@
         var skipCount = (_page - 1) * _pageSize;
 
-        @* Get projects from service *@
         var result = await ProjectService.GetProjectsAsync(
             skipCount,
             _pageSize
         );
 
-        @* Store results
-          result has: Items (the projects) and Total (total count) *@
         _projects = result.Items;
         _total = result.Total;
     }
 
-    // ============================================================
-    // PAGINATION METHODS
-    // ============================================================
-
-    @* Check if on first page *@
     private bool IsOnFirstPage()
     {
         return _page == 1;
     }
 
-    @* Check if on last page *@
     private bool IsOnLastPage()
     {
         var projectsShownSoFar = _page * _pageSize;
         return projectsShownSoFar >= _total;
     }
 
-    @* Calculate total pages *@
     private int GetTotalPages()
     {
         var pages = (double)_total / _pageSize;
         return (int)Math.Ceiling(pages);
     }
 
-    @* Go to previous page *@
     private async Task GoToPreviousPage()
     {
         if (_page > 1)
@@ -176,7 +126,6 @@
         }
     }
 
-    @* Go to next page *@
     private async Task GoToNextPage()
     {
         if (!IsOnLastPage())
@@ -186,35 +135,25 @@
         }
     }
 
-    @* Old method kept for compatibility *@
     private async Task ChangePage(int newPage)
     {
         _page = newPage;
         await LoadProjects();
     }
 
-    // ============================================================
-    // HELPER METHODS
-    // ============================================================
-
-    @* Converts a comma-separated string of tags into an array.
-       Example: "c#,blazor,web" becomes ["c#", "blazor", "web"] *@
     private string[] GetTagsArray(string? tags)
     {
         if (string.IsNullOrWhiteSpace(tags))
         {
-            @* Return empty array if no tags *@
             return Array.Empty<string>();
         }
 
-        @* Split by comma and remove any empty entries *@
         return tags.Split(
             ',',
             StringSplitOptions.RemoveEmptyEntries
         );
     }
 
-    @* Converts a URL object to a string for the ProjectCard *@
     private string? GetUrlString(Uri? url)
     {
         if (url == null)

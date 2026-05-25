@@ -1,5 +1,4 @@
-﻿@* Admin editor page for creating and updating blog posts. *@
-@page "/Account/Admin/Posts/New"
+﻿@page "/Account/Admin/Posts/New"
 @page "/Account/Admin/Posts/Edit/{Id:int}"
 @using Microsoft.AspNetCore.Authorization
 @using suryami62.Domain.Models
@@ -16,17 +15,20 @@
     <EditForm Model="@_post" OnValidSubmit="SavePostAsync" FormName="edit-post-form"
               class="neo-card flex flex-col gap-6 p-8">
         <DataAnnotationsValidator/>
+
         <ValidationSummary class="@ValidationSummaryClass"/>
 
         <div class="grid gap-6 md:grid-cols-2">
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Title</label>
+
                 <InputText @bind-Value="_post.Title" @oninput="OnTitleChanged"
                            class="@InputClass"/>
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Slug</label>
+
                 <InputText @bind-Value="_post.Slug"
                            class="@InputClass"/>
             </div>
@@ -35,12 +37,14 @@
         <div class="grid gap-6 md:grid-cols-2">
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Label</label>
+
                 <InputText @bind-Value="_post.Label"
                            class="@InputClass"/>
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Date</label>
+
                 <InputDate @bind-Value="_post.Date"
                            class="@InputClass"/>
             </div>
@@ -48,23 +52,27 @@
 
         <div class="flex flex-col gap-2">
             <label class="text-xl font-black uppercase">Image URL</label>
+
             <InputText @bind-Value="_imageUrlText" placeholder="https://.../thumbnail.jpg"
                        class="@InputClass"/>
         </div>
 
         <div class="flex flex-col gap-2">
             <label class="text-xl font-black uppercase">Summary</label>
+
             <InputTextArea @bind-Value="_post.Summary" rows="2"
                            class="@InputClass"/>
         </div>
 
         <div class="flex flex-col gap-2">
             <label class="text-xl font-black uppercase">Content</label>
+
             <MarkdownEditor @bind-Value="_post.Content"/>
         </div>
 
         <div class="flex items-center gap-4">
             <label class="text-xl font-black uppercase">Published</label>
+
             <InputCheckbox @bind-Value="_post.IsPublished"
                            class="@CheckboxClass"/>
         </div>
@@ -74,6 +82,7 @@
                     class="@PrimaryButtonClass">
                 @SubmitButtonText
             </button>
+
             <a href="/Account/Admin/Posts"
                class="@SecondaryButtonClass">
                 CANCEL
@@ -89,11 +98,7 @@
     private const string PrimaryButtonClass = "neo-button-lime px-8 py-3 text-xl";
     private const string SecondaryButtonClass = "neo-button bg-neutral-200 px-8 py-3 text-xl hover:bg-neutral-300 dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600";
 
-    /// <summary>
-    ///     Gets the identifier of the post being edited, or <see langword="null" /> when creating a new post.
-    /// </summary>
-    [Parameter]
-    public int? Id { get; set; }
+    [Parameter] public int? Id { get; set; }
 
     private BlogPost _post = CreateNewPost();
     private string? _imageUrlText;
@@ -107,9 +112,6 @@
 
     private string SubmitButtonText => _isSubmitting ? "SAVING..." : "SAVE POST";
 
-    /// <summary>
-    ///     Loads the requested post when the route changes, or resets the form for a new post.
-    /// </summary>
     protected override async Task OnParametersSetAsync()
     {
         if (IsNewPost)
@@ -121,9 +123,6 @@
         await LoadExistingPostAsync(Id!.Value);
     }
 
-    /// <summary>
-    ///     Parses an optional absolute image URL from the free-form input field.
-    /// </summary>
     private static Uri? TryParseAbsoluteUri(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -134,9 +133,6 @@
         return Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
     }
 
-    /// <summary>
-    ///     Auto-generates a unique slug while creating a new post.
-    /// </summary>
     private async Task OnTitleChanged(ChangeEventArgs e)
     {
         if (!IsNewPost)
@@ -150,9 +146,6 @@
         _post.Slug = await BlogPostService.GenerateUniqueSlugAsync(title);
     }
 
-    /// <summary>
-    ///     Creates or updates the post, then returns to the admin post listing.
-    /// </summary>
     private async Task SavePostAsync()
     {
         if (_isSubmitting)
@@ -227,9 +220,6 @@
         NavigationManager.NavigateTo("/Account/Admin/Posts");
     }
 
-    /// <summary>
-    ///     Creates a new post model with the default publication date used by the editor.
-    /// </summary>
     private static BlogPost CreateNewPost()
     {
         return new BlogPost { Date = DateTime.UtcNow };

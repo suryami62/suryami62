@@ -1,5 +1,4 @@
-﻿@* Account management page for configuring authenticator app-based two-factor authentication. *@
-@page "/Account/Manage/EnableAuthenticator"
+﻿@page "/Account/Manage/EnableAuthenticator"
 @using System.ComponentModel.DataAnnotations
 @using System.Globalization
 @using System.Text
@@ -22,11 +21,14 @@
 else
 {
     <StatusMessage Message="@message"/>
+
     <div class="flex flex-col gap-6">
         <div>
             <h3 class="text-3xl font-black uppercase tracking-tighter">Configure authenticator app</h3>
+
             <p class="mt-2 text-sm font-bold uppercase">Follow the steps below to enable 2FA.</p>
         </div>
+
         <ol class="list-decimal pl-6 font-bold space-y-6">
             <li>
                 <p>
@@ -43,12 +45,14 @@ else
                        href="https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8">iOS</a>.
                 </p>
             </li>
+
             <li>
                 <p>
                     Scan the QR Code or enter this key
                     <kbd class="neo-frame-sm px-2 py-1 text-xs font-black">@sharedKey</kbd>
                     into your two factor authenticator app. Spaces and casing do not matter.
                 </p>
+
                 <div class="neo-card mt-4 p-4">
                     @if (!string.IsNullOrEmpty(qrCodeImageAsBase64))
                     {
@@ -60,24 +64,31 @@ else
                     }
                 </div>
             </li>
+
             <li>
                 <p>
                     Once you have scanned the QR code or input the key above, your two factor authentication app will
                     provide you with a unique code. Enter the code in the confirmation box below.
                 </p>
+
                 <EditForm Model="Input" FormName="send-code" OnValidSubmit="OnValidSubmitAsync" method="post">
                     <DataAnnotationsValidator/>
+
                     <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
+
                     <div class="mt-4 flex flex-col gap-4 max-w-xl">
                         <div class="flex flex-col gap-2">
                             <label for="Input.Code" class="text-sm font-black uppercase tracking-widest">Verification
                                 code</label>
+
                             <InputText @bind-Value="Input.Code" id="Input.Code"
                                        class="@InputClass"
                                        autocomplete="off" placeholder="Enter the code"/>
+
                             <ValidationMessage For="() => Input.Code"
                                                class="@ValidationMessageClass"/>
                         </div>
+
                         <button type="submit" class="neo-button w-full text-center">
                             Verify
                         </button>

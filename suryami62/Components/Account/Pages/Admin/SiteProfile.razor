@@ -1,5 +1,4 @@
-﻿@* Admin page for editing public profile links and contact details. *@
-@page "/Account/Admin/SiteProfile"
+﻿@page "/Account/Admin/SiteProfile"
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Policy = AdminAccessPolicy.Name)]
@@ -25,44 +24,57 @@
     <section class="neo-card p-6">
         <EditForm Model="FormInput" FormName="siteProfile" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator/>
+
             <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
 
             <div class="mt-4 flex max-w-xl flex-col gap-4">
                 <div class="flex flex-col gap-2">
                     <label for="FormInput.Instagram"
                            class="text-sm font-black tracking-widest uppercase">Instagram</label>
+
                     <InputText @bind-Value="FormInput.Instagram" id="FormInput.Instagram"
                                class="@InputClass"
                                placeholder="https://instagram.com/username"/>
+
                     <ValidationMessage For="() => FormInput.Instagram"
                                        class="@ValidationMessageClass"/>
                 </div>
+
                 <div class="flex flex-col gap-2">
                     <label for="FormInput.Linkedin"
                            class="text-sm font-black tracking-widest uppercase">LinkedIn</label>
+
                     <InputText @bind-Value="FormInput.Linkedin" id="FormInput.Linkedin"
                                class="@InputClass"
                                placeholder="https://linkedin.com/in/username"/>
+
                     <ValidationMessage For="() => FormInput.Linkedin"
                                        class="@ValidationMessageClass"/>
                 </div>
+
                 <div class="flex flex-col gap-2">
                     <label for="FormInput.Github" class="text-sm font-black tracking-widest uppercase">GitHub</label>
+
                     <InputText @bind-Value="FormInput.Github" id="FormInput.Github"
                                class="@InputClass"
                                placeholder="https://github.com/username"/>
+
                     <ValidationMessage For="() => FormInput.Github"
                                        class="@ValidationMessageClass"/>
                 </div>
+
                 <div class="flex flex-col gap-2">
                     <label for="FormInput.Email" class="text-sm font-black tracking-widest uppercase">Public
                         Email</label>
+
                     <InputText @bind-Value="FormInput.Email" id="FormInput.Email"
                                class="@InputClass"
                                placeholder="mailto:user@domain.com"/>
+
                     <ValidationMessage For="() => FormInput.Email"
                                        class="@ValidationMessageClass"/>
                 </div>
+
                 <button type="submit" disabled="@_isSubmitting"
                         class="neo-button w-full text-center disabled:cursor-not-allowed disabled:opacity-50">
                     @(_isSubmitting ? "Saving..." : "Save")
@@ -88,18 +100,12 @@
 
     [SupplyParameterFromForm] private InputModel FormInput { get; set; } = default!;
 
-    /// <summary>
-    ///     Loads the persisted public profile settings into the admin form.
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         FormInput ??= new InputModel();
         await LoadFormInputAsync();
     }
 
-    /// <summary>
-    ///     Persists the form values as public site profile settings.
-    /// </summary>
     private async Task OnValidSubmitAsync()
     {
         if (_isSubmitting)
@@ -124,9 +130,6 @@
         }
     }
 
-    /// <summary>
-    ///     Loads the existing profile values so the form always starts from the current persisted state.
-    /// </summary>
     private async Task LoadFormInputAsync()
     {
         var siteProfile = await SiteProfileSettingsStore.GetAsync();
@@ -181,9 +184,6 @@
         _isError = true;
     }
 
-    /// <summary>
-    ///     Captures editable site profile values before they are persisted into the settings store.
-    /// </summary>
     private sealed class InputModel
     {
         [WebUrl] [Display(Name = "Instagram")] public string? Instagram { get; set; }
@@ -197,9 +197,6 @@
         public string? Email { get; set; }
     }
 
-    /// <summary>
-    ///     Validates absolute URLs and restricts the allowed schemes for profile fields.
-    /// </summary>
     private abstract class AbsoluteUrlValidationAttribute : ValidationAttribute
     {
         private readonly string[] _allowedSchemes;
@@ -267,9 +264,6 @@
         }
     }
 
-    /// <summary>
-    ///     Allows public social links that should resolve to standard web URLs.
-    /// </summary>
     private sealed class WebUrlAttribute : AbsoluteUrlValidationAttribute
     {
         public WebUrlAttribute() : base("http", "https")
@@ -277,9 +271,6 @@
         }
     }
 
-    /// <summary>
-    ///     Allows either a web URL or a mailto link for the public contact field.
-    /// </summary>
     private sealed class WebOrMailtoUrlAttribute : AbsoluteUrlValidationAttribute
     {
         public WebOrMailtoUrlAttribute() : base("http", "https", "mailto")

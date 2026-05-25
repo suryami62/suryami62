@@ -1,5 +1,4 @@
-﻿@* Account management page for generating a new set of two-factor recovery codes. *@
-@page "/Account/Manage/GenerateRecoveryCodes"
+﻿@page "/Account/Manage/GenerateRecoveryCodes"
 @using Microsoft.AspNetCore.Identity
 @using suryami62.Data
 
@@ -18,15 +17,19 @@ else
     <div class="flex flex-col gap-6">
         <div>
             <h3 class="neo-title-md">Generate recovery codes</h3>
+
             <p class="mt-2 text-sm font-bold uppercase">Create a new set of 2FA recovery codes.</p>
         </div>
+
         <div class="neo-card bg-yellow-100 p-4 font-bold dark:bg-yellow-900/40" role="alert">
             <p>
                 <strong>Put these codes in a safe place.</strong>
             </p>
+
             <p>
                 If you lose your device and don't have the recovery codes you will lose access to your account.
             </p>
+
             <p>
                 Generating new recovery codes does not change the keys used in authenticator apps. If you wish to change
                 the
@@ -35,8 +38,10 @@ else
                     authenticator keys</a>.
             </p>
         </div>
+
         <form @formname="generate-recovery-codes" @onsubmit="OnSubmitAsync" method="post">
             <AntiforgeryToken/>
+
             <button type="submit" class="neo-button-danger text-sm">
                 Generate recovery codes
             </button>

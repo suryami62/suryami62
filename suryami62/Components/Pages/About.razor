@@ -3,17 +3,10 @@
 @inject NavigationManager NavigationManager
 @inject IJourneyHistoryService JourneyHistoryService
 @inject MarkdownRenderer MarkdownRenderer
-@rendermode InteractiveServer
+@* @rendermode InteractiveServer *@
 
-@* This page displays the author's biography and career history.
-   It shows work experience and education in a timeline format.
-   @page "/about" handles the /about URL.
-*@
-
-@* Set browser tab title *@
 <PageTitle>My Personal Bio | suryami62</PageTitle>
 
-@* Meta tags for social media sharing *@
 <HeadContent>
     <MetaOpenGraphCard Title="My Personal Bio | suryami62"
                        Description="Learn about Surya Ramadhan's journey as a .NET Developer and Physics Teacher. Discover how passion for science and coding shapes problem-solving approaches."
@@ -21,10 +14,7 @@
                        Url="@NavigationManager.Uri"/>
 </HeadContent>
 
-@* Main content area *@
 <div class="flex flex-col gap-12 py-8">
-
-    @* Header: Page title *@
     <PageHeader Title="My Personal" Highlight="Bio">
         <ChildContent>
             A <span class="underline decoration-4">.NET Developer</span> and
@@ -33,9 +23,7 @@
         </ChildContent>
     </PageHeader>
 
-    @* Role Cards: Two cards side by side explaining the two roles *@
     <section class="grid gap-8 md:grid-cols-2">
-        @* Developer Role Card *@
         <InfoCard Title="The Developer" IconClass="fa-solid fa-code">
             <p class="text-lg leading-relaxed font-medium">
                 Specializing in <strong>.NET</strong> and <strong>C#</strong>,
@@ -44,7 +32,6 @@
             </p>
         </InfoCard>
 
-        @* Teacher Role Card *@
         <InfoCard Title="The Teacher" IconClass="fa-solid fa-chalkboard-user">
             <p class="text-lg leading-relaxed font-medium">
                 With a background in <strong>Physics Education</strong>, I
@@ -54,30 +41,23 @@
         </InfoCard>
     </section>
 
-    @* Journey Section: Work Experience and Education Timeline *@
     <section>
         <h2 class="mb-8 text-4xl font-black tracking-tighter uppercase decoration-4 underline-offset-4 md:text-6xl md:underline">
             Journey
         </h2>
 
         <div class="grid gap-8 lg:grid-cols-2">
-            @* Work Experience Column *@
             <ContentBlock Title="Experience">
                 <div class="flex flex-col gap-6">
-                    @* Loop through each job in the experience list *@
                     @foreach (var experience in _journey.Experiences)
                     {
                         <div>
-                            @* Job title *@
                             <h4 class="text-2xl font-bold">@experience.Title</h4>
 
-                            @* Company/Organization name *@
                             <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">@experience.Organization</p>
 
-                            @* Time period (e.g., "2020 - 2023") *@
                             <p class="mb-2 font-mono text-sm">@experience.Period</p>
 
-                            @* Job description (rendered as Markdown) *@
                             @if (HasDescription(experience.Summary))
                             {
                                 <div class="prose prose-sm max-w-none font-medium dark:prose-invert">
@@ -89,23 +69,17 @@
                 </div>
             </ContentBlock>
 
-            @* Education Column *@
             <ContentBlock Title="Education">
                 <div class="flex flex-col gap-6">
-                    @* Loop through each school/degree *@
                     @foreach (var education in _journey.Educations)
                     {
                         <div>
-                            @* Degree or certification name *@
                             <h4 class="text-2xl font-bold">@education.Title</h4>
 
-                            @* School or institution name *@
                             <p class="text-lg font-bold text-neutral-600 dark:text-neutral-400">@education.Organization</p>
 
-                            @* Time period *@
                             <p class="mb-2 font-mono text-sm">@education.Period</p>
 
-                            @* Education description *@
                             @if (HasDescription(education.Summary))
                             {
                                 <div class="prose prose-sm max-w-none font-medium dark:prose-invert">
@@ -121,22 +95,13 @@
 </div>
 
 @code {
-    // ============================================================
-    // DATA CLASSES
-    // ============================================================
 
-    @* This class holds all the journey data for the page.
-       We use a simple class instead of 'record' because classes
-       are more familiar to beginners. Records are a newer C# feature.*@
     private class JourneyViewModel
     {
-        @* List of work experiences (jobs) *@
         public List<JourneyHistory> Experiences { get; }
 
-        @* List of education history (schools, degrees) *@
         public List<JourneyHistory> Educations { get; }
 
-        @* Constructor - creates the object with the two lists *@
         public JourneyViewModel(List<JourneyHistory> experiences, List<JourneyHistory> educations)
         {
             Experiences = experiences;
@@ -144,68 +109,36 @@
         }
     }
 
-    // ============================================================
-    // FIELDS
-    // ============================================================
-
-    @* This holds all the experience and education data.
-       It starts with empty lists (new List...).
-       The = means "set to this value when page loads". *@
     private JourneyViewModel _journey = new(
         new List<JourneyHistory>(),
         new List<JourneyHistory>()
     );
 
-    // ============================================================
-    // PAGE LIFECYCLE
-    // ============================================================
-
-    @* This runs automatically when the page first loads.
-       It fetches the experience and education data from the database.*@
     protected override async Task OnInitializedAsync()
     {
-        @* Load work experience from database
-           JourneySection.Experience means "only get work history items" *@
         var experiences = await JourneyHistoryService.GetBySectionAsync(
             JourneySection.Experience
         );
 
-        @* Load education history from database
-           JourneySection.Education means "only get education items" *@
         var educations = await JourneyHistoryService.GetBySectionAsync(
             JourneySection.Education
         );
 
-        @* Create the view model with both lists *@
         _journey = new JourneyViewModel(experiences, educations);
     }
 
-    // ============================================================
-    // HELPER METHODS
-    // ============================================================
-
-    @* Checks if a description exists (not null or empty).
-       Returns true if there is text to display.*@
     private bool HasDescription(string? summary)
     {
-        @* string.IsNullOrWhiteSpace returns true if the text is
-           null, empty, or only whitespace. The ! means "not",
-           so this returns true if there IS actual content. *@
         return !string.IsNullOrWhiteSpace(summary);
     }
 
-    @* Renders Markdown text to HTML.
-       Markdown is a simple way to format text (like **bold** or *italic*).
-       This converts it to proper HTML for the browser.*@
     private MarkupString RenderMarkdown(string? markdownText)
     {
         if (string.IsNullOrWhiteSpace(markdownText))
         {
-            @* Return empty HTML if no text *@
             return new MarkupString("");
         }
 
-        @* Convert Markdown to HTML and return it *@
         return MarkdownRenderer.Render(markdownText);
     }
 

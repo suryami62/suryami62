@@ -1,5 +1,4 @@
-﻿@* Admin editor page for creating and updating portfolio projects. *@
-@page "/Account/Admin/Projects/New"
+﻿@page "/Account/Admin/Projects/New"
 @page "/Account/Admin/Projects/Edit/{Id:int}"
 @using Microsoft.AspNetCore.Authorization
 @using suryami62.Domain.Models
@@ -16,17 +15,20 @@
     <EditForm Model="@_project" OnValidSubmit="SaveProjectAsync" FormName="edit-project-form" method="post"
               class="neo-card flex flex-col gap-6 p-8">
         <DataAnnotationsValidator/>
+
         <ValidationSummary class="@ValidationSummaryClass"/>
 
         <div class="grid gap-6 md:grid-cols-2">
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Title</label>
+
                 <InputText @bind-Value="_project.Title"
                            class="@InputClass"/>
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Tags (comma separated)</label>
+
                 <InputText @bind-Value="_project.Tags" placeholder="e.g. .NET, Blazor, Tailwind"
                            class="@InputClass"/>
             </div>
@@ -34,6 +36,7 @@
 
         <div class="flex flex-col gap-2">
             <label class="text-xl font-black uppercase">Description</label>
+
             <InputTextArea @bind-Value="_project.Description" rows="3"
                            class="@InputClass"/>
         </div>
@@ -41,12 +44,14 @@
         <div class="grid gap-6 md:grid-cols-2">
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Repo URL</label>
+
                 <InputText @bind-Value="_repoUrlText"
                            class="@InputClass"/>
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-xl font-black uppercase">Demo URL</label>
+
                 <InputText @bind-Value="_demoUrlText"
                            class="@InputClass"/>
             </div>
@@ -54,12 +59,14 @@
 
         <div class="flex flex-col gap-2">
             <label class="text-xl font-black uppercase">Image URL</label>
+
             <InputText @bind-Value="_imageUrlText" placeholder="https://.../project-screenshot.png"
                        class="@InputClass"/>
         </div>
 
         <div class="flex w-32 flex-col gap-2">
             <label class="text-xl font-black uppercase">Order</label>
+
             <InputNumber @bind-Value="_project.DisplayOrder"
                          class="@InputClass"/>
         </div>
@@ -69,6 +76,7 @@
                     class="@PrimaryButtonClass">
                 @SubmitButtonText
             </button>
+
             <a href="/Account/Admin/Projects"
                class="@SecondaryButtonClass">
                 CANCEL
@@ -83,11 +91,7 @@
     private const string PrimaryButtonClass = "neo-button-orange px-8 py-3 text-xl";
     private const string SecondaryButtonClass = "neo-button bg-neutral-200 px-8 py-3 text-xl hover:bg-neutral-300 dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600";
 
-    /// <summary>
-    ///     Gets the identifier of the project being edited, or <see langword="null" /> when creating a new project.
-    /// </summary>
-    [Parameter]
-    public int? Id { get; set; }
+    [Parameter] public int? Id { get; set; }
 
     [SupplyParameterFromForm] private Project _project { get; set; } = default!;
     private string? _repoUrlText;
@@ -103,18 +107,12 @@
 
     private string SubmitButtonText => _isSubmitting ? "SAVING..." : "SAVE PROJECT";
 
-    /// <summary>
-    ///     Creates the initial form model used by the project editor.
-    /// </summary>
     protected override void OnInitialized()
     {
         _project ??= new Project();
         SyncUrlTextFromProject();
     }
 
-    /// <summary>
-    ///     Loads the requested project when the route changes, or resets the editor for a new project.
-    /// </summary>
     protected override async Task OnParametersSetAsync()
     {
         if (IsNewProject)
@@ -150,9 +148,6 @@
         _imageUrlText = _project.ImageUrl?.ToString();
     }
 
-    /// <summary>
-    ///     Parses an optional absolute URL from a free-form input field.
-    /// </summary>
     private static Uri? TryParseAbsoluteUri(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -163,9 +158,6 @@
         return Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
     }
 
-    /// <summary>
-    ///     Creates or updates the project, then returns to the admin project listing.
-    /// </summary>
     private async Task SaveProjectAsync()
     {
         if (_isSubmitting)

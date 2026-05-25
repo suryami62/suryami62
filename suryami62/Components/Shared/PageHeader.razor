@@ -1,27 +1,17 @@
-﻿@* Page Header Component - A reusable header section for pages.
-   Features:
-   - Title with highlighted word
-   - Description text (ChildContent)
-   - Optional footer area (for social buttons)
-   - Optional aside area (for avatar/image)
-*@
-<section class="neo-section">
-    @* Grid layout: If AsideContent exists, create 2-column layout *@
+﻿<section class="neo-section">
     <div class="@GetGridClass()">
         <div class="@GetTextAlignClass()">
 
-            @* Title: Main word + highlighted word on second line *@
             <h1 class="neo-title">
                 @Title <br/>
+
                 <span class="neo-highlight">@Highlight</span>
             </h1>
 
-            @* Description content passed by parent *@
             <div class="@GetDescriptionClass()">
                 @ChildContent
             </div>
 
-            @* Optional Footer Area: Social buttons, etc. *@
             @if (HasFooterContent())
             {
                 <div class="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
@@ -30,7 +20,6 @@
             }
         </div>
 
-        @* Optional Aside Area: Avatar, image, etc. *@
         @if (HasAsideContent())
         {
             @AsideContent
@@ -39,60 +28,36 @@
 </section>
 
 @code {
-    // ============================================================
-    // PARAMETERS (Inputs from parent component)
-    // ============================================================
+    [Parameter] [EditorRequired] public string Title { get; set; } = "";
 
-    @* The main title word (e.g., "My Personal") *@
-    [Parameter]
-    [EditorRequired]
-    public string Title { get; set; } = "";
-
-    @* The highlighted word (e.g., "Blog") *@
     [Parameter] [EditorRequired] public string Highlight { get; set; } = "";
 
-    @* The description text content *@
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    @* Optional footer content (like social buttons) *@
     [Parameter] public RenderFragment? FooterContent { get; set; }
 
-    @* Optional aside content (like avatar image) *@
     [Parameter] public RenderFragment? AsideContent { get; set; }
 
-    // ============================================================
-    // HELPER METHODS
-    // ============================================================
-
-    @* Check if we have footer content to display *@
     private bool HasFooterContent()
     {
         return FooterContent is not null;
     }
 
-    @* Check if we have aside content to display *@
     private bool HasAsideContent()
     {
         return AsideContent is not null;
     }
 
-    @* Get the grid CSS class based on whether aside content exists.
-       If aside exists: use 2-column grid.
-       If no aside: no special grid styling. *@
     private string GetGridClass()
     {
         if (HasAsideContent())
         {
-            @* 2-column grid: 1fr (flexible) + auto (size to content) *@
             return "grid gap-12 md:grid-cols-[1fr_auto] md:items-center";
         }
 
         return "";
     }
 
-    @* Get text alignment based on aside content.
-       With aside: text aligns left on desktop.
-       Without aside: centered by default. *@
     private string GetTextAlignClass()
     {
         if (HasAsideContent())
@@ -103,15 +68,10 @@
         return "";
     }
 
-    @* Get description CSS class with proper margins.
-       With aside: no centering (content is left-aligned).
-       Without aside: standard centered text. *@
     private string GetDescriptionClass()
     {
         if (HasAsideContent())
         {
-            @* mx-auto = center horizontally
-               md:mx-0 = remove centering on medium+ screens *@
             return "mx-auto md:mx-0 mt-6 max-w-2xl text-xl font-bold md:text-2xl";
         }
 

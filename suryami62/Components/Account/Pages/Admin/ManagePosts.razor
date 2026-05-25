@@ -1,5 +1,4 @@
-﻿@* Admin listing page for browsing and managing blog posts. *@
-@page "/Account/Admin/Posts"
+﻿@page "/Account/Admin/Posts"
 @using Microsoft.AspNetCore.Authorization
 @using suryami62.Domain.Models
 @attribute [Authorize(Policy = AdminAccessPolicy.Name)]
@@ -11,6 +10,7 @@
 <div class="flex flex-col gap-12 py-8">
     <div class="flex items-center justify-between">
         <PageHeader Title="Manage" Highlight="Posts"/>
+
         <a href="/Account/Admin/Posts/New"
            class="@AddButtonClass">
             ADD NEW POST
@@ -27,6 +27,7 @@
                 <th class="p-4 font-black uppercase">Actions</th>
             </tr>
             </thead>
+
             <tbody class="divide-y-2 divide-black dark:divide-white">
             @if (IsLoadingPosts)
             {

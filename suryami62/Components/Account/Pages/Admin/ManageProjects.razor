@@ -1,5 +1,4 @@
-﻿@* Admin listing page for browsing and managing portfolio projects. *@
-@page "/Account/Admin/Projects"
+﻿@page "/Account/Admin/Projects"
 @using Microsoft.AspNetCore.Authorization
 @using suryami62.Domain.Models
 @attribute [Authorize(Policy = AdminAccessPolicy.Name)]
@@ -11,6 +10,7 @@
 <div class="flex flex-col gap-12 py-8">
     <div class="flex items-center justify-between">
         <PageHeader Title="Manage" Highlight="Projects"/>
+
         <a href="/Account/Admin/Projects/New"
            class="@AddButtonClass">
             ADD NEW PROJECT
@@ -27,6 +27,7 @@
                 <th class="p-4 font-black uppercase">Actions</th>
             </tr>
             </thead>
+
             <tbody class="divide-y-2 divide-black dark:divide-white">
             @if (IsLoadingProjects)
             {
@@ -58,6 +59,7 @@
                         <td class="flex gap-2 p-4">
                             <a href="/Account/Admin/Projects/Edit/@project.Id"
                                class="@EditButtonClass">EDIT</a>
+
                             <button @onclick="() => DeleteProjectAsync(project.Id)"
                                     disabled="@IsDeletingProject(project.Id)"
                                     class="@DeleteButtonClass">
@@ -78,9 +80,11 @@
                     class="@PagerPrevButtonClass">
                 PREV
             </button>
+
             <div class="flex items-center text-2xl font-black">
                 @_page / @TotalPages
             </div>
+
             <button disabled="@(!CanMoveToNextPage)" @onclick="GoToNextPageAsync"
                     class="@PagerNextButtonClass">
                 NEXT
@@ -119,17 +123,11 @@
 
     private int TotalPages => (int)Math.Ceiling((double)_total / _pageSize);
 
-    /// <summary>
-    ///     Loads the first page of projects for the admin listing.
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await LoadProjectsAsync();
     }
 
-    /// <summary>
-    ///     Reads the projects for the current page and refreshes the pager metadata.
-    /// </summary>
     private async Task LoadProjectsAsync()
     {
         var pageOffset = GetCurrentPageOffset();
@@ -139,9 +137,6 @@
         _total = totalProjects;
     }
 
-    /// <summary>
-    ///     Moves the pager to a specific page and reloads the grid.
-    /// </summary>
     private async Task ChangePageAsync(int newPage)
     {
         if (newPage < 1)
@@ -153,25 +148,16 @@
         await LoadProjectsAsync();
     }
 
-    /// <summary>
-    ///     Moves to the previous page when the pager allows it.
-    /// </summary>
     private Task GoToPreviousPageAsync()
     {
         return ChangePageAsync(_page - 1);
     }
 
-    /// <summary>
-    ///     Moves to the next page when more projects are available.
-    /// </summary>
     private Task GoToNextPageAsync()
     {
         return ChangePageAsync(_page + 1);
     }
 
-    /// <summary>
-    ///     Deletes a project after user confirmation.
-    /// </summary>
     private async Task DeleteProjectAsync(int projectId)
     {
         if (!await ShouldDeleteProjectAsync())

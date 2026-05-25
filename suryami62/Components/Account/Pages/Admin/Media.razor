@@ -1,5 +1,4 @@
-﻿@* Admin media manager for uploading images, browsing the gallery, and copying asset URLs. *@
-@page "/Account/Admin/Media"
+﻿@page "/Account/Admin/Media"
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Policy = AdminAccessPolicy.Name)]
 @rendermode InteractiveServer
@@ -14,6 +13,7 @@
 
     <div class="neo-card p-8">
         <h3 class="mb-6 text-2xl font-black uppercase">Upload New Image</h3>
+
         <div class="flex flex-col gap-4">
             <InputFile OnChange="HandleFileSelectedAsync"
                        class="@FileInputClass"/>
@@ -59,13 +59,16 @@
                         <img src="@BuildImageSource(file)" alt="@file" loading="lazy"
                              class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"/>
                     </div>
+
                     <div class="flex flex-col gap-3 p-3">
                         <p class="truncate text-xs font-bold" title="@file">@file</p>
+
                         <div class="flex gap-2">
                             <button @onclick="() => CopyToClipboardAsync(file)"
                                     class="@CopyUrlButtonClass">
                                 COPY URL
                             </button>
+
                             <button @onclick="() => ConfirmDeleteAsync(file)"
                                     class="@DeleteButtonClass">
                                 DELETE
@@ -104,25 +107,16 @@
 
     private bool HasNoImages => _imageFiles is { Count: 0 };
 
-    /// <summary>
-    ///     Loads the media gallery shown on the admin page.
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await LoadImagesAsync();
     }
 
-    /// <summary>
-    ///     Reads the uploaded file list from the media service.
-    /// </summary>
     private async Task LoadImagesAsync()
     {
         _imageFiles = await MediaService.ListFilesAsync();
     }
 
-    /// <summary>
-    ///     Uploads the selected file and refreshes the gallery when the upload succeeds.
-    /// </summary>
     private async Task HandleFileSelectedAsync(InputFileChangeEventArgs e)
     {
         BeginUpload();
@@ -150,9 +144,6 @@
         }
     }
 
-    /// <summary>
-    ///     Deletes the selected image after the user confirms the action.
-    /// </summary>
     private async Task ConfirmDeleteAsync(string fileName)
     {
         if (!await ShouldDeleteImageAsync())
@@ -172,9 +163,6 @@
         SetErrorStatus($"Error: Could not delete {fileName}");
     }
 
-    /// <summary>
-    ///     Copies the absolute public URL of the selected image to the clipboard.
-    /// </summary>
     private async Task CopyToClipboardAsync(string fileName)
     {
         var absoluteUrl = BuildAbsoluteImageUrl(fileName);

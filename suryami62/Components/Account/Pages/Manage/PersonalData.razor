@@ -1,5 +1,4 @@
-﻿@* Account management page for reviewing, downloading, and deleting personal data. *@
-@page "/Account/Manage/PersonalData"
+﻿@page "/Account/Manage/PersonalData"
 @using Microsoft.AspNetCore.Identity
 @using suryami62.Data
 
@@ -11,6 +10,7 @@
 <div class="flex flex-col gap-6">
     <div>
         <h3 class="neo-title-md">Personal data</h3>
+
         <p class="mt-2 text-sm font-bold uppercase">Download or delete your data.</p>
     </div>
 
@@ -21,16 +21,20 @@
             Your account contains personal data that you have given us. This page allows you to download or delete that
             data.
         </p>
+
         <div class="neo-card bg-yellow-100 p-4 font-bold dark:bg-yellow-900/40">
             <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
         </div>
+
         <div class="flex flex-wrap gap-3">
             <form action="Account/Manage/DownloadPersonalData" method="post">
                 <AntiforgeryToken/>
+
                 <button type="submit" class="neo-button-inverse text-sm">
                     Download
                 </button>
             </form>
+
             <a href="Account/Manage/DeletePersonalData" class="neo-button-danger text-sm">
                 Delete
             </a>

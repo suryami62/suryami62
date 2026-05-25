@@ -1,5 +1,4 @@
-﻿@* Account management page for resetting the authenticator app key. *@
-@page "/Account/Manage/ResetAuthenticator"
+﻿@page "/Account/Manage/ResetAuthenticator"
 @using Microsoft.AspNetCore.Identity
 @using suryami62.Data
 
@@ -13,22 +12,27 @@
 <div class="flex flex-col gap-6">
     <div>
         <h3 class="neo-title-md">Reset authenticator key</h3>
+
         <p class="mt-2 text-sm font-bold uppercase">Regenerate your 2FA key.</p>
     </div>
 
     <StatusMessage/>
+
     <div class="neo-card bg-yellow-100 p-4 font-bold dark:bg-yellow-900/40" role="alert">
         <p>
             <strong>If you reset your authenticator key your authenticator app will not work until you reconfigure
                 it.</strong>
         </p>
+
         <p>
             This process disables 2FA until you verify your authenticator app. If you do not complete your authenticator
             app configuration you may lose access to your account.
         </p>
     </div>
+
     <form @formname="reset-authenticator" @onsubmit="OnSubmitAsync" method="post">
         <AntiforgeryToken/>
+
         <button type="submit" class="neo-button-danger text-sm">
             Reset authenticator key
         </button>

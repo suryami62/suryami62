@@ -1,5 +1,4 @@
-﻿@* Admin page for managing experience and education timeline entries. *@
-@page "/Account/Admin/Journey"
+﻿@page "/Account/Admin/Journey"
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
 @using suryami62.Domain.Models
@@ -71,9 +70,12 @@
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <h3 class="text-xl font-black">@item.Title</h3>
+
                                     <p class="font-bold text-neutral-600 dark:text-neutral-400">@item.Organization</p>
+
                                     <p class="font-mono text-sm">@item.Period</p>
                                 </div>
+
                                 <button @onclick="() => DeleteExperienceAsync(item.Id)"
                                         class="@DeleteButtonClass">
                                     DELETE
@@ -132,9 +134,12 @@
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <h3 class="text-xl font-black">@item.Title</h3>
+
                                     <p class="font-bold text-neutral-600 dark:text-neutral-400">@item.Organization</p>
+
                                     <p class="font-mono text-sm">@item.Period</p>
                                 </div>
+
                                 <button @onclick="() => DeleteEducationAsync(item.Id)"
                                         class="@DeleteButtonClass">
                                     DELETE
@@ -170,17 +175,11 @@
 
     private bool HasEducationEntries => _journey.Educations.Count > 0;
 
-    /// <summary>
-    ///     Loads both journey sections required by the admin page.
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         await LoadJourneyAsync();
     }
 
-    /// <summary>
-    ///     Reloads experience and education entries from the application layer.
-    /// </summary>
     private async Task LoadJourneyAsync()
     {
         var experiences = await LoadJourneySectionAsync(JourneySection.Experience);
@@ -189,9 +188,6 @@
         _journey = new JourneyViewModel(experiences, educations);
     }
 
-    /// <summary>
-    ///     Adds a new experience entry and refreshes the timeline.
-    /// </summary>
     private async Task AddExperienceAsync()
     {
         await AddJourneyEntryAsync(
@@ -202,9 +198,6 @@
             "Failed to add experience.");
     }
 
-    /// <summary>
-    ///     Adds a new education entry and refreshes the timeline.
-    /// </summary>
     private async Task AddEducationAsync()
     {
         await AddJourneyEntryAsync(
@@ -215,9 +208,6 @@
             "Failed to add education.");
     }
 
-    /// <summary>
-    ///     Deletes an experience entry and refreshes the timeline.
-    /// </summary>
     private async Task DeleteExperienceAsync(int id)
     {
         await DeleteJourneyEntryAsync(
@@ -226,9 +216,6 @@
             "Failed to delete experience.");
     }
 
-    /// <summary>
-    ///     Deletes an education entry and refreshes the timeline.
-    /// </summary>
     private async Task DeleteEducationAsync(int id)
     {
         await DeleteJourneyEntryAsync(
@@ -237,17 +224,11 @@
             "Failed to delete education.");
     }
 
-    /// <summary>
-    ///     Loads a single journey section from the application service.
-    /// </summary>
     private Task<List<JourneyHistory>> LoadJourneySectionAsync(JourneySection section)
     {
         return JourneyHistoryService.GetBySectionAsync(section);
     }
 
-    /// <summary>
-    ///     Creates a journey entry, resets the form, and reloads the latest persisted data.
-    /// </summary>
     private async Task AddJourneyEntryAsync(
         JourneySection section,
         JourneyInputModel input,
@@ -269,9 +250,6 @@
         }
     }
 
-    /// <summary>
-    ///     Deletes a journey entry and reloads the latest persisted data.
-    /// </summary>
     private async Task DeleteJourneyEntryAsync(int id, string successMessage, string failureMessage)
     {
         try
@@ -320,9 +298,6 @@
         _statusMessage = message;
     }
 
-    /// <summary>
-    ///     Captures editable form values before they are mapped into a domain journey entry.
-    /// </summary>
     private sealed class JourneyInputModel
     {
         [Required] public string Title { get; set; } = string.Empty;
@@ -334,9 +309,6 @@
         public string Summary { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    ///     Groups journey entries by section so the page can render each column independently.
-    /// </summary>
     private sealed record JourneyViewModel(
         IReadOnlyList<JourneyHistory> Experiences,
         IReadOnlyList<JourneyHistory> Educations);

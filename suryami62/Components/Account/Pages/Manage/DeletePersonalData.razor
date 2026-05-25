@@ -1,5 +1,4 @@
-﻿@* Account management page that confirms personal data and account deletion. *@
-@page "/Account/Manage/DeletePersonalData"
+﻿@page "/Account/Manage/DeletePersonalData"
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using suryami62.Data
@@ -14,6 +13,7 @@
 <div class="flex flex-col gap-6">
     <div>
         <h3 class="neo-title-md">Delete personal data</h3>
+
         <p class="mt-2 text-sm font-bold uppercase">This action is permanent.</p>
     </div>
 
@@ -25,16 +25,20 @@
 
     <EditForm Model="Input" FormName="delete-user" OnValidSubmit="OnValidSubmitAsync" method="post">
         <DataAnnotationsValidator/>
+
         <ValidationSummary class="@ValidationSummaryClass" role="alert"/>
+
         <div class="mt-4 flex max-w-xl flex-col gap-4">
             @if (requirePassword)
             {
                 <div class="flex flex-col gap-2">
                     <label for="Input.Password" class="text-sm font-black tracking-widest uppercase">Password</label>
+
                     <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
                                class="@InputClass"
                                autocomplete="current-password" aria-required="true"
                                placeholder="Please enter your password."/>
+
                     <ValidationMessage For="() => Input.Password"
                                        class="@ValidationMessageClass"/>
                 </div>

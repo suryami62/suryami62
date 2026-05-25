@@ -1,15 +1,18 @@
-﻿@* Reusable panel that displays generated two-factor recovery codes. *@
-<StatusMessage Message="@StatusMessage"/>
+﻿<StatusMessage Message="@StatusMessage"/>
+
 <div class="flex flex-col gap-4">
     <h3 class="neo-title-sm">Recovery codes</h3>
+
     <div class="neo-card bg-neutral-100 p-4 font-bold dark:bg-neutral-900" role="alert">
         <p>
             <strong>Put these codes in a safe place.</strong>
         </p>
+
         <p>
             If you lose your device and don't have the recovery codes you will lose access to your account.
         </p>
     </div>
+
     <div class="grid gap-2 sm:grid-cols-2">
         @foreach (var recoveryCode in RecoveryCodes)
         {
