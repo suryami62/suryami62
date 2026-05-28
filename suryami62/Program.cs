@@ -16,6 +16,6 @@ app.UseWebStartupPipeline();
 
 app.MapWebEndpoints();
 
-app.ApplyDatabaseMigrations();
+await app.ApplyDatabaseMigrationsAsync().ConfigureAwait(false);
 
-app.Run();
+await app.RunAsync().ConfigureAwait(false);

@@ -12,6 +12,8 @@ namespace suryami62.Startup;
 
 internal static class WebApplicationExtensions
 {
+    private const string ApplyMigrationsOnStartupConfigurationKey = "Database:ApplyMigrationsOnStartup";
+
     private const string ContentSecurityPolicyValue =
         "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none; " +
         "img-src 'self' data: https:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; " +
@@ -70,9 +72,20 @@ internal static class WebApplicationExtensions
         return app;
     }
 
-    public static WebApplication ApplyDatabaseMigrations(this WebApplication app)
+    public static async Task ApplyDatabaseMigrationsAsync(this WebApplication app)
     {
         ArgumentNullException.ThrowIfNull(app);
+
+        if (!ShouldApplyDatabaseMigrations(app))
+        {
+            var skippedLogger = app.Services.GetRequiredService<ILogger<Program>>();
+            Log.DatabaseMigrationSkipped(
+                skippedLogger,
+                app.Environment.EnvironmentName,
+                ApplyMigrationsOnStartupConfigurationKey);
+
+            return;
+        }
 
         using var scope = app.Services.CreateScope();
 
@@ -81,7 +94,7 @@ internal static class WebApplicationExtensions
         try
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            db.Database.Migrate();
+            await db.Database.MigrateAsync(app.Lifetime.ApplicationStopping).ConfigureAwait(false);
 
             Log.DatabaseMigrationApplied(logger);
         }
@@ -90,8 +103,12 @@ internal static class WebApplicationExtensions
             Log.DatabaseMigrationFailed(logger, ex);
             throw;
         }
+    }
 
-        return app;
+    private static bool ShouldApplyDatabaseMigrations(WebApplication app)
+    {
+        return app.Environment.IsDevelopment()
+               || app.Configuration.GetValue<bool>(ApplyMigrationsOnStartupConfigurationKey);
     }
 
     private static void ConfigureExceptionHandling(WebApplication app)
@@ -156,14 +173,42 @@ internal static class WebApplicationExtensions
 
     private static class Log
     {
+        private static readonly Action<ILogger, Exception?> DatabaseMigrationAppliedMessage = LoggerMessage.Define(
+            LogLevel.Information,
+            new EventId(1, nameof(DatabaseMigrationApplied)),
+            "Applied database migrations at startup.");
+
+        private static readonly Action<ILogger, string, string, Exception?> DatabaseMigrationSkippedMessage =
+            LoggerMessage.Define<string, string>(
+                LogLevel.Information,
+                new EventId(2, nameof(DatabaseMigrationSkipped)),
+                "Skipped database migrations at startup for {EnvironmentName}. Set {ConfigurationKey} to true to opt in.");
+
+        private static readonly Action<ILogger, Exception?> DatabaseMigrationFailedMessage = LoggerMessage.Define(
+            LogLevel.Error,
+            new EventId(3, nameof(DatabaseMigrationFailed)),
+            "An error occurred while applying database migrations at startup.");
+
         public static void DatabaseMigrationApplied(ILogger logger)
         {
-            logger.LogInformation("Applied database migrations at startup.");
+            DatabaseMigrationAppliedMessage(logger, null);
+        }
+
+        public static void DatabaseMigrationSkipped(
+            ILogger logger,
+            string environmentName,
+            string configurationKey)
+        {
+            DatabaseMigrationSkippedMessage(
+                logger,
+                environmentName,
+                configurationKey,
+                null);
         }
 
         public static void DatabaseMigrationFailed(ILogger logger, Exception ex)
         {
-            logger.LogError(ex, "An error occurred while applying database migrations at startup.");
+            DatabaseMigrationFailedMessage(logger, ex);
         }
     }
 }
