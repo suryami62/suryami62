@@ -1,5 +1,7 @@
 #region
 
+using System.Globalization;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using suryami62.Application.Persistence;
 using suryami62.Data;
@@ -71,14 +73,13 @@ public sealed class SettingsRepository : ISettingsRepository
 
         if (values.Count == 0) return;
 
-        var existingSettingsByKey = await LoadExistingSettingsByKeyAsync(
-                values.Keys,
-                cancellationToken)
+        var settingValues = CreateValidatedSettingValues(values);
+        var sql = CreateUpsertSql(settingValues.Count);
+        var parameters = CreateUpsertParameters(settingValues);
+
+        await _context.Database
+            .ExecuteSqlRawAsync(sql, parameters, cancellationToken)
             .ConfigureAwait(false);
-
-        UpsertEachSetting(values, existingSettingsByKey);
-
-        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private static Dictionary<string, string> CreateEmptyValues()
@@ -106,40 +107,63 @@ public sealed class SettingsRepository : ISettingsRepository
         }
     }
 
-    private async Task<Dictionary<string, Setting>> LoadExistingSettingsByKeyAsync(
-        IEnumerable<string> keys,
-        CancellationToken cancellationToken)
+    private static List<KeyValuePair<string, string>> CreateValidatedSettingValues(
+        IReadOnlyDictionary<string, string> values)
     {
-        var keyList = keys.ToArray();
+        var settingValues = new List<KeyValuePair<string, string>>(values.Count);
 
-        var existingSettings = await _context.Settings
-            .Where(setting => keyList.Contains(setting.Key))
-            .ToDictionaryAsync(
-                setting => setting.Key,
-                StringComparer.Ordinal,
-                cancellationToken)
-            .ConfigureAwait(false);
-
-        return existingSettings;
-    }
-
-    private void UpsertEachSetting(
-        IReadOnlyDictionary<string, string> values,
-        Dictionary<string, Setting> existingSettingsByKey)
-    {
         foreach (var (key, value) in values)
         {
-            if (existingSettingsByKey.TryGetValue(key, out var existingSetting))
-            {
-                existingSetting.Value = value;
-                continue;
-            }
+            EnsureKey(key);
+            ArgumentNullException.ThrowIfNull(value);
 
-            var newSetting = new Setting { Key = key, Value = value };
-
-            _context.Settings.Add(newSetting);
-
-            existingSettingsByKey[key] = newSetting;
+            settingValues.Add(new KeyValuePair<string, string>(key, value));
         }
+
+        return settingValues;
+    }
+
+    private static string CreateUpsertSql(int settingCount)
+    {
+        var sql = new StringBuilder();
+
+        sql.AppendLine("""INSERT INTO "Settings" ("Key", "Value")""");
+        sql.AppendLine("VALUES");
+
+        for (var index = 0; index < settingCount; index++)
+        {
+            if (index > 0) sql.AppendLine(",");
+
+            var keyParameterIndex = index * 2;
+            var valueParameterIndex = keyParameterIndex + 1;
+
+            sql.Append("({");
+            sql.Append(keyParameterIndex.ToString(CultureInfo.InvariantCulture));
+            sql.Append("}, {");
+            sql.Append(valueParameterIndex.ToString(CultureInfo.InvariantCulture));
+            sql.Append("})");
+        }
+
+        sql.AppendLine();
+        sql.AppendLine("""ON CONFLICT ("Key") DO UPDATE""");
+        sql.AppendLine("""SET "Value" = EXCLUDED."Value";""");
+
+        return sql.ToString();
+    }
+
+    private static object[] CreateUpsertParameters(List<KeyValuePair<string, string>> settingValues)
+    {
+        var parameters = new object[settingValues.Count * 2];
+
+        for (var index = 0; index < settingValues.Count; index++)
+        {
+            var keyParameterIndex = index * 2;
+            var valueParameterIndex = keyParameterIndex + 1;
+
+            parameters[keyParameterIndex] = settingValues[index].Key;
+            parameters[valueParameterIndex] = settingValues[index].Value;
+        }
+
+        return parameters;
     }
 }
