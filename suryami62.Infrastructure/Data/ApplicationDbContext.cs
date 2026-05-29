@@ -84,10 +84,11 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     private void NormalizeBlogPostDates()
     {
-        foreach (var entry in ChangeTracker.Entries<BlogPost>()
-                     .Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        foreach (var post in ChangeTracker.Entries<BlogPost>()
+                     .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+                     .Select(entry => entry.Entity))
         {
-            entry.Entity.Date = NormalizeDateTimeToUtc(entry.Entity.Date);
+            post.Date = NormalizeDateTimeToUtc(post.Date);
         }
     }
 
