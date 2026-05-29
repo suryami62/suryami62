@@ -97,6 +97,13 @@ public sealed class SettingsRepository : ISettingsRepository
     private static void EnsureKey(string key)
     {
         if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Key cannot be empty.", nameof(key));
+
+        if (key.Length > DomainModelConstraints.SettingKeyMaxLength)
+        {
+            throw new ArgumentException(
+                $"Key cannot exceed {DomainModelConstraints.SettingKeyMaxLength} characters.",
+                nameof(key));
+        }
     }
 
     private async Task<Dictionary<string, Setting>> LoadExistingSettingsByKeyAsync(
