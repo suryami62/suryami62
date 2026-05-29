@@ -55,6 +55,8 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(p => p.RepoUrl).HasConversion(uriConverter);
             entity.Property(p => p.DemoUrl).HasConversion(uriConverter);
             entity.Property(p => p.ImageUrl).HasConversion(uriConverter);
+
+            entity.HasIndex(p => p.DisplayOrder);
         });
 
         builder.Entity<BlogPost>(entity =>
@@ -63,6 +65,7 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(p => p.ImageUrl).HasConversion(uriConverter);
 
             entity.HasIndex(p => p.Slug).IsUnique();
+            entity.HasIndex(p => new { p.IsPublished, p.Date }).IsDescending(false, true);
         });
 
         builder.Entity<JourneyHistory>(entity =>
