@@ -24,6 +24,22 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Setting> Settings { get; set; }
 
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        NormalizeBlogPostDates();
+
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        NormalizeBlogPostDates();
+
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -43,6 +59,7 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<BlogPost>(entity =>
         {
+            entity.Property(p => p.Date).HasColumnType("timestamp with time zone");
             entity.Property(p => p.ImageUrl).HasConversion(uriConverter);
 
             entity.HasIndex(p => p.Slug).IsUnique();
@@ -63,5 +80,27 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         if (Uri.TryCreate(value, UriKind.Absolute, out var uri)) return uri;
 
         return null;
+    }
+
+    private void NormalizeBlogPostDates()
+    {
+        foreach (var entry in ChangeTracker.Entries<BlogPost>())
+        {
+            if (entry.State is EntityState.Added or EntityState.Modified)
+            {
+                entry.Entity.Date = NormalizeDateTimeToUtc(entry.Entity.Date);
+            }
+        }
+    }
+
+    private static DateTime NormalizeDateTimeToUtc(DateTime value)
+    {
+        return value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            DateTimeKind.Unspecified => DateTime.SpecifyKind(value, DateTimeKind.Utc),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
     }
 }
