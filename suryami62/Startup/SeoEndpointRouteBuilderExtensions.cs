@@ -2,7 +2,6 @@
 
 using System.Globalization;
 using System.Text;
-using suryami62.Application.Persistence;
 using suryami62.Domain.Models;
 using suryami62.Services;
 
@@ -27,14 +26,14 @@ internal static class SeoEndpointRouteBuilderExtensions
 
     private static async Task<IResult> GetSitemapAsync(
         IConfiguration configuration,
-        ISettingsRepository settingsRepository,
+        SeoSettingsStore seoSettingsStore,
         IBlogPostService blogPostService)
     {
-        var sitemapEnabled =
-            await IsSeoDocumentEnabledAsync(settingsRepository, "Seo:EnableSitemap").ConfigureAwait(false);
-        if (!sitemapEnabled) return Results.NotFound();
+        var seoSettings = await seoSettingsStore.GetAsync().ConfigureAwait(false);
 
-        var canonicalBaseUrl = await GetCanonicalBaseUrlAsync(configuration, settingsRepository).ConfigureAwait(false);
+        if (!seoSettings.EnableSitemap) return Results.NotFound();
+
+        var canonicalBaseUrl = GetCanonicalBaseUrl(configuration, seoSettings);
         if (canonicalBaseUrl is null) return CreateMissingCanonicalBaseUrlProblem("sitemap.xml");
 
         (IEnumerable<BlogPost> posts, _) = await blogPostService.GetPostsAsync().ConfigureAwait(false);
@@ -45,40 +44,29 @@ internal static class SeoEndpointRouteBuilderExtensions
 
     private static async Task<IResult> GetRobotsAsync(
         IConfiguration configuration,
-        ISettingsRepository settingsRepository)
+        SeoSettingsStore seoSettingsStore)
     {
-        var robotsEnabled =
-            await IsSeoDocumentEnabledAsync(settingsRepository, "Seo:EnableRobots").ConfigureAwait(false);
-        if (!robotsEnabled) return Results.NotFound();
+        var seoSettings = await seoSettingsStore.GetAsync().ConfigureAwait(false);
 
-        var canonicalBaseUrl = await GetCanonicalBaseUrlAsync(configuration, settingsRepository).ConfigureAwait(false);
+        if (!seoSettings.EnableRobots) return Results.NotFound();
+
+        var canonicalBaseUrl = GetCanonicalBaseUrl(configuration, seoSettings);
         if (canonicalBaseUrl is null) return CreateMissingCanonicalBaseUrlProblem("robots.txt");
 
-        var disallowList = await settingsRepository.GetValueAsync("Seo:RobotsDisallow").ConfigureAwait(false);
+        var disallowList = seoSettings.RobotsDisallow;
         if (string.IsNullOrWhiteSpace(disallowList)) disallowList = "/Account";
 
         var robotsText = BuildRobotsText(canonicalBaseUrl, disallowList);
         return Results.Text(robotsText, "text/plain; charset=utf-8");
     }
 
-    private static async Task<bool> IsSeoDocumentEnabledAsync(ISettingsRepository settingsRepository, string settingKey)
-    {
-        var storedValue = await settingsRepository.GetValueAsync(settingKey).ConfigureAwait(false);
-
-        var isDisabled = string.Equals(storedValue, "false", StringComparison.OrdinalIgnoreCase);
-
-        return !isDisabled;
-    }
-
-    private static async Task<string?> GetCanonicalBaseUrlAsync(
+    private static string? GetCanonicalBaseUrl(
         IConfiguration configuration,
-        ISettingsRepository settingsRepository)
+        SeoSettings seoSettings)
     {
-        var settingsBaseUrl = await settingsRepository.GetValueAsync("Seo:BaseUrl").ConfigureAwait(false);
-
         var configuredBaseUrl = configuration["Security:CanonicalBaseUrl"];
 
-        return ResolveCanonicalBaseUrl(settingsBaseUrl, configuredBaseUrl);
+        return ResolveCanonicalBaseUrl(seoSettings.BaseUrl, configuredBaseUrl);
     }
 
     private static string? ResolveCanonicalBaseUrl(string? settingsBaseUrl, string? configuredBaseUrl)

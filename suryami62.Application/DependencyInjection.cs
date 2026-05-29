@@ -26,6 +26,8 @@ public static class ApplicationServiceCollectionExtensions
 
         services.AddScoped<ApplicationSettingsStore>();
 
+        services.AddScoped<SeoSettingsStore>();
+
         return services;
     }
 }
