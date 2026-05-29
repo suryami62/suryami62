@@ -71,6 +71,11 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
             entity.HasIndex(item => new { item.Section, item.DisplayOrder });
         });
+
+        builder.Entity<Setting>(entity =>
+        {
+            entity.HasIndex(setting => setting.Key).IsUnique();
+        });
     }
 
     private static Uri? ParseAbsoluteUri(string? value)
