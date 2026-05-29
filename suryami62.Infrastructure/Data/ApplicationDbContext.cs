@@ -46,6 +46,8 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         base.OnModelCreating(builder);
 
+        builder.HasPostgresExtension("pg_trgm");
+
         var uriConverter = new ValueConverter<Uri?, string?>(
             uri => uri == null ? null : uri.ToString(),
             value => ParseAbsoluteUri(value));
@@ -66,6 +68,8 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
             entity.HasIndex(p => p.Slug).IsUnique();
             entity.HasIndex(p => new { p.IsPublished, p.Date }).IsDescending(false, true);
+            entity.HasIndex(p => p.Title).HasMethod("gin").HasOperators("gin_trgm_ops");
+            entity.HasIndex(p => p.Summary).HasMethod("gin").HasOperators("gin_trgm_ops");
         });
 
         builder.Entity<JourneyHistory>(entity =>

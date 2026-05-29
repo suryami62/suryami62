@@ -11,6 +11,8 @@ namespace suryami62.Infrastructure.Persistence;
 
 public sealed class BlogPostRepository : IBlogPostRepository
 {
+    private const string LikeEscapeCharacter = "\\";
+
     private readonly ApplicationDbContext _context;
 
     public BlogPostRepository(ApplicationDbContext context)
@@ -115,11 +117,26 @@ public sealed class BlogPostRepository : IBlogPostRepository
         if (onlyPublished) query = query.Where(post => post.IsPublished);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var searchPattern = CreateContainsSearchPattern(searchTerm);
+
             query = query.Where(post =>
-                post.Title.Contains(searchTerm) ||
-                post.Summary.Contains(searchTerm));
+                EF.Functions.ILike(post.Title, searchPattern, LikeEscapeCharacter) ||
+                EF.Functions.ILike(post.Summary, searchPattern, LikeEscapeCharacter));
+        }
 
         return query;
+    }
+
+    private static string CreateContainsSearchPattern(string searchTerm)
+    {
+        var escapedTerm = searchTerm
+            .Trim()
+            .Replace(LikeEscapeCharacter, LikeEscapeCharacter + LikeEscapeCharacter, StringComparison.Ordinal)
+            .Replace("%", LikeEscapeCharacter + "%", StringComparison.Ordinal)
+            .Replace("_", LikeEscapeCharacter + "_", StringComparison.Ordinal);
+
+        return $"%{escapedTerm}%";
     }
 
     private static async Task<List<BlogPost>> LoadPagedPostsAsync(
