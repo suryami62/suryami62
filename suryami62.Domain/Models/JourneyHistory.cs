@@ -15,9 +15,11 @@ public enum JourneySection
     Education = 2
 }
 
-public sealed class JourneyHistory
+public sealed class JourneyHistory : IConcurrencyTrackedEntity
 {
     public int Id { get; set; }
+
+    public uint Version { get; set; }
 
     public JourneySection Section { get; set; }
 

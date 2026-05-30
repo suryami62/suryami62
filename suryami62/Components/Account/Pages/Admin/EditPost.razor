@@ -1,6 +1,7 @@
 ﻿@page "/Account/Admin/Posts/New"
 @page "/Account/Admin/Posts/Edit/{Id:int}"
 @using Microsoft.AspNetCore.Authorization
+@using suryami62.Application.Persistence
 @using suryami62.Domain.Models
 @attribute [Authorize(Policy = AdminAccessPolicy.Name)]
 @rendermode InteractiveServer
@@ -11,6 +12,20 @@
 
 <div class="flex flex-col gap-12 py-8">
     <PageHeader Title="@PageActionText" Highlight="Post"/>
+
+    @if (HasStatusMessage)
+    {
+        <div class="@StatusMessageClass" role="alert">
+            <p>@_statusMessage</p>
+
+            @if (CanReloadAfterConflict)
+            {
+                <button type="button" @onclick="ReloadPostAsync" class="@ReloadButtonClass">
+                    RELOAD POST
+                </button>
+            }
+        </div>
+    }
 
     <EditForm Model="@_post" OnValidSubmit="SavePostAsync" FormName="edit-post-form"
               class="neo-card flex flex-col gap-6 p-8">
@@ -97,12 +112,22 @@
     private const string ValidationSummaryClass = "mb-4 font-bold text-red-600 dark:text-red-400";
     private const string PrimaryButtonClass = "neo-button-lime px-8 py-3 text-xl";
     private const string SecondaryButtonClass = "neo-button bg-neutral-200 px-8 py-3 text-xl hover:bg-neutral-300 dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600";
+    private const string ReloadButtonClass = "neo-button mt-3 px-4 py-2 text-sm";
 
     [Parameter] public int? Id { get; set; }
 
     private BlogPost _post = CreateNewPost();
     private string? _imageUrlText;
+    private string? _statusMessage;
     private bool _isSubmitting;
+    private bool _hasConcurrencyConflict;
+
+    private string StatusMessageClass =>
+        $"neo-card p-4 font-bold {(_hasConcurrencyConflict ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200" : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300")}";
+
+    private bool HasStatusMessage => !string.IsNullOrWhiteSpace(_statusMessage);
+
+    private bool CanReloadAfterConflict => _hasConcurrencyConflict && !IsNewPost;
 
     private bool IsNewPost => Id is null;
 
@@ -143,7 +168,7 @@
         var title = e.Value?.ToString();
 
         // Generate unique slug via service (handles duplicates with -2, -3, etc.)
-        _post.Slug = await BlogPostService.GenerateUniqueSlugAsync(title);
+        _post.Slug = await BlogPostService.GenerateUniqueSlugAsync(title ?? string.Empty);
     }
 
     private async Task SavePostAsync()
@@ -161,9 +186,13 @@
             await PersistPostAsync();
             NavigateToPostList();
         }
+        catch (ConcurrencyConflictException ex)
+        {
+            SetConflictStatus(ex.Message);
+        }
         catch
         {
-            // Intentionally swallowing here keeps the page state intact so the user can correct input and retry.
+            SetErrorStatus("Failed to save post. Check the form and try again.");
         }
         finally
         {
@@ -196,6 +225,7 @@
     private void BeginSubmit()
     {
         _isSubmitting = true;
+        ClearStatus();
     }
 
     private void ApplyImageUrlInputToPost()
@@ -213,6 +243,35 @@
     private async Task UpdatePostAsync()
     {
         await BlogPostService.UpdatePostAsync(_post);
+    }
+
+    private async Task ReloadPostAsync()
+    {
+        if (IsNewPost)
+        {
+            return;
+        }
+
+        await LoadExistingPostAsync(Id!.Value);
+        ClearStatus();
+    }
+
+    private void ClearStatus()
+    {
+        _statusMessage = null;
+        _hasConcurrencyConflict = false;
+    }
+
+    private void SetConflictStatus(string message)
+    {
+        _statusMessage = message;
+        _hasConcurrencyConflict = true;
+    }
+
+    private void SetErrorStatus(string message)
+    {
+        _statusMessage = message;
+        _hasConcurrencyConflict = false;
     }
 
     private void NavigateToPostList()

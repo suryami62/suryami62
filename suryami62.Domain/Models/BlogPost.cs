@@ -6,9 +6,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace suryami62.Domain.Models;
 
-public sealed class BlogPost
+public sealed class BlogPost : IConcurrencyTrackedEntity
 {
     public int Id { get; set; }
+
+    public uint Version { get; set; }
 
     [Required]
     [StringLength(DomainModelConstraints.TitleMaxLength)]
