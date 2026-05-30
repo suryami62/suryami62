@@ -25,40 +25,44 @@ public sealed class BlogPostRepository : IBlogPostRepository
         bool onlyPublished = true,
         int? skip = null,
         int? take = null,
-        string? searchTerm = null)
+        string? searchTerm = null,
+        CancellationToken cancellationToken = default)
     {
         var filteredPosts = CreateFilteredPostsQuery(onlyPublished, searchTerm);
 
-        var total = await filteredPosts.CountAsync().ConfigureAwait(false);
+        var total = await filteredPosts.CountAsync(cancellationToken).ConfigureAwait(false);
 
-        var items = await LoadPagedPostsAsync(filteredPosts, skip, take).ConfigureAwait(false);
+        var items = await LoadPagedPostsAsync(filteredPosts, skip, take, cancellationToken).ConfigureAwait(false);
 
         return (items, total);
     }
 
-    public async Task<BlogPost?> GetBySlugAsync(string slug)
+    public async Task<BlogPost?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
     {
         EnsureSlug(slug);
 
         var post = await _context.BlogPosts
             .AsNoTracking()
-            .FirstOrDefaultAsync(post => post.Slug == slug)
+            .FirstOrDefaultAsync(post => post.Slug == slug, cancellationToken)
             .ConfigureAwait(false);
 
         return post;
     }
 
-    public async Task<BlogPost?> GetByIdAsync(int id)
+    public async Task<BlogPost?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var post = await _context.BlogPosts
             .AsNoTracking()
-            .FirstOrDefaultAsync(post => post.Id == id)
+            .FirstOrDefaultAsync(post => post.Id == id, cancellationToken)
             .ConfigureAwait(false);
 
         return post;
     }
 
-    public async Task<bool> SlugExistsAsync(string slug, int? excludeId = null)
+    public async Task<bool> SlugExistsAsync(
+        string slug,
+        int? excludeId = null,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(slug))
             return false;
@@ -70,21 +74,21 @@ public sealed class BlogPostRepository : IBlogPostRepository
         if (excludeId.HasValue)
             query = query.Where(p => p.Id != excludeId.Value);
 
-        return await query.AnyAsync().ConfigureAwait(false);
+        return await query.AnyAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<BlogPost> CreateAsync(BlogPost post)
+    public async Task<BlogPost> CreateAsync(BlogPost post, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(post);
 
         _context.BlogPosts.Add(post);
 
-        await _context.SaveChangesAsync().ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return post;
     }
 
-    public async Task UpdateAsync(BlogPost post)
+    public async Task UpdateAsync(BlogPost post, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(post);
 
@@ -94,20 +98,20 @@ public sealed class BlogPostRepository : IBlogPostRepository
             post,
             item => item.Id);
 
-        await _context.SaveChangesAsync().ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var post = await _context.BlogPosts
-            .FindAsync(id)
+            .FindAsync(new object[] { id }, cancellationToken)
             .ConfigureAwait(false);
 
         if (post is null) return;
 
         _context.BlogPosts.Remove(post);
 
-        await _context.SaveChangesAsync().ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private IQueryable<BlogPost> CreateFilteredPostsQuery(bool onlyPublished, string? searchTerm)
@@ -142,7 +146,8 @@ public sealed class BlogPostRepository : IBlogPostRepository
     private static async Task<List<BlogPost>> LoadPagedPostsAsync(
         IQueryable<BlogPost> filteredPosts,
         int? skip,
-        int? take)
+        int? take,
+        CancellationToken cancellationToken)
     {
         var sortedPosts = filteredPosts
             .OrderByDescending(post => post.Date);
@@ -150,7 +155,7 @@ public sealed class BlogPostRepository : IBlogPostRepository
         var pagedPosts = EfRepositoryHelpers
             .ApplyOptionalPaging(sortedPosts, skip, take);
 
-        return await pagedPosts.ToListAsync().ConfigureAwait(false);
+        return await pagedPosts.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private static void EnsureSlug(string slug)

@@ -45,13 +45,16 @@ public sealed class CacheStampedeProtection : IDisposable
         }
     }
 
-    public async Task<T> ExecuteAsync<T>(string key, Func<Task<T>> factory)
+    public async Task<T> ExecuteAsync<T>(
+        string key,
+        Func<Task<T>> factory,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(factory);
 
         var semaphore = GetLock(key);
 
-        await semaphore.WaitAsync().ConfigureAwait(false);
+        await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {

@@ -99,7 +99,7 @@ public sealed class SiteProfileSettingsStore : ISiteProfileSettingsStore
                         .ConfigureAwait(false);
 
                     return settings;
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
 
             return result;
         }

@@ -9,15 +9,18 @@ namespace suryami62.Services;
 
 public interface IProjectService
 {
-    Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null);
+    Task<(List<Project> Items, int Total)> GetProjectsAsync(
+        int? skip = null,
+        int? take = null,
+        CancellationToken cancellationToken = default);
 
-    Task<Project?> GetProjectByIdAsync(int id);
+    Task<Project?> GetProjectByIdAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<Project> CreateProjectAsync(Project project);
+    Task<Project> CreateProjectAsync(Project project, CancellationToken cancellationToken = default);
 
-    Task UpdateProjectAsync(Project project);
+    Task UpdateProjectAsync(Project project, CancellationToken cancellationToken = default);
 
-    Task DeleteProjectAsync(int id);
+    Task DeleteProjectAsync(int id, CancellationToken cancellationToken = default);
 }
 
 public sealed class ProjectService : IProjectService
@@ -42,13 +45,16 @@ public sealed class ProjectService : IProjectService
         _stampedeProtection = stampedeProtection;
     }
 
-    public async Task<(List<Project> Items, int Total)> GetProjectsAsync(int? skip = null, int? take = null)
+    public async Task<(List<Project> Items, int Total)> GetProjectsAsync(
+        int? skip = null,
+        int? take = null,
+        CancellationToken cancellationToken = default)
     {
         var cacheKey = $"{CacheKeyPrefix}list:{skip ?? 0}:{take ?? 0}";
 
         if (_cacheService != null)
         {
-            var cached = await _cacheService.GetAsync<CachedProjectList>(cacheKey)
+            var cached = await _cacheService.GetAsync<CachedProjectList>(cacheKey, cancellationToken)
                 .ConfigureAwait(false);
 
             if (cached != null)
@@ -61,46 +67,48 @@ public sealed class ProjectService : IProjectService
                 .ExecuteAsync(cacheKey, async () =>
                 {
                     var doubleCheck = await _cacheService
-                        .GetAsync<CachedProjectList>(cacheKey)
+                        .GetAsync<CachedProjectList>(cacheKey, cancellationToken)
                         .ConfigureAwait(false);
 
                     if (doubleCheck != null) return (doubleCheck.Items, doubleCheck.Total);
 
                     var dbResult = await _repository
-                        .GetProjectsAsync(skip, take)
+                        .GetProjectsAsync(skip, take, cancellationToken)
                         .ConfigureAwait(false);
 
                     await _cacheService.SetAsync(
                         cacheKey,
                         new CachedProjectList(dbResult.Items, dbResult.Total),
-                        CacheExpiration).ConfigureAwait(false);
+                        CacheExpiration,
+                        cancellationToken).ConfigureAwait(false);
 
                     return dbResult;
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
 
             return result;
         }
 
         var fallbackResult = await _repository
-            .GetProjectsAsync(skip, take)
+            .GetProjectsAsync(skip, take, cancellationToken)
             .ConfigureAwait(false);
 
         if (_cacheService != null)
             await _cacheService.SetAsync(
                 cacheKey,
                 new CachedProjectList(fallbackResult.Items, fallbackResult.Total),
-                CacheExpiration).ConfigureAwait(false);
+                CacheExpiration,
+                cancellationToken).ConfigureAwait(false);
 
         return fallbackResult;
     }
 
-    public async Task<Project?> GetProjectByIdAsync(int id)
+    public async Task<Project?> GetProjectByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var cacheKey = $"{CacheKeyPrefix}id:{id}";
 
         if (_cacheService != null)
         {
-            var cached = await _cacheService.GetAsync<Project>(cacheKey).ConfigureAwait(false);
+            var cached = await _cacheService.GetAsync<Project>(cacheKey, cancellationToken).ConfigureAwait(false);
             if (cached != null) return cached;
         }
 
@@ -109,68 +117,70 @@ public sealed class ProjectService : IProjectService
             var result = await _stampedeProtection
                 .ExecuteAsync(cacheKey, async () =>
                 {
-                    var doubleCheck = await _cacheService.GetAsync<Project>(cacheKey)
+                    var doubleCheck = await _cacheService.GetAsync<Project>(cacheKey, cancellationToken)
                         .ConfigureAwait(false);
                     if (doubleCheck != null) return doubleCheck;
 
-                    var project = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+                    var project = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
                     if (project != null)
-                        await _cacheService.SetAsync(cacheKey, project, CacheExpiration)
+                        await _cacheService.SetAsync(cacheKey, project, CacheExpiration, cancellationToken)
                             .ConfigureAwait(false);
 
                     return project;
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
 
             return result;
         }
 
-        var fallbackProject = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+        var fallbackProject = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null && fallbackProject != null)
-            await _cacheService.SetAsync(cacheKey, fallbackProject, CacheExpiration)
+            await _cacheService.SetAsync(cacheKey, fallbackProject, CacheExpiration, cancellationToken)
                 .ConfigureAwait(false);
 
         return fallbackProject;
     }
 
-    public async Task<Project> CreateProjectAsync(Project project)
+    public async Task<Project> CreateProjectAsync(
+        Project project,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _repository.CreateAsync(project).ConfigureAwait(false);
+        var result = await _repository.CreateAsync(project, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null)
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*", cancellationToken)
                 .ConfigureAwait(false);
 
         return result;
     }
 
-    public async Task UpdateProjectAsync(Project project)
+    public async Task UpdateProjectAsync(Project project, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(project);
 
-        await _repository.UpdateAsync(project).ConfigureAwait(false);
+        await _repository.UpdateAsync(project, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null)
         {
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{project.Id}")
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{project.Id}", cancellationToken)
                 .ConfigureAwait(false);
 
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*", cancellationToken)
                 .ConfigureAwait(false);
         }
     }
 
-    public async Task DeleteProjectAsync(int id)
+    public async Task DeleteProjectAsync(int id, CancellationToken cancellationToken = default)
     {
-        await _repository.DeleteAsync(id).ConfigureAwait(false);
+        await _repository.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null)
         {
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}")
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}", cancellationToken)
                 .ConfigureAwait(false);
 
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*", cancellationToken)
                 .ConfigureAwait(false);
         }
     }
