@@ -92,13 +92,22 @@ public sealed class BlogPostRepository : IBlogPostRepository
     {
         ArgumentNullException.ThrowIfNull(post);
 
-        EfRepositoryHelpers.UpdateExistingOrAttachModified(
-            _context,
-            _context.BlogPosts,
-            post,
-            item => item.Id);
+        try
+        {
+            EfRepositoryHelpers.UpdateExistingOrAttachModified(
+                _context,
+                _context.BlogPosts,
+                post,
+                item => item.Id);
 
-        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new ConcurrencyConflictException(
+                "The blog post was changed by another user. Reload it before saving again.",
+                ex);
+        }
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)

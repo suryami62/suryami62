@@ -59,13 +59,22 @@ public sealed class ProjectRepository : IProjectRepository
     {
         ArgumentNullException.ThrowIfNull(project);
 
-        EfRepositoryHelpers.UpdateExistingOrAttachModified(
-            _context,
-            _context.Projects,
-            project,
-            item => item.Id);
+        try
+        {
+            EfRepositoryHelpers.UpdateExistingOrAttachModified(
+                _context,
+                _context.Projects,
+                project,
+                item => item.Id);
 
-        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new ConcurrencyConflictException(
+                "The project was changed by another user. Reload it before saving again.",
+                ex);
+        }
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)

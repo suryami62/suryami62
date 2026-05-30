@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using suryami62.Domain.Models;
 
@@ -54,6 +55,8 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Project>(entity =>
         {
+            ConfigureXminConcurrencyToken(entity);
+
             entity.Property(p => p.RepoUrl).HasConversion(uriConverter);
             entity.Property(p => p.DemoUrl).HasConversion(uriConverter);
             entity.Property(p => p.ImageUrl).HasConversion(uriConverter);
@@ -63,6 +66,8 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<BlogPost>(entity =>
         {
+            ConfigureXminConcurrencyToken(entity);
+
             entity.Property(p => p.Date).HasColumnType("timestamp with time zone");
             entity.Property(p => p.ImageUrl).HasConversion(uriConverter);
 
@@ -74,6 +79,8 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<JourneyHistory>(entity =>
         {
+            ConfigureXminConcurrencyToken(entity);
+
             entity.Property(item => item.Summary).HasDefaultValue(string.Empty);
 
             entity.HasIndex(item => new { item.Section, item.DisplayOrder });
@@ -81,8 +88,20 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Setting>(entity =>
         {
+            ConfigureXminConcurrencyToken(entity);
+
             entity.HasIndex(setting => setting.Key).IsUnique();
         });
+    }
+
+    private static void ConfigureXminConcurrencyToken<TEntity>(EntityTypeBuilder<TEntity> entity)
+        where TEntity : class, IConcurrencyTrackedEntity
+    {
+        entity.Property(item => item.Version)
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .ValueGeneratedOnAddOrUpdate()
+            .IsConcurrencyToken();
     }
 
     private static Uri? ParseAbsoluteUri(string? value)
