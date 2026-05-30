@@ -12,17 +12,18 @@ public interface IBlogPostRepository
         bool onlyPublished = true,
         int? skip = null,
         int? take = null,
-        string? searchTerm = null);
+        string? searchTerm = null,
+        CancellationToken cancellationToken = default);
 
-    Task<BlogPost?> GetBySlugAsync(string slug);
+    Task<BlogPost?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
 
-    Task<bool> SlugExistsAsync(string slug, int? excludeId = null);
+    Task<bool> SlugExistsAsync(string slug, int? excludeId = null, CancellationToken cancellationToken = default);
 
-    Task<BlogPost?> GetByIdAsync(int id);
+    Task<BlogPost?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<BlogPost> CreateAsync(BlogPost post);
+    Task<BlogPost> CreateAsync(BlogPost post, CancellationToken cancellationToken = default);
 
-    Task UpdateAsync(BlogPost post);
+    Task UpdateAsync(BlogPost post, CancellationToken cancellationToken = default);
 
-    Task DeleteAsync(int id);
+    Task DeleteAsync(int id, CancellationToken cancellationToken = default);
 }

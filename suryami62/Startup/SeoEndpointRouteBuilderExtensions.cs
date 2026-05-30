@@ -27,16 +27,19 @@ internal static class SeoEndpointRouteBuilderExtensions
     private static async Task<IResult> GetSitemapAsync(
         IConfiguration configuration,
         SeoSettingsStore seoSettingsStore,
-        IBlogPostService blogPostService)
+        IBlogPostService blogPostService,
+        CancellationToken cancellationToken)
     {
-        var seoSettings = await seoSettingsStore.GetAsync().ConfigureAwait(false);
+        var seoSettings = await seoSettingsStore.GetAsync(cancellationToken).ConfigureAwait(false);
 
         if (!seoSettings.EnableSitemap) return Results.NotFound();
 
         var canonicalBaseUrl = GetCanonicalBaseUrl(configuration, seoSettings);
         if (canonicalBaseUrl is null) return CreateMissingCanonicalBaseUrlProblem("sitemap.xml");
 
-        (IEnumerable<BlogPost> posts, _) = await blogPostService.GetPostsAsync().ConfigureAwait(false);
+        (IEnumerable<BlogPost> posts, _) = await blogPostService
+            .GetPostsAsync(cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
         var sitemapXml = BuildSitemapXml(canonicalBaseUrl, posts);
         return Results.Text(sitemapXml, "application/xml; charset=utf-8");
@@ -44,9 +47,10 @@ internal static class SeoEndpointRouteBuilderExtensions
 
     private static async Task<IResult> GetRobotsAsync(
         IConfiguration configuration,
-        SeoSettingsStore seoSettingsStore)
+        SeoSettingsStore seoSettingsStore,
+        CancellationToken cancellationToken)
     {
-        var seoSettings = await seoSettingsStore.GetAsync().ConfigureAwait(false);
+        var seoSettings = await seoSettingsStore.GetAsync(cancellationToken).ConfigureAwait(false);
 
         if (!seoSettings.EnableRobots) return Results.NotFound();
 

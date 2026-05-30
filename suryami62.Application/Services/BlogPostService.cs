@@ -14,21 +14,25 @@ public interface IBlogPostService
         bool onlyPublished = true,
         int? skip = null,
         int? take = null,
-        string? searchTerm = null);
+        string? searchTerm = null,
+        CancellationToken cancellationToken = default);
 
-    Task<BlogPost?> GetPostBySlugAsync(string slug);
+    Task<BlogPost?> GetPostBySlugAsync(string slug, CancellationToken cancellationToken = default);
 
-    Task<BlogPost?> GetPostByIdAsync(int id);
+    Task<BlogPost?> GetPostByIdAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<BlogPost> CreatePostAsync(BlogPost post);
+    Task<BlogPost> CreatePostAsync(BlogPost post, CancellationToken cancellationToken = default);
 
-    Task UpdatePostAsync(BlogPost post);
+    Task UpdatePostAsync(BlogPost post, CancellationToken cancellationToken = default);
 
-    Task DeletePostAsync(int id);
+    Task DeletePostAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<string> GenerateUniqueSlugAsync(string title, int? excludeId = null);
+    Task<string> GenerateUniqueSlugAsync(
+        string title,
+        int? excludeId = null,
+        CancellationToken cancellationToken = default);
 
-    Task<bool> SlugExistsAsync(string slug, int? excludeId = null);
+    Task<bool> SlugExistsAsync(string slug, int? excludeId = null, CancellationToken cancellationToken = default);
 }
 
 public sealed class BlogPostService : IBlogPostService
@@ -57,13 +61,14 @@ public sealed class BlogPostService : IBlogPostService
         bool onlyPublished = true,
         int? skip = null,
         int? take = null,
-        string? searchTerm = null)
+        string? searchTerm = null,
+        CancellationToken cancellationToken = default)
     {
         var cacheKey = $"{CacheKeyPrefix}list:{onlyPublished}:{skip ?? 0}:{take ?? 0}:{searchTerm ?? ""}";
 
         if (_cacheService != null)
         {
-            var cached = await _cacheService.GetAsync<CachedBlogPostList>(cacheKey)
+            var cached = await _cacheService.GetAsync<CachedBlogPostList>(cacheKey, cancellationToken)
                 .ConfigureAwait(false);
 
             if (cached != null)
@@ -76,40 +81,42 @@ public sealed class BlogPostService : IBlogPostService
                 .ExecuteAsync(cacheKey, async () =>
                 {
                     var doubleCheck = await _cacheService
-                        .GetAsync<CachedBlogPostList>(cacheKey)
+                        .GetAsync<CachedBlogPostList>(cacheKey, cancellationToken)
                         .ConfigureAwait(false);
 
                     if (doubleCheck != null) return (doubleCheck.Items, doubleCheck.Total);
 
                     var dbResult = await _repository
-                        .GetPostsAsync(onlyPublished, skip, take, searchTerm)
+                        .GetPostsAsync(onlyPublished, skip, take, searchTerm, cancellationToken)
                         .ConfigureAwait(false);
 
                     await _cacheService.SetAsync(
                         cacheKey,
                         new CachedBlogPostList(dbResult.Items, dbResult.Total),
-                        CacheExpiration).ConfigureAwait(false);
+                        CacheExpiration,
+                        cancellationToken).ConfigureAwait(false);
 
                     return dbResult;
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
 
             return result;
         }
 
         var fallbackResult = await _repository
-            .GetPostsAsync(onlyPublished, skip, take, searchTerm)
+            .GetPostsAsync(onlyPublished, skip, take, searchTerm, cancellationToken)
             .ConfigureAwait(false);
 
         if (_cacheService != null)
             await _cacheService.SetAsync(
                 cacheKey,
                 new CachedBlogPostList(fallbackResult.Items, fallbackResult.Total),
-                CacheExpiration).ConfigureAwait(false);
+                CacheExpiration,
+                cancellationToken).ConfigureAwait(false);
 
         return fallbackResult;
     }
 
-    public async Task<BlogPost?> GetPostBySlugAsync(string slug)
+    public async Task<BlogPost?> GetPostBySlugAsync(string slug, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(slug)) return null;
 
@@ -117,99 +124,104 @@ public sealed class BlogPostService : IBlogPostService
 
         if (_cacheService != null)
         {
-            var cached = await _cacheService.GetAsync<BlogPost>(cacheKey).ConfigureAwait(false);
+            var cached = await _cacheService.GetAsync<BlogPost>(cacheKey, cancellationToken).ConfigureAwait(false);
             if (cached != null) return cached;
         }
 
-        var post = await _repository.GetBySlugAsync(slug).ConfigureAwait(false);
+        var post = await _repository.GetBySlugAsync(slug, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null && post != null)
-            await _cacheService.SetAsync(cacheKey, post, CacheExpiration).ConfigureAwait(false);
+            await _cacheService.SetAsync(cacheKey, post, CacheExpiration, cancellationToken).ConfigureAwait(false);
 
         return post;
     }
 
-    public async Task<BlogPost?> GetPostByIdAsync(int id)
+    public async Task<BlogPost?> GetPostByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var cacheKey = $"{CacheKeyPrefix}id:{id}";
 
         if (_cacheService != null)
         {
-            var cached = await _cacheService.GetAsync<BlogPost>(cacheKey).ConfigureAwait(false);
+            var cached = await _cacheService.GetAsync<BlogPost>(cacheKey, cancellationToken).ConfigureAwait(false);
             if (cached != null) return cached;
         }
 
-        var post = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+        var post = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null && post != null)
-            await _cacheService.SetAsync(cacheKey, post, CacheExpiration).ConfigureAwait(false);
+            await _cacheService.SetAsync(cacheKey, post, CacheExpiration, cancellationToken).ConfigureAwait(false);
 
         return post;
     }
 
-    public async Task<BlogPost> CreatePostAsync(BlogPost post)
+    public async Task<BlogPost> CreatePostAsync(
+        BlogPost post,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(post);
 
         if (string.IsNullOrWhiteSpace(post.Slug))
             throw new ArgumentException("Post slug cannot be empty.", nameof(post));
 
-        if (await _repository.SlugExistsAsync(post.Slug).ConfigureAwait(false))
+        if (await _repository.SlugExistsAsync(post.Slug, cancellationToken: cancellationToken).ConfigureAwait(false))
             throw new InvalidOperationException($"A post with slug '{post.Slug}' already exists.");
 
-        var result = await _repository.CreateAsync(post).ConfigureAwait(false);
+        var result = await _repository.CreateAsync(post, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null)
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*").ConfigureAwait(false);
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*", cancellationToken).ConfigureAwait(false);
 
         return result;
     }
 
-    public async Task UpdatePostAsync(BlogPost post)
+    public async Task UpdatePostAsync(BlogPost post, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(post);
 
         if (string.IsNullOrWhiteSpace(post.Slug))
             throw new ArgumentException("Post slug cannot be empty.", nameof(post));
 
-        if (await _repository.SlugExistsAsync(post.Slug, post.Id).ConfigureAwait(false))
+        if (await _repository.SlugExistsAsync(post.Slug, post.Id, cancellationToken).ConfigureAwait(false))
             throw new InvalidOperationException($"A post with slug '{post.Slug}' already exists.");
 
-        await _repository.UpdateAsync(post).ConfigureAwait(false);
+        await _repository.UpdateAsync(post, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null)
         {
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}")
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}", cancellationToken)
                 .ConfigureAwait(false);
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{post.Id}")
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{post.Id}", cancellationToken)
                 .ConfigureAwait(false);
 
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*", cancellationToken)
                 .ConfigureAwait(false);
         }
     }
 
-    public async Task DeletePostAsync(int id)
+    public async Task DeletePostAsync(int id, CancellationToken cancellationToken = default)
     {
-        var post = await _repository.GetByIdAsync(id).ConfigureAwait(false);
+        var post = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
-        await _repository.DeleteAsync(id).ConfigureAwait(false);
+        await _repository.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null)
         {
             if (post != null)
-                await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}")
+                await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}slug:{post.Slug}", cancellationToken)
                     .ConfigureAwait(false);
 
-            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}")
+            await _cacheService.RemoveEntryAsync($"{CacheKeyPrefix}id:{id}", cancellationToken)
                 .ConfigureAwait(false);
 
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*")
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}list:*", cancellationToken)
                 .ConfigureAwait(false);
         }
     }
 
-    public async Task<string> GenerateUniqueSlugAsync(string title, int? excludeId = null)
+    public async Task<string> GenerateUniqueSlugAsync(
+        string title,
+        int? excludeId = null,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(title))
             return string.Empty;
@@ -218,23 +230,27 @@ public sealed class BlogPostService : IBlogPostService
         if (string.IsNullOrEmpty(baseSlug))
             return string.Empty;
 
-        if (!await _repository.SlugExistsAsync(baseSlug, excludeId).ConfigureAwait(false))
+        if (!await _repository.SlugExistsAsync(baseSlug, excludeId, cancellationToken).ConfigureAwait(false))
             return baseSlug;
 
         var counter = 2;
         string candidate;
         do
         {
+            cancellationToken.ThrowIfCancellationRequested();
             candidate = $"{baseSlug}-{counter}";
             counter++;
-        } while (await _repository.SlugExistsAsync(candidate, excludeId).ConfigureAwait(false));
+        } while (await _repository.SlugExistsAsync(candidate, excludeId, cancellationToken).ConfigureAwait(false));
 
         return candidate;
     }
 
-    public Task<bool> SlugExistsAsync(string slug, int? excludeId = null)
+    public Task<bool> SlugExistsAsync(
+        string slug,
+        int? excludeId = null,
+        CancellationToken cancellationToken = default)
     {
-        return _repository.SlugExistsAsync(slug, excludeId);
+        return _repository.SlugExistsAsync(slug, excludeId, cancellationToken);
     }
 
     private static string CreateSlug(string title)

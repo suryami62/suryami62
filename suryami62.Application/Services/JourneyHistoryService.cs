@@ -9,11 +9,13 @@ namespace suryami62.Services;
 
 public interface IJourneyHistoryService
 {
-    Task<List<JourneyHistory>> GetBySectionAsync(JourneySection section);
+    Task<List<JourneyHistory>> GetBySectionAsync(
+        JourneySection section,
+        CancellationToken cancellationToken = default);
 
-    Task<JourneyHistory> CreateAsync(JourneyHistory item);
+    Task<JourneyHistory> CreateAsync(JourneyHistory item, CancellationToken cancellationToken = default);
 
-    Task DeleteAsync(int id);
+    Task DeleteAsync(int id, CancellationToken cancellationToken = default);
 }
 
 public sealed class JourneyHistoryService : IJourneyHistoryService
@@ -38,14 +40,16 @@ public sealed class JourneyHistoryService : IJourneyHistoryService
         _stampedeProtection = stampedeProtection;
     }
 
-    public async Task<List<JourneyHistory>> GetBySectionAsync(JourneySection section)
+    public async Task<List<JourneyHistory>> GetBySectionAsync(
+        JourneySection section,
+        CancellationToken cancellationToken = default)
     {
         var cacheKey = $"{CacheKeyPrefix}section:{section}";
 
         if (_cacheService != null)
         {
             var cached = await _cacheService
-                .GetAsync<List<JourneyHistory>>(cacheKey)
+                .GetAsync<List<JourneyHistory>>(cacheKey, cancellationToken)
                 .ConfigureAwait(false);
 
             if (cached != null)
@@ -58,53 +62,55 @@ public sealed class JourneyHistoryService : IJourneyHistoryService
                 .ExecuteAsync(cacheKey, async () =>
                 {
                     var doubleCheck = await _cacheService
-                        .GetAsync<List<JourneyHistory>>(cacheKey)
+                        .GetAsync<List<JourneyHistory>>(cacheKey, cancellationToken)
                         .ConfigureAwait(false);
 
                     if (doubleCheck != null) return doubleCheck;
 
                     var items = await _repository
-                        .GetBySectionAsync(section)
+                        .GetBySectionAsync(section, cancellationToken)
                         .ConfigureAwait(false);
 
-                    await _cacheService.SetAsync(cacheKey, items, CacheExpiration)
+                    await _cacheService.SetAsync(cacheKey, items, CacheExpiration, cancellationToken)
                         .ConfigureAwait(false);
 
                     return items;
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
 
             return result;
         }
 
         var fallbackItems = await _repository
-            .GetBySectionAsync(section)
+            .GetBySectionAsync(section, cancellationToken)
             .ConfigureAwait(false);
 
         if (_cacheService != null)
-            await _cacheService.SetAsync(cacheKey, fallbackItems, CacheExpiration)
+            await _cacheService.SetAsync(cacheKey, fallbackItems, CacheExpiration, cancellationToken)
                 .ConfigureAwait(false);
 
         return fallbackItems;
     }
 
-    public async Task<JourneyHistory> CreateAsync(JourneyHistory item)
+    public async Task<JourneyHistory> CreateAsync(
+        JourneyHistory item,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _repository.CreateAsync(item)
+        var result = await _repository.CreateAsync(item, cancellationToken)
             .ConfigureAwait(false);
 
         if (_cacheService != null)
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*")
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*", cancellationToken)
                 .ConfigureAwait(false);
 
         return result;
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        await _repository.DeleteAsync(id).ConfigureAwait(false);
+        await _repository.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null)
-            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*")
+            await _cacheService.RemoveByPatternAsync($"{CacheKeyPrefix}section:*", cancellationToken)
                 .ConfigureAwait(false);
     }
 }
