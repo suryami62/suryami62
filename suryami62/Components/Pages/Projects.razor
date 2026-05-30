@@ -42,7 +42,7 @@
                 {
                     <ProjectCard Title="@project.Title"
                                  Description="@project.Description"
-                                 Tags="@GetTagsArray(project.Tags)"
+                                 Tags="@ProjectTagFormatter.Split(project.Tags)"
                                  RepoUrl="@GetUrlString(project.RepoUrl)"
                                  DemoUrl="@GetUrlString(project.DemoUrl)"
                                  ImageUrl="@GetUrlString(project.ImageUrl)"/>
@@ -139,19 +139,6 @@
     {
         _page = newPage;
         await LoadProjects();
-    }
-
-    private string[] GetTagsArray(string? tags)
-    {
-        if (string.IsNullOrWhiteSpace(tags))
-        {
-            return Array.Empty<string>();
-        }
-
-        return tags.Split(
-            ',',
-            StringSplitOptions.RemoveEmptyEntries
-        );
     }
 
     private string? GetUrlString(Uri? url)

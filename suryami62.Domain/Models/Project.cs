@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace suryami62.Domain.Models;
 
-public sealed class Project : IConcurrencyTrackedEntity
+public sealed class Project : IConcurrencyTrackedEntity, IValidatableObject
 {
     public int Id { get; set; }
 
@@ -27,4 +27,13 @@ public sealed class Project : IConcurrencyTrackedEntity
     public Uri? ImageUrl { get; set; }
 
     public int DisplayOrder { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        var tagsValidationResult = ProjectTagFormatter.Validate(Tags);
+        if (tagsValidationResult is not null)
+        {
+            yield return tagsValidationResult;
+        }
+    }
 }

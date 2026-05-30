@@ -46,6 +46,7 @@
 
                 <InputText @bind-Value="_project.Tags" placeholder="e.g. .NET, Blazor, Tailwind"
                            class="@InputClass"/>
+                <ValidationMessage For="() => _project.Tags" class="font-bold text-red-600 dark:text-red-400"/>
             </div>
         </div>
 
@@ -201,6 +202,10 @@
         catch (ConcurrencyConflictException ex)
         {
             SetConflictStatus(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            SetErrorStatus(ex.Message);
         }
         catch
         {

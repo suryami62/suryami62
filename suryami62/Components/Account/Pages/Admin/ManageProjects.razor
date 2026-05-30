@@ -191,9 +191,7 @@
 
     private IEnumerable<string> GetProjectTags(Project project)
     {
-        return project.Tags
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(tag => tag.Trim());
+        return ProjectTagFormatter.Split(project.Tags);
     }
 
     private async Task<bool> ShouldDeleteProjectAsync()

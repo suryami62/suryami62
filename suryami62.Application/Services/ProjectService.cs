@@ -146,6 +146,10 @@ public sealed class ProjectService : IProjectService
         Project project,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(project);
+
+        NormalizeProjectTags(project);
+
         var result = await _repository.CreateAsync(project, cancellationToken).ConfigureAwait(false);
 
         if (_cacheService != null)
@@ -158,6 +162,8 @@ public sealed class ProjectService : IProjectService
     public async Task UpdateProjectAsync(Project project, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(project);
+
+        NormalizeProjectTags(project);
 
         await _repository.UpdateAsync(project, cancellationToken).ConfigureAwait(false);
 
@@ -186,4 +192,17 @@ public sealed class ProjectService : IProjectService
     }
 
     private sealed record CachedProjectList(List<Project> Items, int Total);
+
+    private static void NormalizeProjectTags(Project project)
+    {
+        var validationResult = ProjectTagFormatter.Validate(project.Tags);
+        if (validationResult is not null)
+        {
+            throw new ArgumentException(
+                validationResult.ErrorMessage ?? "Project tags are invalid.",
+                nameof(project));
+        }
+
+        project.Tags = ProjectTagFormatter.Format(project.Tags);
+    }
 }
