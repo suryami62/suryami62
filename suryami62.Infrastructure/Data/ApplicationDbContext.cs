@@ -1,5 +1,6 @@
 #region
 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -47,6 +48,8 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         base.OnModelCreating(builder);
 
+    ConfigureIdentityTables(builder);
+
         builder.HasPostgresExtension("pg_trgm");
 
         var uriConverter = new ValueConverter<Uri?, string?>(
@@ -92,6 +95,31 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
             entity.HasIndex(setting => setting.Key).IsUnique();
         });
+    }
+
+    private static void ConfigureIdentityTables(ModelBuilder builder)
+    {
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity.ToTable("asp_net_users");
+            entity.HasIndex(user => user.NormalizedEmail)
+                .HasDatabaseName("ix_asp_net_users_normalized_email");
+            entity.HasIndex(user => user.NormalizedUserName)
+                .HasDatabaseName("ux_asp_net_users_normalized_user_name");
+        });
+
+        builder.Entity<IdentityRole>(entity =>
+        {
+            entity.ToTable("asp_net_roles");
+            entity.HasIndex(role => role.NormalizedName)
+                .HasDatabaseName("ux_asp_net_roles_normalized_name");
+        });
+
+        builder.Entity<IdentityRoleClaim<string>>(entity => entity.ToTable("asp_net_role_claims"));
+        builder.Entity<IdentityUserClaim<string>>(entity => entity.ToTable("asp_net_user_claims"));
+        builder.Entity<IdentityUserLogin<string>>(entity => entity.ToTable("asp_net_user_logins"));
+        builder.Entity<IdentityUserRole<string>>(entity => entity.ToTable("asp_net_user_roles"));
+        builder.Entity<IdentityUserToken<string>>(entity => entity.ToTable("asp_net_user_tokens"));
     }
 
     private static void ConfigureXminConcurrencyToken<TEntity>(EntityTypeBuilder<TEntity> entity)

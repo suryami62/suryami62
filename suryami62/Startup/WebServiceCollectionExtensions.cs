@@ -223,6 +223,8 @@ internal static class WebServiceCollectionExtensions
                 npgsqlOptions.EnableRetryOnFailure(3);
                 npgsqlOptions.CommandTimeout(30);
             });
+
+            options.UseSnakeCaseNamingConvention();
         });
 
         services.AddInfrastructureServices();
