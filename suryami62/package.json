@@ -8,7 +8,7 @@
   },
   "private": true,
   "scripts": {
-    "build:css": "tailwindcss -i ./Styles/app.css -o ./wwwroot/app.css"
+    "build:css": "tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css"
   },
   "type": "module"
 }
