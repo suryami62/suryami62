@@ -5,6 +5,12 @@
 @source "../Shared";
 @source "../wwwroot/index.html";
 
+@layer components {
+    .neo-frame {
+        @apply border-4 border-black shadow-[8px_8px_0px_0px_#000] dark:border-white dark:shadow-[8px_8px_0px_0px_#fff];
+    }
+}
+
 h1:focus {
     outline: none;
 }

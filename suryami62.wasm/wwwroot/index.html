@@ -14,18 +14,40 @@
     <link href="img/favicon.ico" rel="icon" type="image/ico"/>
 
     <script crossorigin="anonymous"
+            defer
             integrity="sha512-CjD2l6/z0P1nUAHl+/lyS6NwV2bp2ijelm2Eqqg5TuGM8/Sc9WiNEtUfKm/Ac7OppXjthmZATFM5nnq7OyEPYQ=="
-            referrerpolicy="no-referrer" src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.15.12/cdn.min.js"></script>
+            referrerpolicy="no-referrer"
+            src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.15.12/cdn.min.js"></script>
     <script type="importmap"></script>
 </head>
 
 <body>
-<div id="app">
-    <svg class="loading-progress">
-        <circle cx="50%" cy="50%" r="40%"/>
-        <circle cx="50%" cy="50%" r="40%"/>
-    </svg>
-    <div class="loading-progress-text"></div>
+<div class="flex min-h-screen flex-col bg-white font-sans text-black selection:bg-black selection:text-white dark:bg-black dark:text-white dark:selection:bg-white dark:selection:text-black"
+     id="app">
+
+    <div class="fixed inset-0 flex items-center justify-center">
+        <div class="w-full max-w-sm border-4 border-black p-4 shadow-[8px_8px_0px_0px_#000] dark:border-white dark:shadow-[8px_8px_0px_0px_#fff]">
+            <div class="mb-4">
+                <h1 class="text-2xl font-black uppercase">suryami62.my.id</h1>
+
+                <p class="text-sm font-bold">Sedang memuat ...</p>
+            </div>
+
+            <div class="border-4 border-black bg-black dark:border-white dark:bg-white">
+                <div class="h-8 bg-white dark:bg-black" style="width: var(--blazor-load-percentage);"></div>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between text-sm font-black">
+                <span>Status</span>
+                <span class="loading-text"></span>
+            </div>
+
+            <div class="mt-2 text-xs font-bold">
+                <span class="line-through">Web portofolio ini sedang efesiensi</span>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
