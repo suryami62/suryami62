@@ -1,0 +1,79 @@
+﻿<section class="border-b-4 border-black pb-12 dark:border-white">
+    <div class="@GetGridClass()">
+        <div class="@GetTextAlignClass()">
+            <h1 class="text-5xl leading-none font-black tracking-tighter uppercase sm:text-6xl md:text-8xl">
+                @Title <br/>
+                <span class="bg-black px-4 text-white dark:bg-white dark:text-black">@Highlight</span>
+            </h1>
+
+            <div class="@GetDescriptionClass()">
+                @ChildContent
+            </div>
+
+            @if (HasFooterContent())
+            {
+                <div class="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
+                    @FooterContent
+                </div>
+            }
+        </div>
+
+        @if (HasAsideContent())
+        {
+            @AsideContent
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter] [EditorRequired] public string Title { get; set; } = "";
+
+    [Parameter] [EditorRequired] public string Highlight { get; set; } = "";
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public RenderFragment? FooterContent { get; set; }
+
+    [Parameter] public RenderFragment? AsideContent { get; set; }
+
+    private bool HasFooterContent()
+    {
+        return FooterContent is not null;
+    }
+
+    private bool HasAsideContent()
+    {
+        return AsideContent is not null;
+    }
+
+    private string GetGridClass()
+    {
+        if (HasAsideContent())
+        {
+            return "grid gap-12 md:grid-cols-[1fr_auto] md:items-center";
+        }
+
+        return "";
+    }
+
+    private string GetTextAlignClass()
+    {
+        if (HasAsideContent())
+        {
+            return "text-center md:text-left";
+        }
+
+        return "";
+    }
+
+    private string GetDescriptionClass()
+    {
+        if (HasAsideContent())
+        {
+            return "mx-auto md:mx-0 mt-6 max-w-2xl text-xl font-bold md:text-2xl";
+        }
+
+        return "mt-6 max-w-2xl text-xl font-bold md:text-2xl";
+    }
+
+}

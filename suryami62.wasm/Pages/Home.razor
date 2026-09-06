@@ -1,7 +1,56 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+@inject NavigationManager NavigationManager
 
-<h1>Hello, world!</h1>
+<PageTitle>My Personal Blog | suryami62</PageTitle>
 
-Welcome to your new app.
+<HeadContent>
+    <MetaOpenGraphCard Title="My Personal Blog | suryami62"
+                       Description="Hi, I am Surya Ramadhan. A .NET Developer and Physics Teacher, shares insights on minimal design, coding, and learning from technical and educational perspectives."
+                       Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
+                       Url="@NavigationManager.Uri"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+          integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+</HeadContent>
+
+<div class="flex flex-col gap-12 py-8">
+    <PageHeader Title="My Personal " Highlight="Website">
+        <ChildContent>
+            Hi, I'm
+            <span class="underline decoration-4">
+                Surya Ramadhan
+            </span>. A .NET Developer and Physics Teacher
+            sharing insights on minimal design, coding, and learning.
+        </ChildContent>
+
+        <FooterContent>
+            @foreach (var social in _socials)
+            {
+                <SocialButton Href="@social.Href" IconClass="@social.IconClass"/>
+            }
+        </FooterContent>
+
+        <AsideContent>
+            <Avatar AvatarUrl="@Assets["img/photo.webp"]" Alt="Surya Ramadhan"/>
+        </AsideContent>
+    </PageHeader>
+</div>
+
+@code {
+
+    private class Social(string href, string iconClass)
+    {
+        public string Href { get; } = href;
+        public string IconClass { get; } = iconClass;
+    }
+
+    private readonly List<Social> _socials =
+    [
+        new("https://www.instagram.com/suryami62", "fa-brands fa-instagram"),
+        new("https://www.linkedin.com/in/suryami62", "fa-brands fa-linkedin"),
+        new("https://github.com/suryami62", "fa-brands fa-github"),
+        new("mailto:suryami62@outlook.com", "fa-regular fa-envelope")
+    ];
+
+}
