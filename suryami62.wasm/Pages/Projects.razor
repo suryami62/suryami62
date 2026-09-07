@@ -1,0 +1,62 @@
+﻿@page "/projects"
+
+@inject NavigationManager NavigationManager
+
+<PageTitle>My Selected Projects | suryami62</PageTitle>
+
+<HeadContent>
+    <MetaOpenGraphCard Title="My Selected Projects | suryami62"
+                       Description="Discover practical projects combining technology and science. From web applications to coding experiments solving real-world problems with systematic innovation."
+                       Image="@(NavigationManager.BaseUri + Assets["img/socialCard.webp"])"
+                       Url="@NavigationManager.Uri"/>
+</HeadContent>
+
+<div class="flex flex-col gap-12 py-8">
+    <PageHeader Title="My Selected" Highlight="Projects">
+        <ChildContent>
+            A collection of tools and experiments built by a
+            <span class="underline decoration-4">.NET Developer</span> and
+            <span class="underline decoration-4">Physics Teacher</span>.
+        </ChildContent>
+    </PageHeader>
+
+    <section>
+        <div class="grid gap-12 md:grid-cols-2">
+            @foreach (var project in _projects)
+            {
+                <ProjectCard Title="@project.Title"
+                             Description="@project.Description"
+                             PreviewUrl="@project.DemoUrl"
+                             RepoUrl="@project.RepoUrl"
+                             ImageUrl="@project.ImageUrl"/>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+
+    private class Project(string title, string description, string? demoUrl, string? repoUrl, string? imageUrl)
+    {
+        public string Title { get; } = title;
+        public string Description { get; } = description;
+        public string? DemoUrl { get; } = demoUrl;
+        public string? RepoUrl { get; } = repoUrl;
+        public string? ImageUrl { get; } = imageUrl;
+    }
+
+    private readonly List<Project> _projects =
+    [
+        new("Measuring Devices E-Module",
+            "A project to complete the Colloquium course assignment for the 5th semester of physics education at Sarjanawiyata Tamansiswa University.",
+            "https://drive.google.com/drive/folders/1flh7liFsmdLA_l3yBKXLRr07DqFO40vl",
+            null,
+            "https://example.com/physics-simulation.jpg"),
+        new("OZA",
+            "A bachelor's thesis to complete one of the requirements in obtaining a Bachelor of Education degree in Physics Education, Faculty of Teacher Training and Education, Sarjanawiyata Tamansiswa University.",
+            "https://oza.suryami62.my.id/",
+            null,
+            "https://example.com/oza-project.jpg")
+    ];
+
+}
