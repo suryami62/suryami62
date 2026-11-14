@@ -1,0 +1,38 @@
+{{/* Isi <head> untuk semua halaman. "." adalah halaman yang sedang dibuat. */}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+
+{{ $title := printf "%s | %s" .Title site.Title }}
+{{ $desc := .Description | default site.Params.description }}
+<title>{{ $title }}</title>
+<meta name="description" content="{{ $desc }}">
+<meta name="author" content="{{ site.Params.author }}">
+
+{{/* Setiap halaman punya canonical sendiri dari .Permalink. Halaman 404 tidak boleh diindeks. */}}
+{{ if eq .Kind "404" }}
+  <meta name="robots" content="noindex">
+{{ else }}
+  <link rel="canonical" href="{{ .Permalink }}">
+{{ end }}
+
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+
+<meta property="og:title" content="{{ $title }}">
+<meta property="og:type" content="{{ .Params.ogType | default "website" }}">
+<meta property="og:url" content="{{ .Permalink }}">
+<meta property="og:site_name" content="{{ site.Title }}">
+<meta property="og:locale" content="en_US">
+<meta property="og:description" content="{{ $desc }}">
+<meta property="og:image" content="{{ site.Params.socialImage | absURL }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ site.Params.socialImageAlt }}">
+{{/* Twitter/X otomatis memakai tag og:*, jadi cukup satu tag ini. */}}
+<meta name="twitter:card" content="summary_large_image">
+
+{{/* Hugo Pipes: minify lalu beri nama file berhash agar cache browser selalu segar. */}}
+{{ $css := resources.Get "css/main.css" | resources.Minify | resources.Fingerprint }}
+<link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+
+{{ partial "jsonld.html" . }}

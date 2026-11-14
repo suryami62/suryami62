@@ -1,0 +1,245 @@
+/*
+  Satu file CSS tanpa framework. Urutan baca:
+  1. Variabel warna  2. Dasar  3. Layout  4. Komponen  5. Utilitas
+  Mode gelap otomatis mengikuti pengaturan sistem lewat light-dark().
+*/
+
+/* 1. Variabel ----------------------------------------------------------- */
+:root {
+  color-scheme: light dark;                  /* beri tahu browser: situs ini punya dua tema */
+  --fg: light-dark(#000, #fff);              /* warna teks dan garis */
+  --bg: light-dark(#fff, #000);              /* warna latar */
+  --muted: light-dark(#525252, #a3a3a3);     /* teks sekunder */
+  --soft: light-dark(#d4d4d4, #404040);      /* hover dan sorotan */
+  --panel: light-dark(#f5f5f5, #171717);     /* latar footer */
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* 2. Dasar -------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, p { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; }
+::selection { background: var(--fg); color: var(--bg); }
+
+/* Fokus keyboard: outline asli tetap terlihat di mode High Contrast (box-shadow tidak). */
+:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+
+h1 {
+  font-size: clamp(3rem, 9vw, 6rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+/* 3. Layout ------------------------------------------------------------- */
+.wrap { width: 100%; max-width: 80rem; margin-inline: auto; }
+
+.stack {                                      /* susunan vertikal dengan jarak antar bagian */
+  display: grid;
+  gap: 3rem;
+  align-content: start;
+  flex: 1;
+  padding: 3rem 1rem;
+}
+@media (min-width: 48rem) { .stack { padding-inline: 2rem; } }
+
+.grid-2 { display: grid; gap: 2rem; }
+@media (min-width: 48rem) { .grid-2 { grid-template-columns: repeat(2, 1fr); } }
+
+.site-header { padding: 1rem; border-bottom: 4px solid var(--fg); }
+.site-header__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+@media (min-width: 48rem) { .site-header__inner { flex-direction: row; } }
+
+.nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+
+.site-footer {
+  padding: 2rem 1rem;
+  border-top: 4px solid var(--fg);
+  background: var(--panel);
+  text-align: center;
+}
+
+/* 4. Komponen ----------------------------------------------------------- */
+.brand {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid var(--fg);
+  background: var(--fg);
+  color: var(--bg);
+  box-shadow: 4px 4px 0 var(--fg);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+}
+.brand img { width: auto; height: 2.5rem; }
+@media (prefers-color-scheme: dark) { .brand img { filter: invert(1); } }
+
+.btn {
+  display: block;
+  padding: 0.5rem 1.5rem;
+  border: 2px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 4px 4px 0 var(--fg);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: translate 0.1s, box-shadow 0.1s, background-color 0.1s;
+}
+.btn:hover { background: var(--soft); }
+.btn:active { translate: 4px 4px; box-shadow: none; }
+/* Halaman aktif: gaya mengikuti atribut ARIA, jadi tampilan dan semantik tidak bisa berbeda. */
+.btn[aria-current="page"] { background: var(--fg); color: var(--bg); }
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+
+.hero { padding-bottom: 3rem; border-bottom: 4px solid var(--fg); }
+.hero--split { display: grid; gap: 3rem; align-items: center; }
+@media (min-width: 48rem) { .hero--split { grid-template-columns: 1fr auto; } }
+
+.accent {
+  display: block;
+  width: fit-content;
+  padding-inline: 1rem;
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.lead { max-width: 42rem; margin-top: 1.5rem; font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 700; }
+.lead strong { font-weight: 900; box-shadow: inset 0 -0.4em 0 var(--soft); }  /* sorotan, bukan garis bawah */
+
+.photo {
+  width: 100%;
+  max-width: 20rem;
+  margin-inline: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 4px solid var(--fg);
+  box-shadow: 8px 8px 0 var(--fg);
+}
+
+.card {
+  padding: 1.5rem;
+  border: 4px solid var(--fg);
+  background: var(--bg);
+  box-shadow: 8px 8px 0 var(--fg);
+}
+.card--small { border-width: 2px; box-shadow: 4px 4px 0 var(--fg); }
+.card h2 { font-size: clamp(1.5rem, 3vw, 1.875rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.025em; text-transform: uppercase; }
+.card--small h2 { font-size: 1.875rem; }
+.card--feature h2 { margin-top: 0.75rem; font-size: clamp(1.875rem, 5vw, 3rem); }
+.card p { margin-top: 1rem; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.muted { color: var(--muted); font-weight: 500; }
+
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 2px solid var(--fg);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+/* Panah dari CSS. Bagian setelah "/" adalah teks pengganti kosong, jadi pembaca layar melewatinya. */
+.flow li + li::before { content: "→"; content: "→" / ""; margin-right: 0.5rem; }
+
+.cards { gap: 3rem; }
+.cards > li { display: flex; }
+.cards .card { display: flex; flex-direction: column; width: 100%; }
+.cards img { width: 100%; aspect-ratio: 16 / 9; margin-top: 1rem; object-fit: cover; border: 4px solid var(--fg); }
+.card__actions { margin-top: auto; padding-top: 2rem; }
+
+.section-title { margin-bottom: 2rem; font-size: clamp(2.25rem, 6vw, 3.75rem); font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; text-wrap: balance; }
+.label { padding: 0.5rem; background: var(--fg); color: var(--bg); font-size: 1.5rem; font-weight: 700; text-transform: uppercase; }
+.timeline { display: grid; gap: 1.5rem; margin-top: 1.5rem; padding-left: 1.5rem; border-left: 4px solid var(--fg); }
+.timeline h4 { font-size: 1.5rem; font-weight: 700; }
+.org { font-size: 1.125rem; font-weight: 700; color: var(--muted); }
+.dates { margin-bottom: 0.5rem; font-family: var(--font-mono); font-size: 0.875rem; }
+
+.actions { margin-top: 2rem; }
+.actions .btn { display: inline-block; }
+
+.social { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; }
+.copyright { font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* Halaman 404: bandul, daftar hukum, dan tabel bacaan lab */
+.pendulum { justify-self: center; width: 16rem; max-width: 100%; height: 15rem; border-top: 8px solid var(--fg); }
+.pendulum__arm {
+  position: relative;
+  width: 4px;
+  height: 9rem;
+  margin-inline: auto;
+  background: var(--fg);
+  transform-origin: top center;
+  animation: swing 2.4s ease-in-out infinite alternate;   /* ease-in-out membuat geraknya mirip bandul sungguhan */
+}
+.pendulum__bob {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  translate: -50% 0;
+  display: grid;
+  place-items: center;
+  width: 5rem;
+  height: 5rem;
+  border: 4px solid var(--fg);
+  background: var(--bg);
+  box-shadow: 4px 4px 0 var(--fg);
+  font-size: 2.5rem;
+  font-weight: 900;
+}
+@keyframes swing { from { rotate: -24deg; } to { rotate: 24deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .pendulum__arm { animation: none; rotate: 16deg; }
+}
+
+.facts { display: grid; gap: 1.25rem; margin: 1.5rem 0 0; }
+.facts dt { font-family: var(--font-mono); font-size: 0.875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.facts dd { margin: 0.25rem 0 0; }
+.facts--rows { gap: 0.75rem; }
+.facts--rows > div { display: flex; justify-content: space-between; gap: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--fg); }
+.facts--rows dd { margin: 0; font-family: var(--font-mono); font-weight: 700; text-align: right; }
+
+/* 5. Utilitas ----------------------------------------------------------- */
+/* Teks yang hanya dibaca pembaca layar. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

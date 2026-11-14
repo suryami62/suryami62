@@ -1,0 +1,52 @@
+{{ define "main" }}
+  <section class="hero hero--split">
+    <div>
+      <h1>404 <span class="accent">Page not found</span></h1>
+      <div class="lead">
+        <p>Schrödinger’s page was both here and not here. You opened the box. It was not here.</p>
+      </div>
+      <div class="actions"><a class="btn" href="{{ site.Home.RelPermalink }}">Back to home</a></div>
+    </div>
+
+    {{/* Hiasan murni, jadi disembunyikan dari pembaca layar. Animasinya mati jika pengguna memilih "reduce motion". */}}
+    <div class="pendulum" aria-hidden="true">
+      <div class="pendulum__arm"><span class="pendulum__bob">?</span></div>
+    </div>
+  </section>
+
+  <div class="grid-2">
+    <section class="card">
+      <h2>Possible explanations</h2>
+      {{/* dl = daftar istilah dan penjelasannya. Cocok untuk pasangan "hukum: alasan". */}}
+      <dl class="facts">
+        <div>
+          <dt>Heisenberg</dt>
+          <dd>We now know exactly where this page is not, which means we have no idea how fast it was going.</dd>
+        </div>
+        <div>
+          <dt>Einstein</dt>
+          <dd>It left at 99.99% of the speed of light. For the page it was a short trip. For this URL it has been a very long time.</dd>
+        </div>
+        <div>
+          <dt>Thermodynamics</dt>
+          <dd>Entropy increased. The page is now an evenly spread amount of nothing.</dd>
+        </div>
+        <div>
+          <dt>Newton</dt>
+          <dd>An unfinished side project stays unfinished unless acted on by an outside weekend. No weekend arrived.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Lab readings</h2>
+      <dl class="facts facts--rows">
+        <div><dt>Pages expected</dt><dd>1</dd></div>
+        <div><dt>Pages observed</dt><dd>0</dd></div>
+        <div><dt>Margin of error</dt><dd>± 1 page</dd></div>
+        <div><dt>Prime suspect</dt><dd>The URL</dd></div>
+      </dl>
+      <p class="muted">Peer review pending. Reviewer 2 insists the page was never here.</p>
+    </section>
+  </div>
+{{ end }}

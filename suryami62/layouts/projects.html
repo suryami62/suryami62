@@ -1,0 +1,29 @@
+{{ define "main" }}
+  <section class="hero">{{ partial "hero-text.html" . }}</section>
+
+  <section>
+    <ul class="cards grid-2">
+      {{/* range mengulang tiap item di data/projects.yaml. Di dalamnya, "." adalah satu proyek. */}}
+      {{ range hugo.Data.projects }}
+        {{ $project := . }}
+        <li>
+          <article class="card">
+            <h2>{{ .title }}</h2>
+            {{ with .image }}
+              {{ with resources.Get . }}
+                <img src="{{ .RelPermalink }}" alt="{{ $project.imageAlt | default "" }}"
+                     width="{{ .Width }}" height="{{ .Height }}" loading="lazy" decoding="async">
+              {{ end }}
+            {{ end }}
+            <p class="muted">{{ .description }}</p>
+            <div class="card__actions">
+              <a class="btn" href="{{ .url }}" target="_blank" rel="noopener noreferrer">
+                Preview<span class="sr-only"> {{ .title }} (opens in new tab)</span>
+              </a>
+            </div>
+          </article>
+        </li>
+      {{ end }}
+    </ul>
+  </section>
+{{ end }}

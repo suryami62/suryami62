@@ -1,0 +1,16 @@
+<footer class="site-footer">
+  <div class="wrap">
+    <ul class="social" aria-label="Social media">
+      {{ range site.Params.social }}
+        {{ $external := not (strings.HasPrefix .url "mailto:") }}
+        <li>
+          {{/* target="_blank" hanya untuk tautan web, bukan mailto. Pengguna diberi tahu lewat teks sr-only. */}}
+          <a class="btn" href="{{ .url }}"{{ if $external }} target="_blank" rel="noopener noreferrer"{{ end }}>
+            {{ .name }}{{ if $external }}<span class="sr-only"> (opens in new tab)</span>{{ end }}
+          </a>
+        </li>
+      {{ end }}
+    </ul>
+    <p class="copyright">Built by {{ site.Params.author }} © {{ now.Year }}</p>
+  </div>
+</footer>

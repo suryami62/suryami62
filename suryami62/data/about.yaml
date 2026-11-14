@@ -1,0 +1,45 @@
+# Isi halaman About. Tanggal ditulis YYYY-MM-DD, hari diabaikan saat ditampilkan.
+# Hapus baris "end" untuk pekerjaan yang masih berjalan, otomatis tampil "Present".
+cards:
+  - title: The Developer
+    text: >-
+      I focus on software development using C# and the .NET ecosystem, exploring
+      technologies for building modern applications. I enjoy designing practical
+      solutions, writing maintainable code, and continuously learning new tools
+      and development practices.
+  - title: The Teacher
+    text: >-
+      With a background in Physics Education, I am interested in making complex
+      scientific concepts easier to understand through structured explanations
+      and practical examples. I value critical thinking, curiosity, and
+      meaningful learning experiences.
+
+experience:
+  - title: Coding Instructor
+    org: Ruangguru Coding
+    start: "2026-07-01"
+    summary: >-
+      Deliver coding lessons through online and offline sessions based on the established 
+      curriculum and teaching guidelines. Foster positive classroom interactions, monitor 
+      student participation and learning progress, and maintain teaching records, 
+      attendance, session documentation, and periodic student progress reports.
+  - title: Class Teacher
+    org: SD Negeri 004 Tanjungpinang Kota
+    start: "2025-04-13"
+    end: "2026-04-02"
+    summary: >-
+      Responsible for planning and delivering classroom activities in accordance
+      with the national curriculum. Facilitated interactive, student-centered
+      learning experiences and conducted formative and summative assessments to
+      monitor students' learning progress.
+
+education:
+  - title: Bachelor of Physics Education
+    org: Universitas Sarjanawiyata Tamansiswa
+    start: "2019-09-02"
+    end: "2024-10-31"
+    summary: >-
+      Studied fundamental physics concepts, science education, and instructional
+      methodologies. Developed an understanding of how to communicate scientific
+      concepts through structured explanations, practical learning activities,
+      and educational approaches.

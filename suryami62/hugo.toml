@@ -1,0 +1,44 @@
+# Konfigurasi utama situs. Dokumentasi: https://gohugo.io/configuration/
+baseURL = "https://suryami62.my.id/"
+title = "suryami62"
+defaultContentLanguage = "en"
+
+enableGitInfo = true
+
+# Situs ini tidak butuh halaman kategori/tag maupun RSS.
+disableKinds = ["taxonomy", "term", "rss"]
+
+# Nilai yang bisa dibaca di template lewat site.Params.<nama>
+[params]
+  author = "Surya Ramadhan"
+  description = "Surya Ramadhan's portfolio featuring .NET development projects, programming experiments, physics education, and technical insights."
+  socialImage = "/socialCard.webp"
+  socialImageAlt = "Surya Ramadhan, .NET Developer and Physics Teacher"
+
+  # Tautan sosial. Muncul di footer semua halaman, urutannya mengikuti daftar ini.
+  [[params.social]]
+    name = "Instagram"
+    url = "https://www.instagram.com/suryami62"
+  [[params.social]]
+    name = "LinkedIn"
+    url = "https://www.linkedin.com/in/suryami62"
+  [[params.social]]
+    name = "GitHub"
+    url = "https://github.com/suryami62"
+  [[params.social]]
+    name = "Email"
+    url = "mailto:suryami62@outlook.com"
+
+# Menu navigasi utama. pageRef menunjuk ke halaman, jadi Hugo tahu mana yang sedang aktif.
+[[menus.main]]
+  name = "home"
+  pageRef = "/"
+  weight = 10
+[[menus.main]]
+  name = "projects"
+  pageRef = "/projects"
+  weight = 20
+[[menus.main]]
+  name = "about"
+  pageRef = "/about"
+  weight = 30

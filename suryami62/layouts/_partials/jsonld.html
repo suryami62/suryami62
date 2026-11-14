@@ -1,0 +1,15 @@
+{{/* Data terstruktur untuk mesin pencari. Hanya di halaman home. */}}
+{{ if .IsHome }}
+  {{ $profiles := slice }}
+  {{ range site.Params.social }}
+    {{ if not (strings.HasPrefix .url "mailto:") }}{{ $profiles = $profiles | append .url }}{{ end }}
+  {{ end }}
+  {{ $person := dict
+      "@context" "https://schema.org"
+      "@type" "Person"
+      "name" site.Params.author
+      "url" site.Home.Permalink
+      "jobTitle" ".NET Developer"
+      "sameAs" $profiles }}
+  <script type="application/ld+json">{{ $person | jsonify | safeJS }}</script>
+{{ end }}

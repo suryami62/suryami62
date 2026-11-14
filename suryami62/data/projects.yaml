@@ -1,0 +1,19 @@
+# Satu item = satu kartu di halaman Projects. Urutan di sini = urutan tampil.
+# Untuk menambah gambar, taruh file di static/img/projects/ lalu isi:
+#   image: /img/projects/nama-file.webp
+#   imageAlt: deskripsi isi gambar (kosongkan jika gambar hanya hiasan)
+- title: Measuring Devices E-Module
+  description: >-
+    An educational module designed to introduce students to physics measuring 
+    instruments, their functions, and practical applications in physics experiments.
+  url: https://drive.google.com/drive/folders/1flh7liFsmdLA_l3yBKXLRr07DqFO40vl
+  image: /img/projects/measuringDevices.webp
+  imageAlt: Measuring Devices E-Module
+
+- title: OZA
+  description: >-
+    A web-based project developed as part of a Physics Education bachelor's
+    thesis at Universitas Sarjanawiyata Tamansiswa.
+  url: https://oza.suryami62.my.id/
+  image: /img/projects/oza.webp
+  imageAlt: OZA
