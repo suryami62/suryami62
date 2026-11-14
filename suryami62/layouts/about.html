@@ -1,0 +1,22 @@
+{{ define "main" }}
+  {{ $about := hugo.Data.about }}
+  <section class="hero">{{ partial "hero-text.html" . }}</section>
+
+  <div class="grid-2">
+    {{ range $about.cards }}
+      <div class="card card--small">
+        <h2>{{ .title }}</h2>
+        <p>{{ .text }}</p>
+      </div>
+    {{ end }}
+  </div>
+
+  {{/* aria-labelledby menamai section dari heading yang terlihat, jadi section ini jadi landmark "region". */}}
+  <section aria-labelledby="journey-heading">
+    <h2 id="journey-heading" class="section-title">Journey</h2>
+    <div class="grid-2">
+      {{ partial "timeline.html" (dict "title" "Experience" "items" $about.experience) }}
+      {{ partial "timeline.html" (dict "title" "Education" "items" $about.education) }}
+    </div>
+  </section>
+{{ end }}

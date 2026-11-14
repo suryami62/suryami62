@@ -1,0 +1,27 @@
+{{ define "main" }}
+  <section class="hero hero--split">
+    <div>{{ partial "hero-text.html" . }}</div>
+    {{/* resources.Get membaca file dari folder assets/. Jika belum ada, gambar dilewati. */}}
+    {{ with resources.Get "img/photo.webp" }}
+      <img class="photo" src="{{ .RelPermalink }}" alt="{{ site.Params.author }}"
+           width="{{ .Width }}" height="{{ .Height }}" fetchpriority="high" decoding="async">
+    {{ end }}
+  </section>
+
+  {{/* Kartu ini hanya ada di home, jadi teksnya ditulis langsung di sini. */}}
+  <section class="card card--feature">
+    <p class="eyebrow">A very unofficial law of physics</p>
+    <h2>The Conservation of Side Projects</h2>
+    <p>
+      In a closed system, unfinished side projects are neither created nor destroyed.
+      They simply change state:
+    </p>
+    <ol class="flow">
+      <li>idea</li>
+      <li>new repository</li>
+      <li>“I’ll finish this weekend”</li>
+      <li>archived but not forgotten</li>
+    </ol>
+    <p><strong>No known escape velocity.</strong></p>
+  </section>
+{{ end }}

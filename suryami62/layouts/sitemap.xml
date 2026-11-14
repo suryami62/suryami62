@@ -1,0 +1,16 @@
+{{- /*
+  Menggantikan sitemap bawaan Hugo. Perbedaannya hanya satu baris: instruksi xml-stylesheet
+  yang menyuruh browser menampilkan XML ini lewat static/sitemap.xsl.
+  PENTING: tanda minus pada {{- dan -}} membuang spasi di sekitar komentar. Deklarasi <?xml
+  harus menjadi karakter pertama file, satu baris kosong saja membuat browser menolaknya.
+*/ -}}
+{{ printf "<?xml version=\"1.0\" encoding=\"utf-8\"?>" | safeHTML }}
+{{ printf "<?xml-stylesheet type=\"text/xsl\" href=\"%s\"?>" ("sitemap.xsl" | relURL) | safeHTML }}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  {{- range .Data.Pages }}
+  <url>
+    <loc>{{ .Permalink }}</loc>{{ if not .Lastmod.IsZero }}
+    <lastmod>{{ .Lastmod.Format "2006-01-02" }}</lastmod>{{ end }}
+  </url>
+  {{- end }}
+</urlset>

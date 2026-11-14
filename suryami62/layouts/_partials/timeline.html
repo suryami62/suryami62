@@ -1,0 +1,24 @@
+{{/* Satu kolom riwayat. Menerima dict: title (judul kolom) dan items (daftar dari data/about.yaml). */}}
+<div>
+  <h3 class="label">{{ .title }}</h3>
+  <ol class="timeline">
+    {{ range .items }}
+      {{ $start := time.AsTime .start }}
+      <li>
+        <h4>{{ .title }}</h4>
+        <p class="org">{{ .org }}</p>
+        <p class="dates">
+          <time datetime="{{ $start.Format "2006-01" }}">{{ $start.Format "Jan 2006" }}</time>
+          <span aria-hidden="true">–</span><span class="sr-only">to</span>
+          {{ with .end }}
+            {{ $end := time.AsTime . }}
+            <time datetime="{{ $end.Format "2006-01" }}">{{ $end.Format "Jan 2006" }}</time>
+          {{ else }}
+            Present
+          {{ end }}
+        </p>
+        <p>{{ .summary }}</p>
+      </li>
+    {{ end }}
+  </ol>
+</div>
