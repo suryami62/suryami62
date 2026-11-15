@@ -36,7 +36,7 @@ jobs:
         working-directory: suryami62
         env:
           HOST: suryami62.my.id
-          INDEXNOW_KEY: kkgtxfzqxahzur3ca2z7z5dpj4npteap
+          INDEXNOW_KEY: 1b81cf167b4e402abc0c5241d0c99a2b
         run: |
           set -euo pipefail
 
